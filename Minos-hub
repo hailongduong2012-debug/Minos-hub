@@ -1,220 +1,188 @@
--- ==========================================================
--- MINOS HUB & GARRY | SBSD EDITION
--- AUTHOR: minos
--- SCRIPT BY minos
--- COLLABORATION: Minos Hub & Garry
--- ==========================================================
+-- ====================================================================
+-- AUTHOR: minos | Script by minos | Minos Hub & Garry
+-- EDITION: SBSD Edition (Chuẩn cấu trúc Garry - Sirius Rayfield)
+-- ====================================================================
 
+-- 1. Khởi tạo và cấu hình UI Rayfield
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
-   Name = "Minos Hub & Garry 📦 | SBSD", -- Đã thêm tên kết hợp
-   LoadingTitle = "Minos Hub & Garry",
-   LoadingSubtitle = "Author: minos | Script by minos",
+   Name = "Minos Hub & Garry | SBSD Edition",
+   LoadingTitle = "Script by minos",
+   LoadingSubtitle = "Author: minos",
    ConfigurationSaving = {
-      Enabled = true,
-      Folder = "MinosHub_Garry_SBSD_Config",
-      FileName = "MinosGarrySave"
+      Enabled = false,
+      FolderName = "MinosHubGarry"
    },
    Discord = {
       Enabled = false,
-      Invite = "noinvite",
-      RememberJoins = true
+      Invite = ""
    },
    KeySystem = false
 })
 
--- KHỞI TẠO CÁC TAB THEO PHONG CÁCH SBSD
-local FarmTab = Window:CreateTab("Auto Campaign", 4483362458)
-local InfoTab = Window:CreateTab("Credits", 4483362458)
+-- 2. Tạo Tab chính bằng chuỗi thô (Chuẩn cấu trúc Garry)
+local AutoCampaignTab = Window:CreateTab("Auto Campaign", 4483362458) 
 
--- Bổ sung thông tin nhận diện thương hiệu Minos Hub & Garry theo yêu cầu
-InfoTab:CreateParagraph({
-   Title = "Minos Hub & Garry Information", 
-   Content = "• Author: minos\n• Script by minos\n• Collaboration: Minos Hub & Garry\n\nChúc các bạn hack game vui vẻ cùng sự kết hợp của Minos Hub & Garry!"
+-- 3. Khởi tạo các biến lưu trữ trạng thái tính năng
+local States = {
+    AdminSelection = false,
+    RainbowSword = false,
+    LockEquip = false,
+    FastAttack = false,
+    BossDamage = 1,
+    AttackDelay = 1
+}
+
+-- ====================================================================
+-- BỘ 4 NÚT TOGGLE ĐỘC LẬP (Đã fix lỗi hiển thị, hiển thị trực tiếp trong Tab)
+-- ====================================================================
+
+-- Toggle 1: Chọn Admin bằng getconnections
+AutoCampaignTab:CreateToggle({
+   Name = "Chọn Admin (GetConnections)",
+   CurrentValue = false,
+   Callback = function(Value)
+      States.AdminSelection = Value
+      if Value then
+          task.spawn(function()
+              while States.AdminSelection do
+                  if getconnections then
+                      for _, connection in ipairs(getconnections(game:GetService("UserInputService").TouchTapInWorld)) do
+                          pcall(function() connection:Fire() end)
+                      end
+                  end
+                  task.wait(0.5)
+              end
+          end)
+      end
+   end,
 })
 
--- CÁC BIẾN CẤU HÌNH TRẠNG THÁI TÁCH BIỆT
-local AutoAdmin = false
-local AutoGetGear = false
-local AutoEquip = false
-local AutoFastAttack = false
+-- Toggle 2: Kiếm Rainbow ẩn danh (Khóa cứng hotbar)
+AutoCampaignTab:CreateToggle({
+   Name = "Kiếm Rainbow Ẩn Danh (Khóa Hotbar)",
+   CurrentValue = false,
+   Callback = function(Value)
+      States.RainbowSword = Value
+      if Value then
+          task.spawn(function()
+              while States.RainbowSword do
+                  -- Sử dụng kết nối ẩn danh thông qua ReplicatedStorage
+                  if getconnections then
+                      for _, con in ipairs(getconnections(game:GetService("ReplicatedStorage").ChildAdded)) do
+                          pcall(function() con:Fire() end)
+                      end
+                  end
+                  
+                  -- Khóa cứng hotbar (Tự động đưa kiếm Rainbow từ Backpack lên Character)
+                  local localPlayer = game:GetService("Players").LocalPlayer
+                  if localPlayer and localPlayer.Character then
+                      local backpack = localPlayer:FindFirstChildOfClass("Backpack")
+                      local rainbow = backpack and backpack:FindFirstChild("Rainbow Sword") or localPlayer.Character:FindFirstChild("Rainbow Sword")
+                      if rainbow and backpack then
+                          pcall(function()
+                              rainbow.Parent = localPlayer.Character
+                          end)
+                      end
+                  end
+                  task.wait(0.1)
+              end
+          end)
+      end
+   end,
+})
 
--- BIẾN TÙY CHỈNH SÁT THƯƠNG VÀ TỐC ĐỘ CHÉM
-local CustomDamageAmount = 10 
-local CustomAttackDelay = 0.05 
+-- Toggle 3: Khóa equip vũ khí
+AutoCampaignTab:CreateToggle({
+   Name = "Khóa Equip Vũ Khí",
+   CurrentValue = false,
+   Callback = function(Value)
+      States.LockEquip = Value
+      if Value then
+          task.spawn(function()
+              local player = game:GetService("Players").LocalPlayer
+              while States.LockEquip do
+                  if player.Character then
+                      local tool = player.Character:FindFirstChildOfClass("Tool")
+                      -- Nếu nhân vật bị gỡ vũ khí, tự động trang bị lại ngay lập tức
+                      if not tool then
+                          local backpack = player:FindFirstChildOfClass("Backpack")
+                          local targetTool = backpack and backpack:FindFirstChildOfClass("Tool")
+                          if targetTool then
+                              pcall(function() targetTool.Parent = player.Character end)
+                          end
+                      end
+                  end
+                  task.wait(0.2)
+              end
+          end)
+      end
+   end,
+})
 
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-local virtualInputManager = game:GetService("VirtualInputManager")
+-- Toggle 4: Fast Attack đánh quái thường và Boss (Bọc pcall chống kẹt)
+AutoCampaignTab:CreateToggle({
+   Name = "Fast Attack (Chống Kẹt Boss/Quái)",
+   CurrentValue = false,
+   Callback = function(Value)
+      States.FastAttack = Value
+      if Value then
+          task.spawn(function()
+              while States.FastAttack do
+                  -- Bọc toàn bộ trong pcall để chống kẹt/crash script khi quái chết hoặc mất mục tiêu
+                  pcall(function()
+                      local player = game:GetService("Players").LocalPlayer
+                      local character = player.Character
+                      local tool = character and character:FindFirstChildOfClass("Tool")
+                      
+                      if tool and tool:FindFirstChild("AttackRemote") then
+                          -- Số lần chém liên tiếp dựa theo thanh Slider sát thương Boss
+                          for i = 1, States.BossDamage do
+                              tool.AttackRemote:FireServer()
+                          end
+                      end
+                  end)
+                  -- Tốc độ delay chém (lấy giá trị Slider chia cho 100)
+                  task.wait(States.AttackDelay / 100)
+              end
+          end)
+      end
+   end,
+})
 
--- HÀM 1: CHỌN NHÂN VẬT ADMIN THEO BẢN GỐC CỦA GARRY
-local function ProcessSelectAdmin()
-    local playerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui") or LocalPlayer:FindFirstChild("PlayerGui")
-    local charClass = playerGui and playerGui:FindFirstChild("CharClass")
-    if not charClass then return end
-    
-    for _, desc in ipairs(charClass:GetDescendants()) do
-        if desc:IsA("GuiButton") and desc.Name == "Admin" and desc.Visible then
-            if not charClass.Enabled then charClass.Enabled = true end
-            pcall(function()
-                for _, connection in pairs(getconnections(desc.MouseButton1Click)) do connection:Fire() end
-                for _, connection in pairs(getconnections(desc.MouseButton1Down)) do connection:Fire() end
-                if desc.Activated then
-                    for _, connection in pairs(getconnections(desc.Activated)) do connection:Fire() end
-                end
-            end)
-            break
-        end
-    end
-end
+-- ====================================================================
+-- BỘ 2 THANH SLIDER TÙY CHỈNH
+-- ====================================================================
 
--- HÀM 2: LẤY KIẾM CẦU VỒNG PHƯƠNG PHÁP GARRY + AUTO KHÓA SLOT
-local function ProcessGetRainbowGear()
-    local backpack = LocalPlayer:FindFirstChildOfClass("Backpack")
-    local character = LocalPlayer.Character
-    local hasRainbow = (backpack and backpack:FindFirstChild("RainbowPeriastron")) or (character and character:FindFirstChild("RainbowPeriastron"))
-    
-    if not hasRainbow then
-        virtualInputManager:SendKeyEvent(true, Enum.KeyCode.G, false, game)
-        task.wait(0.1)
-        virtualInputManager:SendKeyEvent(false, Enum.KeyCode.G, false, game)
-        task.wait(0.2)
-        
-        local playerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui") or LocalPlayer:FindFirstChild("PlayerGui")
-        local gearsGui = playerGui and playerGui:FindFirstChild("gears")
-        
-        if gearsGui and gearsGui.Enabled then
-            for _, obj in ipairs(gearsGui:GetDescendants()) do
-                if (obj:IsA("GuiButton") or obj:IsA("GuiObject")) and string.lower(obj.Name) == "rainbowperiastron" and obj.Visible then
-                    pcall(function()
-                        for _, connection in pairs(getconnections(obj.MouseButton1Click)) do connection:Fire() end
-                        for _, connection in pairs(getconnections(obj.MouseButton1Down)) do connection:Fire() end
-                        if obj:IsA("GuiButton") and obj.Activated then
-                            for _, connection in pairs(getconnections(obj.Activated)) do connection:Fire() end
-                        end
-                    end)
-                    break
-                end
-            end
-            task.wait(0.2)
-            gearsGui.Enabled = false
-        end
-    else
-        -- Quét slot định danh thanh Rainbow trong kho đồ hotbar
-        if backpack then
-            local items = backpack:GetChildren()
-            for index, item in ipairs(items) do
-                if item.Name == "RainbowPeriastron" then
-                    if index <= 9 then
-                        pcall(function()
-                            local slotKey = Enum.KeyCode[ "Number" .. tostring(index) ]
-                            virtualInputManager:SendKeyEvent(true, slotKey, false, game)
-                            task.wait(0.05)
-                            virtualInputManager:SendKeyEvent(false, slotKey, false, game)
-                        end)
-                    end
-                    break
-                end
-            end
-        end
-    end
-end
+-- Slider 1: Chỉnh sát thương đập Boss từ 1-30
+AutoCampaignTab:CreateSlider({
+   Name = "Sát Thương Đập Boss (Số Lần Chém)",
+   Min = 1,
+   Max = 30,
+   CurrentValue = 1,
+   Flag = "BossDamageSlider",
+   Callback = function(Value)
+      States.BossDamage = Value
+   end,
+})
 
--- HÀM 3: TỰ ĐỘNG KHÓA VÀ TRANG BỊ VŨ KHÍ
-local function ProcessEquipWeapon()
-    local backpack = LocalPlayer:FindFirstChild("Backpack")
-    local character = LocalPlayer.Character
-    if character and backpack then
-        local currentTool = character:FindFirstChildOfClass("Tool")
-        if not currentTool or currentTool.Name ~= "RainbowPeriastron" then
-            if currentTool then currentTool.Parent = backpack task.wait(0.05) end
-            local rainbowTool = backpack:FindFirstChild("RainbowPeriastron")
-            if rainbowTool then character.Humanoid:EquipTool(rainbowTool) end
-        end
-    end
-end
+-- Slider 2: Chỉnh tốc độ delay chém từ 1-50 (Chia 100 trong code)
+AutoCampaignTab:CreateSlider({
+   Name = "Tốc Độ Delay Chém (Chia 100)",
+   Min = 1,
+   Max = 50,
+   CurrentValue = 1,
+   Flag = "AttackDelaySlider",
+   Callback = function(Value)
+      States.AttackDelay = Value
+   end,
+})
 
--- KHỞI CHẠY LUỒNG HOẠT ĐỘNG RIÊNG CHO CÁC NÚT ĐỘC LẬP
-task.spawn(function()
-    while true do
-        task.wait(0.1)
-        if AutoAdmin then pcall(ProcessSelectAdmin) end
-        if AutoGetGear then pcall(ProcessGetRainbowGear) end
-        if AutoEquip then pcall(ProcessEquipWeapon) end
-    end
-end)
-
--- VÒNG LẶP CHÍNH FAST ATTACK CHỐNG KẸT QUÁI/BOSS
-task.spawn(function()
-    while true do
-        task.wait(0.1)
-        
-        if AutoFastAttack and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-            local myRoot = LocalPlayer.Character.HumanoidRootPart
-            local enemiesFolder = workspace:FindFirstChild("Enemies") or workspace:FindFirstChild("Zombies") or workspace
-            local hitRemote = game:GetService("ReplicatedStorage"):FindFirstChild("Hit") or game:GetService("ReplicatedStorage"):FindFirstChild("Damage")
-            
-            local targetEnemy = nil
-            local shortestDistance = math.huge
-            
-            for _, enemy in pairs(enemiesFolder:GetChildren()) do
-                if enemy:IsA("Model") and enemy:FindFirstChild("HumanoidRootPart") then
-                    local humanoid = enemy:FindFirstChildOfClass("Humanoid")
-                    if humanoid and humanoid.Health > 0 then
-                        local distance = (myRoot.Position - enemy.HumanoidRootPart.Position).Magnitude
-                        if distance < shortestDistance then
-                            shortestDistance = distance
-                            targetEnemy = enemy
-                        end
-                    end
-                end
-            end
-            
-            if targetEnemy and targetEnemy:FindFirstChild("HumanoidRootPart") then
-                local enemyRoot = targetEnemy.HumanoidRootPart
-                local humanoid = targetEnemy:FindFirstChildOfClass("Humanoid")
-                local enemyNameLower = string.lower(targetEnemy.Name)
-                
-                local isBoss = string.find(enemyNameLower, "boss") or string.find(enemyNameLower, "titan") or (humanoid and humanoid.MaxHealth >= 1000)
-                
-                while AutoFastAttack and targetEnemy and targetEnemy.Parent and enemyRoot and enemyRoot.Parent and humanoid and humanoid.Health > 0 do
-                    pcall(function()
-                        local targetPos = enemyRoot.Position
-                        
-                        if not isBoss then
-                            -- Diệt quái thường
-                            myRoot.CFrame = enemyRoot.CFrame * CFrame.new(0, 0, 2.5)
-                            myRoot.AssemblyLinearVelocity = Vector3.zero
-                            
-                            local boxPart = targetEnemy:FindFirstChild("Box")
-                            if boxPart then
-                                local closePrompt = boxPart:FindFirstChild("Close") or boxPart:FindFirstChildWhichIsA("ProximityPrompt")
-                                if closePrompt and fireproximityprompt then fireproximityprompt(closePrompt) end
-                            end
-                            
-                            if hitRemote then hitRemote:FireServer(enemyRoot, targetPos) end
-                        else
-                            -- Diệt Boss/Titan (Sát thương to nhỏ chỉnh bằng CustomDamageAmount qua Slider)
-                            myRoot.CFrame = enemyRoot.CFrame * CFrame.new(0, 3.5, 0)
-                            myRoot.AssemblyLinearVelocity = Vector3.zero
-                            
-                            if hitRemote then
-                                task.spawn(function()
-                                    for i = 1, CustomDamageAmount do 
-                                        if enemyRoot and enemyRoot.Parent then
-                                            hitRemote:FireServer(enemyRoot, targetPos)
-                                        end
-                                    end
-                                end)
-                            end
-                        end
-                    end)
-                    task.wait(CustomAttackDelay)
-                end
-            end
-        end
-    end
-end)
-
--- ==========================================================
+-- Thông báo chạy script thành công
+Rayfield:Notify({
+   Title = "Minos Hub",
+   Content = "Đã khởi chạy đầy đủ tính năng Minos & Garry!",
+   Duration = 4,
+   Image = 4483362458,
+})
