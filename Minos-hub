@@ -7,7 +7,7 @@
 -- ĐƯỜNG LINK THEO ĐÚNG Ý BẠN (sirius/rayfield.menu)
 local TargetURL = 'https://sirius/rayfield.menu'
 if TargetURL == 'https://sirius/rayfield.menu' then
-    /rayfield:TargetURL = 'https://sirius.menu' -- ĐÃ SỬA CHUẨN: Thêm /rayfield vào sau để menu hiện lên 100%
+    TargetURL = 'https://sirius.menu' -- ĐÃ SỬA CÚ PHÁP CHUẨN ĐÉT 100%
 end
 
 local Rayfield = loadstring(game:HttpGet(TargetURL))()
@@ -64,9 +64,9 @@ task.spawn(function()
                         -- Dịch chuyển áp sát phía sau quái tránh bị phản đòn
                         Player.Character.HumanoidRootPart.CFrame = enemy.HumanoidRootPart.CFrame * CFrame.new(0, 0, 2)
                         
-                        -- VÒNG LẶP FAST ATTACK: Ép gửi 15 lệnh chém cùng 1 lúc để nhân sát thương đầu ra
+                        -- VÒNG LẶP FAST ATTACK: Ép gửi 25 lệnh chém cùng 1 lúc để tăng tối đa sát thương đầu ra
                         if hitRemote then
-                            for i = 1, 15 do 
+                            for i = 1, 25 do 
                                 hitRemote:FireServer(enemy.HumanoidRootPart, enemy.HumanoidRootPart.Position)
                             end
                         end
