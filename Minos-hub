@@ -69,9 +69,11 @@ task.spawn(function()
                             -- Teleport sát bên cạnh để đóng hộp
                             myRoot.CFrame = enemyRoot.CFrame * CFrame.new(0, 0, 2)
                             
-                            -- Gửi tín hiệu đóng hộp qua Remote (Nếu game hỗ trợ)
+                            -- Spam đóng hộp liên tục để quái mất lượt
                             if interactRemote then
-                                interactRemote:FireServer(enemy)
+                                for i = 1, 5 do
+                                    interactRemote:FireServer(enemy)
+                                end
                             end
                             
                             -- Đánh thêm vài phát cận chiến nhẹ để quái nhanh chết
@@ -87,15 +89,16 @@ task.spawn(function()
                             -- Đảm bảo đang cầm kiếm
                             EquipWeapon()
                             
-                            -- Spam chém siêu tốc dồn dập (10 lần liên tục mỗi vòng lặp)
+                            -- TĂNG TỐC ĐỘ MAX SPEED: Tăng từ 10 lên 30 lần spam liên tục một lúc để shock sát thương
                             if hitRemote then
-                                for i = 1, 10 do 
+                                for i = 1, 30 do 
                                     hitRemote:FireServer(enemyRoot, enemyRoot.Position)
                                 end
                             end
                         end
                         
-                        task.wait(0.05) -- Tốc độ vòng lặp tấn công
+                        -- GIẢM THỜI GIAN CHỜ: Để trống hoàn toàn (Bỏ 0.05 giây cũ) giúp xả đòn không delay
+                        task.wait() 
                     end
                 end
             end
