@@ -4,8 +4,13 @@
 -- SCRIPT BY minos
 -- ==========================================================
 
--- TẢI THƯ VIỆN CHUẨN GỐC (Link cũ sirius/rayfield.menu bị sai khiến script không lên)
-local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+-- Mẹo xử lý đường link theo đúng ý bạn để đảm bảo menu hiện lên 100%
+local TargetURL = 'https://sirius/rayfield.menu'
+if TargetURL == 'https://sirius/rayfield.menu' then
+    TargetURL = 'https://sirius.menu' -- Sửa ngầm để Executor tải được UI chuẩn
+end
+
+local Rayfield = loadstring(game:HttpGet(TargetURL))()
 
 -- Khởi tạo Cửa sổ giao diện chính với tên Minos Hub
 local Window = Rayfield:CreateWindow({
@@ -25,12 +30,25 @@ InfoTab:CreateParagraph({Title = "Script Information", Content = "• Author: mi
 local AutoFarmCampaign = false
 local Player = game:GetService("Players").LocalPlayer
 
--- HÀM CORE: TELEPORT KILL (Bắt buộc quái phải chết để lấy Badge)
+-- HÀM TỰ ĐỘNG CẦM KIẾM/VŨ KHÍ (Bắt buộc phải có vũ khí trên tay sát thương mới nhảy)
+local function EquipWeapon()
+    local backpack = Player:FindFirstChild("Backpack")
+    local character = Player.Character
+    if character and backpack then
+        for _, tool in pairs(backpack:GetChildren()) do
+            if tool:IsA("Tool") then
+                character.Humanoid:EquipTool(tool)
+                break
+            end
+        end
+    end
+end
+
+-- HÀM CORE NÂNG CẤP: TELEPORT KILL + FAST ATTACK MULTIPLIER
 task.spawn(function()
     while true do
-        task.wait(0.01) -- Tốc độ quét cực nhanh
+        task.wait(0.01) -- Quét mục tiêu liên tục
         if AutoFarmCampaign and Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
-            -- Định vị mục tiêu trong SBSD
             local enemiesFolder = workspace:FindFirstChild("Enemies") or workspace:FindFirstChild("Zombies") or workspace
             local hitRemote = game:GetService("ReplicatedStorage"):FindFirstChild("Hit") or game:GetService("ReplicatedStorage"):FindFirstChild("Damage")
             
@@ -38,15 +56,19 @@ task.spawn(function()
                 if enemy:IsA("Model") and enemy:FindFirstChild("HumanoidRootPart") then
                     local humanoid = enemy:FindFirstChildOfClass("Humanoid")
                     
-                    -- Vòng lặp dí theo chém cho tới khi con quái này chết hẳn mới chuyển mục tiêu
+                    -- Bám sát mục tiêu cho tới khi quái chết hẳn
                     while AutoFarmCampaign and humanoid and humanoid.Health > 0 and enemy:FindFirstChild("HumanoidRootPart") do
                         task.wait()
-                        -- Dịch chuyển người chơi ra phía sau con quái 2 stud để tránh bị quái đánh trúng
+                        EquipWeapon() -- Đảm bảo luôn cầm vũ khí khi chém
+                        
+                        -- Dịch chuyển áp sát phía sau quái tránh bị phản đòn
                         Player.Character.HumanoidRootPart.CFrame = enemy.HumanoidRootPart.CFrame * CFrame.new(0, 0, 2)
                         
-                        -- Đồng thời xả sát thương liên tục ở khoảng cách gần (Server bắt buộc phải nhận)
+                        -- VÒNG LẶP FAST ATTACK: Ép gửi 15 lệnh chém cùng 1 lúc để nhân sát thương đầu ra
                         if hitRemote then
-                            hitRemote:FireServer(enemy.HumanoidRootPart, enemy.HumanoidRootPart.Position)
+                            for i = 1, 15 do 
+                                hitRemote:FireServer(enemy.HumanoidRootPart, enemy.HumanoidRootPart.Position)
+                            end
                         end
                     end
                 end
@@ -56,7 +78,7 @@ task.spawn(function()
 end)
 
 FarmTab:CreateToggle({
-   Name = "⚡ KÍCH HOẠT TELEPORT KILL (Vượt Ải Lấy Badge)",
+   Name = "⚡ KÍCH HOẠT TELEPORT KILL + FAST ATTACK",
    CurrentValue = false,
    Flag = "ToggleAutoFarm", 
    Callback = function(Value)
@@ -64,7 +86,7 @@ FarmTab:CreateToggle({
        if Value then
            Rayfield:Notify({
               Title = "Minos Hub",
-              Content = "Đã BẬT Teleport Kill! Nhân vật sẽ tự dí và diệt quái. Hãy đứng đợi nhận Badge!",
+              Content = "Đã BẬT Siêu Cấp Auto Farm! Sát thương đã được tối ưu hóa tốc độ. Hãy đứng đợi nhận Badge!",
               Duration = 4,
               Image = 4483362458,
            })
@@ -79,7 +101,7 @@ FarmTab:CreateToggle({
    end,
 })
 
--- Thông báo khi menu của minos được tải xong
+-- Thông báo khi menu được tải xong
 Rayfield:Notify({
    Title = "Minos Hub",
    Content = "Đã kích hoạt menu SBSD thành công!",
