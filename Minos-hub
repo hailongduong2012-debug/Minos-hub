@@ -1,93 +1,41 @@
 -- ==========================================================
 -- AUTHOR: minos
--- SCRIPT BY minos (Ultimate All-In-One - OFFLINE/BYPASS EXECUTE)
+-- SCRIPT CREATOR: minos
+-- SCRIPT BY minos (SBSD Structure Edition - 100% FIXED LINK)
 -- ==========================================================
 
-local CoreGui = game:GetService("CoreGui")
-local Players = game:GetService("Players")
-local Player = Players.LocalPlayer
+-- ĐÃ FIX CHÍNH XÁC: Thêm /rayfield đi kèm với sirius.menu chuẩn cấu trúc SBSD
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
+local Window = Rayfield:CreateWindow({
+   Name = "Minos Hub 📦 | SBSD",
+   LoadingTitle = "Minos Hub - Made by minos",
+   LoadingSubtitle = "Author: minos | Script Creator: minos",
+   ConfigurationSaving = {
+      Enabled = true,
+      Folder = "MinosHub_SBSD_Config",
+      FileName = "MinosSave"
+   },
+   Discord = {
+      Enabled = false,
+      Invite = "noinvite",
+      RememberJoins = true
+   },
+   KeySystem = false
+})
+
+-- KHỞI TẠO CÁC TAB Y HỆT SBSD
+local FarmTab = Window:CreateTab("Auto Campaign", 4483362458)
+local InfoTab = Window:CreateTab("Credits", 4483362458)
+
+InfoTab:CreateParagraph({Title = "Script Information", Content = "• Author: minos\n• Script Creator: minos\n• Script by minos\n\nChúc các bạn hack game vui vẻ!"})
+
+-- BIẾN HỖ TRỢ TÍNH NĂNG
+local AutoFastAttack = false
+local Player = game:GetService("Players").LocalPlayer
 local virtualInputManager = game:GetService("VirtualInputManager")
 
--- 1. XÓA UI CŨ BỊ KẸT
-for _, child in ipairs(CoreGui:GetChildren()) do
-    if child:IsA("ScreenGui") and (string.find(child.Name, "Minos") or string.find(child.Name, "Rayfield")) then
-        child:Destroy()
-    end
-end
-
--- 2. TỰ KHỞI TẠO GIAO DIỆN THÔ (Không dùng link HttpGet để tránh lỗi Executor)
-local MinosUI = Instance.new("ScreenGui")
-local MainFrame = Instance.new("Frame")
-local Title = Instance.new("TextLabel")
-local SubTitle = Instance.new("TextLabel")
-local ToggleBtn = Instance.new("TextButton")
-local CreditText = Instance.new("TextLabel")
-
-MinosUI.Name = "MinosHub_Bypass"
-MinosUI.Parent = CoreGui
-MinosUI.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-
-MainFrame.Name = "MainFrame"
-MainFrame.Parent = MinosUI
-MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-MainFrame.Position = UDim2.new(0.5, -150, 0.5, -100)
-MainFrame.Size = UDim2.new(0, 300, 0, 200)
-MainFrame.Active = true
-MainFrame.Draggable = true
-
--- Bo góc UI
-local UICorner = Instance.new("UICorner")
-UICorner.CornerRadius = UDim.new(0, 8)
-UICorner.Parent = MainFrame
-
-Title.Name = "Title"
-Title.Parent = MainFrame
-Title.BackgroundTransparency = 1
-Title.Position = UDim2.new(0, 0, 0, 10)
-Title.Size = UDim2.new(1, 0, 0, 30)
-Title.Font = Enum.Font.SourceSansBold
-Title.Text = "Minos Hub 📦 | SBSD"
-Title.TextColor3 = Color3.fromRGB(255, 255, 255)
-Title.TextSize = 22
-
-SubTitle.Name = "SubTitle"
-SubTitle.Parent = MainFrame
-SubTitle.BackgroundTransparency = 1
-SubTitle.Position = UDim2.new(0, 0, 0, 35)
-SubTitle.Size = UDim2.new(1, 0, 0, 20)
-SubTitle.Font = Enum.Font.SourceSansItalic
-SubTitle.Text = "Fixed Offline Mode (Anti-Execute Crash)"
-SubTitle.TextColor3 = Color3.fromRGB(180, 180, 180)
-SubTitle.TextSize = 14
-
-ToggleBtn.Name = "ToggleBtn"
-ToggleBtn.Parent = MainFrame
-ToggleBtn.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
-ToggleBtn.Position = UDim2.new(0.1, 0, 0.4, 0)
-ToggleBtn.Size = UDim2.new(0.8, 0, 0, 45)
-ToggleBtn.Font = Enum.Font.SourceSansBold
-ToggleBtn.Text = "FAST ATTACK: OFF"
-ToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-ToggleBtn.TextSize = 18
-
-local ButtonCorner = Instance.new("UICorner")
-ButtonCorner.CornerRadius = UDim.new(0, 6)
-ButtonCorner.Parent = ToggleBtn
-
-CreditText.Name = "CreditText"
-CreditText.Parent = MainFrame
-CreditText.BackgroundTransparency = 1
-CreditText.Position = UDim2.new(0, 0, 0.8, 0)
-CreditText.Size = UDim2.new(1, 0, 0, 30)
-CreditText.Font = Enum.Font.SourceSans
-CreditText.Text = "Author: minos | Chúc các bạn vui vẻ!"
-CreditText.TextColor3 = Color3.fromRGB(150, 150, 150)
-CreditText.TextSize = 14
-
--- 3. XỬ LÝ LOGIC LOG IN GAME VÀ AUTO CAMPAIGN
-local AutoFastAttack = false
-
--- Hàm 1: Chọn Admin
+-- HÀM 1: TỰ ĐỘNG CHỌN NHÂN VẬT ADMIN
 local function AutoSelectAdmin()
     local playerGui = Player:FindFirstChildOfClass("PlayerGui") or Player:FindFirstChild("PlayerGui")
     local charClass = playerGui and playerGui:FindFirstChild("CharClass")
@@ -102,20 +50,28 @@ local function AutoSelectAdmin()
     end
     
     if adminBtn and adminBtn.Visible then
-        if not charClass.Enabled then charClass.Enabled = true end
+        if not charClass.Enabled then
+            charClass.Enabled = true
+        end
+        
         local vp = workspace.CurrentCamera.ViewportSize
+        local x, y = vp.X / 2, vp.Y / 2
+        
         adminBtn.Size = UDim2.new(1, 0, 1, 0)
-        virtualInputManager:SendMouseButtonEvent(vp.X / 2, vp.Y / 2, 0, true, game, 1)
+        virtualInputManager:SendMouseButtonEvent(x, y, 0, true, game, 1)
         task.wait(0.05)
-        virtualInputManager:SendMouseButtonEvent(vp.X / 2, vp.Y / 2, 0, false, game, 1)
+        virtualInputManager:SendMouseButtonEvent(x, y, 0, false, game, 1)
     end
 end
 
--- Hàm 2: Lấy kiếm
+-- HÀM 2: CHỈ ĐỊNH VÀ LẤY ĐÚNG THANH RAINBOW PERIASTRON
 local function AutoSelectRainbowGear()
     local backpack = Player:FindFirstChildOfClass("Backpack")
     local character = Player.Character
-    local hasRainbow = (backpack and backpack:FindFirstChild("RainbowPeriastron")) or (character and character:FindFirstChild("RainbowPeriastron"))
+    
+    local hasRainbow = false
+    if backpack and backpack:FindFirstChild("RainbowPeriastron") then hasRainbow = true end
+    if character and character:FindFirstChild("RainbowPeriastron") then hasRainbow = true end
     
     if not hasRainbow then
         virtualInputManager:SendKeyEvent(true, Enum.KeyCode.G, false, game)
@@ -125,12 +81,14 @@ local function AutoSelectRainbowGear()
         
         local playerGui = Player:FindFirstChildOfClass("PlayerGui") or Player:FindFirstChild("PlayerGui")
         local gearsGui = playerGui and playerGui:FindFirstChild("gears")
+        
         if gearsGui and gearsGui.Enabled then
             for _, obj in ipairs(gearsGui:GetDescendants()) do
                 if (obj:IsA("GuiButton") or obj:IsA("GuiObject")) and string.lower(obj.Name) == "rainbowperiastron" then
                     local vp = workspace.CurrentCamera.ViewportSize
                     obj.Visible = true
                     obj.Size = UDim2.new(1, 0, 1, 0)
+                    
                     virtualInputManager:SendMouseButtonEvent(vp.X / 2, vp.Y / 2, 0, true, game, 1)
                     task.wait(0.05)
                     virtualInputManager:SendMouseButtonEvent(vp.X / 2, vp.Y / 2, 0, false, game, 1)
@@ -143,24 +101,30 @@ local function AutoSelectRainbowGear()
     end
 end
 
--- Hàm 3: Trang bị kiếm
+-- HÀM 3: KHÓA TRANG BỊ VŨ KHÍ
 local function EquipWeapon()
     local backpack = Player:FindFirstChild("Backpack")
     local character = Player.Character
     if character and backpack then
         local currentTool = character:FindFirstChildOfClass("Tool")
         if not currentTool or currentTool.Name ~= "RainbowPeriastron" then
-            if currentTool then currentTool.Parent = backpack task.wait(0.05) end
+            if currentTool then
+                currentTool.Parent = backpack
+                task.wait(0.05)
+            end
             local rainbowTool = backpack:FindFirstChild("RainbowPeriastron")
-            if rainbowTool then character.Humanoid:EquipTool(rainbowTool) end
+            if rainbowTool then
+                character.Humanoid:EquipTool(rainbowTool)
+            end
         end
     end
 end
 
--- Vòng lặp quét quái liên tục không kẹt
+-- VÒNG LẶP CHÍNH AUTO FARM VƯỢT ẢI (ĐÃ KHẮC PHỤC HOÀN TOÀN LỖI KẸT)
 task.spawn(function()
     while true do
         task.wait(0.1)
+        
         if AutoFastAttack and Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
             pcall(AutoSelectAdmin)
             pcall(AutoSelectRainbowGear)
@@ -169,6 +133,7 @@ task.spawn(function()
             local enemiesFolder = workspace:FindFirstChild("Enemies") or workspace:FindFirstChild("Zombies") or workspace
             local hitRemote = game:GetService("ReplicatedStorage"):FindFirstChild("Hit") or game:GetService("ReplicatedStorage"):FindFirstChild("Damage")
             
+            -- Tìm quái gần nhất
             local targetEnemy = nil
             local shortestDistance = math.huge
             
@@ -185,31 +150,50 @@ task.spawn(function()
                 end
             end
             
+            -- Tấn công mục tiêu và xử lý vòng lặp chống kẹt
             if targetEnemy and targetEnemy:FindFirstChild("HumanoidRootPart") then
                 local enemyRoot = targetEnemy.HumanoidRootPart
                 local humanoid = targetEnemy:FindFirstChildOfClass("Humanoid")
-                local isBoss = string.find(string.lower(targetEnemy.Name), "boss") or string.find(string.lower(targetEnemy.Name), "titan") or (humanoid and humanoid.MaxHealth >= 1000)
+                local enemyNameLower = string.lower(targetEnemy.Name)
                 
+                local isBoss = false
+                if string.find(enemyNameLower, "boss") or string.find(enemyNameLower, "titan") or (humanoid and humanoid.MaxHealth >= 1000) then
+                    isBoss = true
+                end
+                
+                -- Khóa quái, liên tục kiểm tra tính hợp lệ của .Parent để chuyển quái ngay khi quái chết/bị hủy
                 while AutoFastAttack and targetEnemy and targetEnemy.Parent and enemyRoot and enemyRoot.Parent and humanoid and humanoid.Health > 0 do
                     pcall(function()
                         local targetPos = enemyRoot.Position
+                        
                         if not isBoss then
+                            -- Diệt quái thường
                             myRoot.CFrame = enemyRoot.CFrame * CFrame.new(0, 0, 2.5)
                             myRoot.AssemblyLinearVelocity = Vector3.zero
+                            
                             local boxPart = targetEnemy:FindFirstChild("Box")
                             if boxPart then
                                 local closePrompt = boxPart:FindFirstChild("Close") or boxPart:FindFirstChildWhichIsA("ProximityPrompt")
-                                if closePrompt and fireproximityprompt then fireproximityprompt(closePrompt) end
+                                if closePrompt and fireproximityprompt then
+                                    fireproximityprompt(closePrompt)
+                                end
                             end
-                            if hitRemote then hitRemote:FireServer(enemyRoot, targetPos) end
+                            
+                            if hitRemote then
+                                hitRemote:FireServer(enemyRoot, targetPos)
+                            end
                         else
+                            -- Diệt Boss / Titan
                             myRoot.CFrame = enemyRoot.CFrame * CFrame.new(0, 3.5, 0)
                             myRoot.AssemblyLinearVelocity = Vector3.zero
                             EquipWeapon()
+                            
                             if hitRemote then
                                 task.spawn(function()
                                     for i = 1, 10 do 
-                                        if enemyRoot and enemyRoot.Parent then hitRemote:FireServer(enemyRoot, targetPos) end
+                                        if enemyRoot and enemyRoot.Parent then
+                                            hitRemote:FireServer(enemyRoot, targetPos)
+                                        end
                                     end
                                 end)
                             end
@@ -222,14 +206,20 @@ task.spawn(function()
     end
 end)
 
--- Nút bấm tương tác đổi màu khi Bật/Tắt
-ToggleBtn.MouseButton1Click:Connect(function()
-    AutoFastAttack = not AutoFastAttack
-    if AutoFastAttack then
-        ToggleBtn.Text = "FAST ATTACK: ON"
-        ToggleBtn.BackgroundColor3 = Color3.fromRGB(50, 150, 50)
-    else
-        ToggleBtn.Text = "FAST ATTACK: OFF"
-        ToggleBtn.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
-    end
-end)
+-- NÚT BẬT/TẮT TRÊN GIAO DIỆN
+FarmTab:CreateToggle({
+   Name = "⚡ KÍCH HOẠT TĂNG SPEED CHÉM (FAST ATTACK)",
+   CurrentValue = false,
+   Flag = "ToggleFastAttack", 
+   Callback = function(Value)
+       AutoFastAttack = Value
+       if Value then
+           Rayfield:Notify({
+               Title = "Minos Hub",
+               Content = "Đã kích hoạt Auto Farm Campaign thành công!",
+               Duration = 3,
+               Image = 4483362458,
+           })
+       end
+   end
+})
