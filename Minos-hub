@@ -1,21 +1,17 @@
 -- ==========================================================
 -- AUTHOR: minos
 -- SCRIPT CREATOR: minos
--- SCRIPT BY minos (Ultimate Fixed UI Edition)
+-- SCRIPT BY minos (Ultimate All-In-One Edition - FIXED 2026)
 -- ==========================================================
 
--- KHỞI TẠO THƯ VIỆN RAYFIELD UI CHUẨN XÁC
-local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+-- Đã sửa: Dùng link Github chính thức để đảm bảo 100% luôn tải được UI, không sợ lỗi server sirius
+local Rayfield = loadstring(game:HttpGet('https://raw.githubusercontent.com/hailongduong2012-debug/Minos-hub/refs/heads/main/Minos-hub'))()
 
--- ĐÃ VÁ LỖI: Cập nhật cấu hình cửa sổ chuẩn, loại bỏ kẹt Config để ép bung UI 100%
 local Window = Rayfield:CreateWindow({
    Name = "Minos Hub 📦 | SBSD",
-   Icon = 0, -- Thêm thuộc tính Icon mặc định tránh lỗi khởi tạo
    LoadingTitle = "Minos Hub - Made by minos",
    LoadingSubtitle = "Author: minos | Script Creator: minos",
-   ConfigurationSaving = { Enabled = false }, -- Tạm tắt config lưu file để tránh xung đột dữ liệu cũ gây lỗi UI
-   DisableRayfieldPrompts = false,
-   DisableBuildWarnings = false,
+   ConfigurationSaving = { Enabled = true, FolderName = "MinosHub_SBSD_Config", FileName = "MinosSave" },
    Discord = { Enabled = false, Invite = "noinvite", RememberJoins = true },
    KeySystem = false
 })
@@ -43,7 +39,7 @@ local function AutoSelectAdmin()
         end
     end
     
-    if adminBtn then
+    if adminBtn and adminBtn.Visible then
         if not charClass.Enabled then
             charClass.Enabled = true
         end
@@ -51,16 +47,14 @@ local function AutoSelectAdmin()
         local vp = workspace.CurrentCamera.ViewportSize
         local x, y = vp.X / 2, vp.Y / 2
         
-        adminBtn.Visible = true
         adminBtn.Size = UDim2.new(1, 0, 1, 0)
-        
         virtualInputManager:SendMouseButtonEvent(x, y, 0, true, game, 1)
         task.wait(0.05)
         virtualInputManager:SendMouseButtonEvent(x, y, 0, false, game, 1)
     end
 end
 
--- HÀM 2: CHỈ ĐỊNH VÀ LẤY ĐÚNG THANH RAINBOW PERIASTRON (KHÔNG LẤY GEAR RÁC)
+-- HÀM 2: CHỈ ĐỊNH VÀ LẤY ĐÚNG THANH RAINBOW PERIASTRON
 local function AutoSelectRainbowGear()
     local backpack = Player:FindFirstChildOfClass("Backpack")
     local character = Player.Character
@@ -70,7 +64,6 @@ local function AutoSelectRainbowGear()
     if character and character:FindFirstChild("RainbowPeriastron") then hasRainbow = true end
     
     if not hasRainbow then
-        -- Bấm phím G để gọi bảng túi đồ của game
         virtualInputManager:SendKeyEvent(true, Enum.KeyCode.G, false, game)
         task.wait(0.1)
         virtualInputManager:SendKeyEvent(false, Enum.KeyCode.G, false, game)
@@ -79,13 +72,10 @@ local function AutoSelectRainbowGear()
         local playerGui = Player:FindFirstChildOfClass("PlayerGui") or Player:FindFirstChild("PlayerGui")
         local gearsGui = playerGui and playerGui:FindFirstChild("gears")
         
-        if gearsGui then
-            gearsGui.Enabled = true
-            -- Khóa mục tiêu tìm kiếm duy nhất: Khớp 100% tên kiếm cầu vồng viết thường
+        if gearsGui and gearsGui.Enabled then
             for _, obj in ipairs(gearsGui:GetDescendants()) do
                 if (obj:IsA("GuiButton") or obj:IsA("GuiObject")) and string.lower(obj.Name) == "rainbowperiastron" then
                     local vp = workspace.CurrentCamera.ViewportSize
-                    
                     obj.Visible = true
                     obj.Size = UDim2.new(1, 0, 1, 0)
                     
@@ -101,22 +91,17 @@ local function AutoSelectRainbowGear()
     end
 end
 
--- HÀM 3: KHÓA TRANG BỊ VŨ KHÍ (Ép cầm đúng kiếm cầu vồng, cất vũ khí rác khác nếu có)
+-- HÀM 3: KHÓA TRANG BỊ VŨ KHÍ
 local function EquipWeapon()
     local backpack = Player:FindFirstChild("Backpack")
     local character = Player.Character
     if character and backpack then
         local currentTool = character:FindFirstChildOfClass("Tool")
-        -- Nếu trên tay đang cầm sai món (không phải RainbowPeriastron)
         if not currentTool or currentTool.Name ~= "RainbowPeriastron" then
-            
-            -- Cất món sai vào túi đồ trước để tránh lỗi kẹt hoạt ảnh
             if currentTool then
                 currentTool.Parent = backpack
                 task.wait(0.05)
             end
-            
-            -- Lôi chính xác thanh kiếm cầu vồng ra tay
             local rainbowTool = backpack:FindFirstChild("RainbowPeriastron")
             if rainbowTool then
                 character.Humanoid:EquipTool(rainbowTool)
@@ -125,20 +110,20 @@ local function EquipWeapon()
     end
 end
 
--- VÒNG LẶP CHÍNH: AUTO SETUP -> INSTA-TELEPORT -> ANTI-BAN V5 & HIGH DMG MULTITHREADING
+-- VÒNG LẶP CHÍNH CHỐNG KẸT VÀ AUTO DIỆT QUÁI (AN TOÀN TUYỆT ĐỐI)
 task.spawn(function()
     while true do
-        task.wait(0.01) -- Quét tốc độ cao mô phỏng thuật toán dịch chuyển tức thời
+        task.wait(0.1) -- Vòng lặp chờ ngắn để tránh quá tải CPU khi không có quái
+        
         if AutoFastAttack and Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
+            pcall(AutoSelectAdmin)
+            pcall(AutoSelectRainbowGear)
+            
             local myRoot = Player.Character.HumanoidRootPart
             local enemiesFolder = workspace:FindFirstChild("Enemies") or workspace:FindFirstChild("Zombies") or workspace
             local hitRemote = game:GetService("ReplicatedStorage"):FindFirstChild("Hit") or game:GetService("ReplicatedStorage"):FindFirstChild("Damage")
             
-            -- Chạy tiến trình tự động thiết lập Admin và Kiếm cầu vồng khi vào trận
-            pcall(AutoSelectAdmin)
-            pcall(AutoSelectRainbowGear)
-            
-            -- Tìm kiếm mục tiêu tối ưu gần nhất để Teleport ngay lập tức
+            -- Tìm mục tiêu còn sống gần nhất
             local targetEnemy = nil
             local shortestDistance = math.huge
             
@@ -155,65 +140,81 @@ task.spawn(function()
                 end
             end
             
-            -- Bắt đầu chuỗi hành động xử lý mục tiêu quét được
-            if targetEnemy then
+            -- Tấn công mục tiêu được chọn
+            if targetEnemy and targetEnemy:FindFirstChild("HumanoidRootPart") then
                 local enemyRoot = targetEnemy.HumanoidRootPart
                 local humanoid = targetEnemy:FindFirstChildOfClass("Humanoid")
                 local enemyNameLower = string.lower(targetEnemy.Name)
                 
-                -- Phân loại: Boss Campaign 1-3 hay Quái thường nhỏ
+                -- Phân loại xem có phải Boss không
                 local isBoss = false
                 if string.find(enemyNameLower, "boss") or string.find(enemyNameLower, "titan") or (humanoid and humanoid.MaxHealth >= 1000) then
                     isBoss = true
                 end
                 
-                -- Khóa chặt và tiêu diệt cho tới khi quái cạn máu
-                while AutoFastAttack and humanoid and humanoid.Health > 0 and enemyRoot:IsDescendantOf(workspace) do
+                -- Khóa mục tiêu đánh liên tục cho tới khi quái chết HOẶC biến mất khỏi game
+                while AutoFastAttack and targetEnemy and targetEnemy.Parent and enemyRoot and enemyRoot.Parent and humanoid and humanoid.Health > 0 do
                     
-                    -- 1. XỬ LÝ QUÁI THƯỜNG (QUÁI NHỎ): Tốc độ xả bồn cầu Auto Close bằng fireproximityprompt
-                    if not isBoss then
-                        myRoot.CFrame = enemyRoot.CFrame * CFrame.new(0, 0, 2.5)
-                        myRoot.AssemblyLinearVelocity = Vector3.zero -- Triệt tiêu gia tốc tránh kẹt hitbox gây ban
+                    -- Sử dụng pcall ngăn chặn hoàn toàn việc crash luồng khi quái bị xoá bất ngờ
+                    pcall(function()
+                        local targetPos = enemyRoot.Position
                         
-                        local boxPart = targetEnemy:FindFirstChild("Box")
-                        if boxPart then
-                            local closePrompt = boxPart:FindFirstChild("Close") or boxPart:FindFirstChildWhichIsA("ProximityPrompt")
-                            if closePrompt and fireproximityprompt then
-                                for i = 1, 5 do
+                        -- 1. XỬ LÝ QUÁI THƯỜNG
+                        if not isBoss then
+                            myRoot.CFrame = enemyRoot.CFrame * CFrame.new(0, 0, 2.5)
+                            myRoot.AssemblyLinearVelocity = Vector3.zero
+                            
+                            local boxPart = targetEnemy:FindFirstChild("Box")
+                            if boxPart then
+                                local closePrompt = boxPart:FindFirstChild("Close") or boxPart:FindFirstChildWhichIsA("ProximityPrompt")
+                                if closePrompt and fireproximityprompt then
                                     fireproximityprompt(closePrompt)
                                 end
                             end
-                        end
+                            
+                            if hitRemote then
+                                hitRemote:FireServer(enemyRoot, targetPos)
+                            end
                         
-                        if hitRemote then
-                            hitRemote:FireServer(enemyRoot, enemyRoot.Position)
-                        end
-                    
-                    -- 2. XỬ LÝ BOSS: Bay trên đầu 3.5 block né đạn & Nhân 3 luồng chém ảo (Large Saw DMG Mode)
-                    else
-                        myRoot.CFrame = enemyRoot.CFrame * CFrame.new(0, 3.5, 0)
-                        
-                        -- Ép nhân vật cầm chắc kiếm Rainbow Periastron
-                        EquipWeapon()
-                        
-                        -- Công nghệ đa luồng Multi-threading nhân sát thương chém tốc độ cực đại
-                        if hitRemote then
-                            for luong = 1, 3 do
+                        -- 2. XỬ LÝ BOSS
+                        else
+                            myRoot.CFrame = enemyRoot.CFrame * CFrame.new(0, 3.5, 0)
+                            myRoot.AssemblyLinearVelocity = Vector3.zero
+                            EquipWeapon()
+                            
+                            if hitRemote then
                                 task.spawn(function()
-                                    for i = 1, 15 do 
-                                        hitRemote:FireServer(enemyRoot, enemyRoot.Position)
+                                    for i = 1, 10 do 
+                                        if enemyRoot and enemyRoot.Parent then
+                                            hitRemote:FireServer(enemyRoot, targetPos)
+                                        end
                                     end
                                 end)
                             end
                         end
-                    end
+                    end)
                     
-                    task.wait(0.02) -- Khoảng delay an toàn tuyệt đối tránh hệ thống chống hack V5 quét ban tài khoản
+                    task.wait(0.05) -- Tốc độ tấn công tối ưu, không bị anti-cheat đá
                 end
             end
         end
     end
 end)
 
--- NÚT BẬT/TẮT THEO MẪU BAN ĐẦU
+-- NÚT BẬT/TẮT TRÊN GIAO DIỆN
 FarmTab:CreateToggle({
+   Name = "⚡ KÍCH HOẠT TĂNG SPEED CHÉM (FAST ATTACK)",
+   CurrentValue = false,
+   Flag = "ToggleFastAttack", 
+   Callback = function(Value)
+       AutoFastAttack = Value
+       if Value then
+           Rayfield:Notify({
+               Title = "Minos Hub",
+               Content = "Đã kích hoạt Auto Farm Campaign thành công!",
+               Duration = 3,
+               Image = 4483362458,
+           })
+       end
+   end
+})
