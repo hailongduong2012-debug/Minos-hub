@@ -1,48 +1,53 @@
 -- ==========================================================
 -- AUTHOR: minos
--- SCRIPT BY minos (Ultimate Custom Damage & Attack Speed)
+-- SCRIPT BY minos (Ultimate Custom Damage & Attack Speed - Standard Fix)
 -- ==========================================================
 
+-- KHỞI TẠO THƯ VIỆN RAYFIELD THEO ĐÚNG LINK SBSD CỦA BẠN
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
    Name = "Minos Hub 📦 | SBSD",
    LoadingTitle = "Minos Hub",
    LoadingSubtitle = "Author: minos",
-   ConfigurationSaving = {
-      Enabled = false,
-      Folder = "MinosHub_SBSD_Config",
-      FileName = "MinosSave"
-   },
-   Discord = {
-      Enabled = false,
-      Invite = "noinvite",
-      RememberJoins = true
-   },
-   KeySystem = false
+   Theme = "Default",
+   DisableRayfieldPrompts = false,
+   DisableBuildWarnings = false,
+   ConfigurationSaving = { Enabled = false } -- Tắt để tránh cache UI cũ đè nút mới
 })
 
-local FarmTab = Window:CreateTab("Auto Campaign", 4483362458)
-local InfoTab = Window:CreateTab("Credits", 4483362458)
+-- ĐÃ FIX: Đồng bộ cấu trúc tạo Tab dạng Table chuẩn Rayfield giống hệt file gốc của bạn
+local FarmTab = Window:CreateTab({
+    Name = "Auto Campaign",
+    Icon = 4483362458
+})
 
+local InfoTab = Window:CreateTab({
+    Name = "Credits",
+    Icon = 4483362458
+})
+
+-- Xóa bỏ hoàn toàn thông tin liên quan tới Script Creator
 InfoTab:CreateParagraph({Title = "Script Information", Content = "• Author: minos\n\nChúc các bạn hack game vui vẻ!"})
 
--- CÁC BIẾN CẤU HÌNH TRẠNG THÁI
+-- CÁC BIẾN CẤU HÌNH TRẠNG THÁI ĐỘC LẬP
 local AutoAdmin = false
 local AutoGetGear = false
 local AutoEquip = false
 local AutoFastAttack = false
 
--- BIẾN TÙY CHỈNH MỚI: TỐC ĐỘ VÀ SÁT THƯƠNG
-local CustomDamageAmount = 10 -- Mặc định đập Boss 10 phát/nhịp
-local CustomAttackDelay = 0.05 -- Mặc định delay 0.05 giây
+-- BIẾN ĐIỀU CHỈNH SÁT THƯƠNG VÀ TỐC ĐỘ CHÉM
+local CustomDamageAmount = 10 
+local CustomAttackDelay = 0.05 
 
-local Player = game:GetService("Players").LocalPlayer
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
 local virtualInputManager = game:GetService("VirtualInputManager")
+local runService = game:GetService("RunService")
 
--- HÀM 1: CHỌN NHÂN VẬT ADMIN THEO BẢN CỦA GARRY
+-- HÀM 1: CHỌN NHÂN VẬT ADMIN THEO BẢN KÍCH HOẠT GARRY
 local function ProcessSelectAdmin()
-    local playerGui = Player:FindFirstChildOfClass("PlayerGui") or Player:FindFirstChild("PlayerGui")
+    local playerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui") or LocalPlayer:FindFirstChild("PlayerGui")
     local charClass = playerGui and playerGui:FindFirstChild("CharClass")
     if not charClass then return end
     
@@ -61,10 +66,10 @@ local function ProcessSelectAdmin()
     end
 end
 
--- HÀM 2: LẤY VŨ KHÍ THEO PHƯƠNG PHÁP GARRY + KHÓA CỨNG SLOT KHO ĐỒ
+-- HÀM 2: LẤY VŨ KHÍ GARRY METHOD + KHÓA CỨNG SLOT KHO ĐỒ TIẾN HÓA
 local function ProcessGetRainbowGear()
-    local backpack = Player:FindFirstChildOfClass("Backpack")
-    local character = Player.Character
+    local backpack = LocalPlayer:FindFirstChildOfClass("Backpack")
+    local character = LocalPlayer.Character
     local hasRainbow = (backpack and backpack:FindFirstChild("RainbowPeriastron")) or (character and character:FindFirstChild("RainbowPeriastron"))
     
     if not hasRainbow then
@@ -73,7 +78,7 @@ local function ProcessGetRainbowGear()
         virtualInputManager:SendKeyEvent(false, Enum.KeyCode.G, false, game)
         task.wait(0.2)
         
-        local playerGui = Player:FindFirstChildOfClass("PlayerGui") or Player:FindFirstChild("PlayerGui")
+        local playerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui") or LocalPlayer:FindFirstChild("PlayerGui")
         local gearsGui = playerGui and playerGui:FindFirstChild("gears")
         
         if gearsGui and gearsGui.Enabled then
@@ -114,8 +119,8 @@ end
 
 -- HÀM 3: TỰ ĐỘNG KHÓA VÀ TRANG BỊ VŨ KHÍ
 local function ProcessEquipWeapon()
-    local backpack = Player:FindFirstChild("Backpack")
-    local character = Player.Character
+    local backpack = LocalPlayer:FindFirstChild("Backpack")
+    local character = LocalPlayer.Character
     if character and backpack then
         local currentTool = character:FindFirstChildOfClass("Tool")
         if not currentTool or currentTool.Name ~= "RainbowPeriastron" then
@@ -136,13 +141,13 @@ task.spawn(function()
     end
 end)
 
--- VÒNG LẶP CHÍNH AUTO FARM VỚI TỐC ĐỘ VÀ DAM TÙY CHỈNH
+-- VÒNG LẶP CHÍNH AUTO FARM VỚI TỐC ĐỘ VÀ SÁT THƯƠNG TÙY CHỈNH CHỐNG KẸT BOSS
 task.spawn(function()
     while true do
         task.wait(0.1)
         
-        if AutoFastAttack and Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
-            local myRoot = Player.Character.HumanoidRootPart
+        if AutoFastAttack and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            local myRoot = LocalPlayer.Character.HumanoidRootPart
             local enemiesFolder = workspace:FindFirstChild("Enemies") or workspace:FindFirstChild("Zombies") or workspace
             local hitRemote = game:GetService("ReplicatedStorage"):FindFirstChild("Hit") or game:GetService("ReplicatedStorage"):FindFirstChild("Damage")
             
@@ -174,7 +179,7 @@ task.spawn(function()
                         local targetPos = enemyRoot.Position
                         
                         if not isBoss then
-                            -- Diệt quái thường (Áp dụng Delay tốc độ chém tùy chọn)
+                            -- Diệt quái thường
                             myRoot.CFrame = enemyRoot.CFrame * CFrame.new(0, 0, 2.5)
                             myRoot.AssemblyLinearVelocity = Vector3.zero
                             
@@ -186,13 +191,12 @@ task.spawn(function()
                             
                             if hitRemote then hitRemote:FireServer(enemyRoot, targetPos) end
                         else
-                            -- Diệt Boss/Titan (Áp dụng Sát thương lớn/nhỏ tùy chọn bằng vòng lặp loop gửi)
+                            -- Diệt Boss/Titan (Gửi số lượng Remote chém dựa theo Slider chọn sát thương to hay nhỏ)
                             myRoot.CFrame = enemyRoot.CFrame * CFrame.new(0, 3.5, 0)
                             myRoot.AssemblyLinearVelocity = Vector3.zero
                             
                             if hitRemote then
                                 task.spawn(function()
-                                    -- Số lần chém chạy theo thanh trượt CustomDamageAmount bạn cấu hình
                                     for i = 1, CustomDamageAmount do 
                                         if enemyRoot and enemyRoot.Parent then
                                             hitRemote:FireServer(enemyRoot, targetPos)
@@ -202,7 +206,6 @@ task.spawn(function()
                             end
                         end
                     end)
-                    -- Nhịp delay được cập nhật trực tiếp theo giá trị thanh CustomAttackDelay
                     task.wait(CustomAttackDelay)
                 end
             end
@@ -211,9 +214,4 @@ task.spawn(function()
 end)
 
 -- ==========================================================
--- GIAO DIỆN ĐIỀU KHIỂN & ĐIỀU CHỈNH SỐ LIỆU
--- ==========================================================
-
-FarmTab:CreateToggle({
-   Name = "👑 Auto Select Admin Character",
-   CurrentValue = false,
+-- GIAO DIỆN PHÂN TÁCH NÚT TOGGLE & THANH KÉO SLIDER
