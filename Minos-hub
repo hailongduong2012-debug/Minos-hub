@@ -4,10 +4,9 @@
 -- SCRIPT BY minos
 -- ==========================================================
 
--- ĐÃ SỬA: Thay thế link lỗi bằng đường link Rayfield chính thức, hoạt động ổn định
+-- ĐÃ SỬA CHÍNH XÁC 100%: Dẫn thẳng tới thư viện Rayfield UI
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
--- Khởi tạo Cửa sổ giao diện chính với tên Minos Hub
 local Window = Rayfield:CreateWindow({
    Name = "Minos Hub 📦 | SBSD",
    LoadingTitle = "Minos Hub - Made by minos",
@@ -25,44 +24,78 @@ InfoTab:CreateParagraph({Title = "Script Information", Content = "• Author: mi
 local AutoFastAttack = false
 local Player = game:GetService("Players").LocalPlayer
 
--- HÀM TỰ ĐỘNG CẦM VŨ KHÍ (Cần thiết để kích hoạt sát thương)
+-- HÀM CẦM VŨ KHÍ TỰ ĐỘNG (Giữ vũ khí ổn định không bị bật/tắt)
 local function EquipWeapon()
     local backpack = Player:FindFirstChild("Backpack")
     local character = Player.Character
     if character and backpack then
-        for _, tool in pairs(backpack:GetChildren()) do
-            if tool:IsA("Tool") then
-                character.Humanoid:EquipTool(tool)
-                break
+        if not character:FindFirstChildOfClass("Tool") then
+            for _, tool in pairs(backpack:GetChildren()) do
+                if tool:IsA("Tool") then
+                    character.Humanoid:EquipTool(tool)
+                    break
+                end
             end
         end
     end
 end
 
--- HÀM TĂNG SPEED CHÉM SIÊU TỐC (FAST ATTACK MULTIHIT)
+-- VÒNG LẶP CHÍNH: QUÉT QUÁI - PHÂN LOẠI XỬ LÝ (ĐÓNG HỘP / CHÉM BOSS)
 task.spawn(function()
     while true do
-        task.wait(0.1) -- Đã chỉnh từ 0.01 lên 0.1 để tránh gây nghẽn bộ nhớ máy (Crash game)
+        task.wait(0.1)
         if AutoFastAttack and Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
-            -- Định vị mục tiêu trong SBSD
+            local myRoot = Player.Character.HumanoidRootPart
             local enemiesFolder = workspace:FindFirstChild("Enemies") or workspace:FindFirstChild("Zombies") or workspace
             local hitRemote = game:GetService("ReplicatedStorage"):FindFirstChild("Hit") or game:GetService("ReplicatedStorage"):FindFirstChild("Damage")
+            local interactRemote = game:GetService("ReplicatedStorage"):FindFirstChild("Interact") or game:GetService("ReplicatedStorage"):FindFirstChild("CloseBox")
             
             for _, enemy in pairs(enemiesFolder:GetChildren()) do
                 if enemy:IsA("Model") and enemy:FindFirstChild("HumanoidRootPart") then
+                    local enemyRoot = enemy.HumanoidRootPart
                     local humanoid = enemy:FindFirstChildOfClass("Humanoid")
                     
-                    -- Dồn sát thương siêu tốc liên tục cho đến khi con quái này gục
-                    while AutoFastAttack and humanoid and humanoid.Health > 0 and enemy:FindFirstChild("HumanoidRootPart") do
-                        task.wait(0.05) -- Tốc độ chém dồn dập
-                        EquipWeapon()  -- Luôn đảm bảo cầm vũ khí
+                    -- Kiểm tra xem mục tiêu có phải là Boss dựa trên Tên hoặc Lượng máu lớn
+                    local isBoss = false
+                    if string.find(string.lower(enemy.Name), "boss") or string.find(string.lower(enemy.Name), "titan") or (humanoid and humanoid.MaxHealth >= 1000) then
+                        isBoss = true
+                    end
+                    
+                    -- Bám sát và xử lý mục tiêu
+                    while AutoFastAttack and humanoid and humanoid.Health > 0 and enemyRoot:IsDescendantOf(workspace) do
                         
-                        -- Gửi đồng loạt lệnh chém cùng lúc để nhân sát thương (Đã giảm xuống 8 lần để tránh bị game kick do lỗi spam Remote quá nhanh)
-                        if hitRemote then
-                            for i = 1, 8 do 
-                                hitRemote:FireServer(enemy.HumanoidRootPart, enemy.HumanoidRootPart.Position)
+                        -- 1. XỬ LÝ QUÁI THƯỜNG (QUÁI NHỎ): Dịch chuyển đến và ưu tiên đóng hộp
+                        if not isBoss then
+                            -- Teleport sát bên cạnh để đóng hộp
+                            myRoot.CFrame = enemyRoot.CFrame * CFrame.new(0, 0, 2)
+                            
+                            -- Gửi tín hiệu đóng hộp qua Remote (Nếu game hỗ trợ)
+                            if interactRemote then
+                                interactRemote:FireServer(enemy)
+                            end
+                            
+                            -- Đánh thêm vài phát cận chiến nhẹ để quái nhanh chết
+                            if hitRemote then
+                                hitRemote:FireServer(enemyRoot, enemyRoot.Position)
+                            end
+                        
+                        -- 2. XỬ LÝ BOSS / QUÁI LỚN: Teleport lên trên đầu để né đạn tầm xa & Spam chém siêu tốc
+                        else
+                            -- Teleport lên trên đầu Boss 3 block để tránh bị dính skill tầm xa dưới đất
+                            myRoot.CFrame = enemyRoot.CFrame * CFrame.new(0, 3, 0)
+                            
+                            -- Đảm bảo đang cầm kiếm
+                            EquipWeapon()
+                            
+                            -- Spam chém siêu tốc dồn dập (10 lần liên tục mỗi vòng lặp)
+                            if hitRemote then
+                                for i = 1, 10 do 
+                                    hitRemote:FireServer(enemyRoot, enemyRoot.Position)
+                                end
                             end
                         end
+                        
+                        task.wait(0.05) -- Tốc độ vòng lặp tấn công
                     end
                 end
             end
@@ -70,6 +103,7 @@ task.spawn(function()
     end
 end)
 
+-- NÚT BẬT/TẮT THEO MẪU BAN ĐẦU
 FarmTab:CreateToggle({
    Name = "⚡ KÍCH HOẠT TĂNG SPEED CHÉM (FAST ATTACK)",
    CurrentValue = false,
@@ -79,14 +113,14 @@ FarmTab:CreateToggle({
        if Value then
            Rayfield:Notify({
               Title = "Minos Hub",
-              Content = "Đã BẬT Tăng Speed Chém! Hãy đứng gần quái/hộp để xả sát thương siêu tốc!",
+              Content = "Đã BẬT! Tự động bay đóng hộp quái nhỏ và xả sát thương siêu tốc lên Boss!",
               Duration = 4,
               Image = 4483362458,
            })
        else
            Rayfield:Notify({
               Title = "Minos Hub",
-              Content = "Đã TẮT Tăng Speed Chém!",
+              Content = "Đã TẮT tính năng tự động farm!",
               Duration = 3,
               Image = 4483362458,
            })
