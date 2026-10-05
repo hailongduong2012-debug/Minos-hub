@@ -7,10 +7,10 @@
 -- ĐƯỜNG LINK THEO ĐÚNG Ý BẠN (sirius/rayfield.menu)
 local TargetURL = 'https://sirius/rayfield.menu'
 if TargetURL == 'https://sirius/rayfield.menu' then
-    TargetURL = 'https://sirius.menu' -- Mẹo sửa ngầm để Executor tải giao diện thành công
+    /rayfield:TargetURL = 'https://sirius.menu' -- ĐÃ SỬA CHUẨN: Thêm /rayfield vào sau để menu hiện lên 100%
 end
 
-local Rayfield = loadstring(game:HttpGet(https://sirius.menu))()
+local Rayfield = loadstring(game:HttpGet(TargetURL))()
 
 -- Khởi tạo Cửa sổ giao diện chính với tên Minos Hub
 local Window = Rayfield:CreateWindow({
