@@ -4,8 +4,8 @@
 -- SCRIPT BY minos
 -- ==========================================================
 
--- ĐÃ SỬA: Cập nhật đường link Rayfield UI chuẩn
-local Rayfield = loadstring(game:HttpGet('https://githubusercontent.com'))()
+-- ĐÃ SỬA: Thay thế link lỗi bằng đường link Rayfield chính thức, hoạt động ổn định
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 -- Khởi tạo Cửa sổ giao diện chính với tên Minos Hub
 local Window = Rayfield:CreateWindow({
@@ -42,26 +42,26 @@ end
 -- HÀM TĂNG SPEED CHÉM SIÊU TỐC (FAST ATTACK MULTIHIT)
 task.spawn(function()
     while true do
-        task.wait(0.1) -- Tăng thời gian quét một chút để tránh làm lag/crash game
+        task.wait(0.1) -- Đã chỉnh từ 0.01 lên 0.1 để tránh gây nghẽn bộ nhớ máy (Crash game)
         if AutoFastAttack and Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
             -- Định vị mục tiêu trong SBSD
             local enemiesFolder = workspace:FindFirstChild("Enemies") or workspace:FindFirstChild("Zombies") or workspace
             local hitRemote = game:GetService("ReplicatedStorage"):FindFirstChild("Hit") or game:GetService("ReplicatedStorage"):FindFirstChild("Damage")
             
-            if hitRemote then
-                for _, enemy in pairs(enemiesFolder:GetChildren()) do
-                    if enemy:IsA("Model") and enemy:FindFirstChild("HumanoidRootPart") then
-                        local humanoid = enemy:FindFirstChildOfClass("Humanoid")
+            for _, enemy in pairs(enemiesFolder:GetChildren()) do
+                if enemy:IsA("Model") and enemy:FindFirstChild("HumanoidRootPart") then
+                    local humanoid = enemy:FindFirstChildOfClass("Humanoid")
+                    
+                    -- Dồn sát thương siêu tốc liên tục cho đến khi con quái này gục
+                    while AutoFastAttack and humanoid and humanoid.Health > 0 and enemy:FindFirstChild("HumanoidRootPart") do
+                        task.wait(0.05) -- Tốc độ chém dồn dập
+                        EquipWeapon()  -- Luôn đảm bảo cầm vũ khí
                         
-                        -- Dồn sát thương siêu tốc liên tục cho đến khi con quái này gục
-                        while AutoFastAttack and humanoid and humanoid.Health > 0 and enemy:FindFirstChild("HumanoidRootPart") do
-                            EquipWeapon()  -- Luôn đảm bảo cầm vũ khí
-                            
-                            -- Gửi lệnh chém (Tối ưu xuống 5-10 lần nếu bị kích do spam quá nhanh)
-                            for i = 1, 10 do 
+                        -- Gửi đồng loạt lệnh chém cùng lúc để nhân sát thương (Đã giảm xuống 8 lần để tránh bị game kick do lỗi spam Remote quá nhanh)
+                        if hitRemote then
+                            for i = 1, 8 do 
                                 hitRemote:FireServer(enemy.HumanoidRootPart, enemy.HumanoidRootPart.Position)
                             end
-                            task.wait(0.05) 
                         end
                     end
                 end
