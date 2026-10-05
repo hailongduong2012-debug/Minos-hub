@@ -1,17 +1,45 @@
 -- ==========================================================
 -- AUTHOR: minos
--- SCRIPT CREATOR: minos
--- SCRIPT BY minos (Ultimate All-In-One Edition - FIXED 2026)
+-- SCRIPT BY minos (Ultimate All-In-One - ANTI-CRASH UI)
 -- ==========================================================
 
--- Đã sửa: Dùng link Github chính thức để đảm bảo 100% luôn tải được UI, không sợ lỗi server sirius
-local Rayfield = loadstring(game:HttpGet('https://raw.githubusercontent.com/hailongduong2012-debug/Minos-hub/refs/heads/main/Minos-hub'))()
+-- BƯỚC KHỞI ĐẦU CHỐNG KẸT UI: Tự động tìm và xóa UI cũ nếu đã có sẵn trong game
+local CoreGui = game:GetService("CoreGui")
+local Players = game:GetService("Players")
+local Player = Players.LocalPlayer
 
+for _, child in ipairs(CoreGui:GetChildren()) do
+    if child:IsA("ScreenGui") and (string.find(child.Name, "Rayfield") or string.find(child.Name, "Minos")) then
+        child:Destroy()
+    end
+end
+if Player:FindFirstChild("PlayerGui") then
+    for _, child in ipairs(Player.PlayerGui:GetChildren()) do
+        if child:IsA("ScreenGui") and (string.find(child.Name, "Rayfield") or string.find(child.Name, "Minos")) then
+            child:Destroy()
+        end
+    end
+end
+
+-- KÍCH HOẠT CHẾ ĐỘ BẢO MẬT GIẢM THIỂU PHÁT HIỆN & TRÁNH CRASH CỦA RAYFIELD
+getgenv().SecureMode = true  --
+
+-- Nạp thư viện Rayfield chính thức (Bọc trong pcall bảo vệ)
+local success, Rayfield = pcall(function()
+    return loadstring(game:HttpGet('https://raw.githubusercontent.com/hailongduong2012-debug/Minos-hub/refs/heads/main/Minos-hub'))()
+end)
+
+if not success or not Rayfield then
+    -- Nếu link Github chính thức bị lỗi, tự động chuyển sang link nạp thô dự phòng
+    Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+end
+
+-- TẠO WINDOW GIAO DIỆN
 local Window = Rayfield:CreateWindow({
    Name = "Minos Hub 📦 | SBSD",
    LoadingTitle = "Minos Hub - Made by minos",
    LoadingSubtitle = "Author: minos | Script Creator: minos",
-   ConfigurationSaving = { Enabled = true, FolderName = "MinosHub_SBSD_Config", FileName = "MinosSave" },
+   ConfigurationSaving = { Enabled = false, FolderName = "MinosHub_SBSD_Config", FileName = "MinosSave" }, -- Tạm tắt config để tránh lỗi không lên UI do file save cũ lỗi
    Discord = { Enabled = false, Invite = "noinvite", RememberJoins = true },
    KeySystem = false
 })
@@ -22,7 +50,6 @@ local InfoTab = Window:CreateTab("Credits", 4483362458)
 InfoTab:CreateParagraph({Title = "Script Information", Content = "• Author: minos\n• Script Creator: minos\n• Script by minos\n\nChúc các bạn hack game vui vẻ!"})
 
 local AutoFastAttack = false
-local Player = game:GetService("Players").LocalPlayer
 local virtualInputManager = game:GetService("VirtualInputManager")
 
 -- HÀM 1: TỰ ĐỘNG CHỌN NHÂN VẬT ADMIN
@@ -110,10 +137,10 @@ local function EquipWeapon()
     end
 end
 
--- VÒNG LẶP CHÍNH CHỐNG KẸT VÀ AUTO DIỆT QUÁI (AN TOÀN TUYỆT ĐỐI)
+-- VÒNG LẶP CHÍNH CHỐNG KẸT VÀ AUTO DIỆT QUÁI
 task.spawn(function()
     while true do
-        task.wait(0.1) -- Vòng lặp chờ ngắn để tránh quá tải CPU khi không có quái
+        task.wait(0.1)
         
         if AutoFastAttack and Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
             pcall(AutoSelectAdmin)
@@ -123,7 +150,6 @@ task.spawn(function()
             local enemiesFolder = workspace:FindFirstChild("Enemies") or workspace:FindFirstChild("Zombies") or workspace
             local hitRemote = game:GetService("ReplicatedStorage"):FindFirstChild("Hit") or game:GetService("ReplicatedStorage"):FindFirstChild("Damage")
             
-            -- Tìm mục tiêu còn sống gần nhất
             local targetEnemy = nil
             local shortestDistance = math.huge
             
@@ -140,26 +166,20 @@ task.spawn(function()
                 end
             end
             
-            -- Tấn công mục tiêu được chọn
             if targetEnemy and targetEnemy:FindFirstChild("HumanoidRootPart") then
                 local enemyRoot = targetEnemy.HumanoidRootPart
                 local humanoid = targetEnemy:FindFirstChildOfClass("Humanoid")
                 local enemyNameLower = string.lower(targetEnemy.Name)
                 
-                -- Phân loại xem có phải Boss không
                 local isBoss = false
                 if string.find(enemyNameLower, "boss") or string.find(enemyNameLower, "titan") or (humanoid and humanoid.MaxHealth >= 1000) then
                     isBoss = true
                 end
                 
-                -- Khóa mục tiêu đánh liên tục cho tới khi quái chết HOẶC biến mất khỏi game
                 while AutoFastAttack and targetEnemy and targetEnemy.Parent and enemyRoot and enemyRoot.Parent and humanoid and humanoid.Health > 0 do
-                    
-                    -- Sử dụng pcall ngăn chặn hoàn toàn việc crash luồng khi quái bị xoá bất ngờ
                     pcall(function()
                         local targetPos = enemyRoot.Position
                         
-                        -- 1. XỬ LÝ QUÁI THƯỜNG
                         if not isBoss then
                             myRoot.CFrame = enemyRoot.CFrame * CFrame.new(0, 0, 2.5)
                             myRoot.AssemblyLinearVelocity = Vector3.zero
@@ -175,8 +195,6 @@ task.spawn(function()
                             if hitRemote then
                                 hitRemote:FireServer(enemyRoot, targetPos)
                             end
-                        
-                        -- 2. XỬ LÝ BOSS
                         else
                             myRoot.CFrame = enemyRoot.CFrame * CFrame.new(0, 3.5, 0)
                             myRoot.AssemblyLinearVelocity = Vector3.zero
@@ -193,8 +211,7 @@ task.spawn(function()
                             end
                         end
                     end)
-                    
-                    task.wait(0.05) -- Tốc độ tấn công tối ưu, không bị anti-cheat đá
+                    task.wait(0.05)
                 end
             end
         end
@@ -212,9 +229,3 @@ FarmTab:CreateToggle({
            Rayfield:Notify({
                Title = "Minos Hub",
                Content = "Đã kích hoạt Auto Farm Campaign thành công!",
-               Duration = 3,
-               Image = 4483362458,
-           })
-       end
-   end
-})
