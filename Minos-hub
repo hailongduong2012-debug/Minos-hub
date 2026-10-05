@@ -1,0 +1,122 @@
+-- ==========================================================
+-- AUTHOR: minos
+-- SCRIPT CREATOR: minos
+-- SCRIPT BY minos
+-- ==========================================================
+
+-- Tải thư viện Rayfield UI từ đường dẫn chính thức có /rayfield
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
+-- Khởi tạo Cửa sổ giao diện chính cho SBSD
+local Window = Rayfield:CreateWindow({
+   Name = "SBSD Hub 📦 | Script by minos",
+   LoadingTitle = "SBSD Hub - Made by minos",
+   LoadingSubtitle = "Author: minos | Script Creator: minos",
+   ConfigurationSaving = {
+      Enabled = true,
+      FolderName = "SBSD_Minos_Config",
+      FileName = "MinosSave"
+   },
+   Discord = {
+      Enabled = false,
+      Invite = "noinvite",
+      RememberJoins = true
+   },
+   KeySystem = false
+})
+
+-- Tạo các Tab chức năng
+local CampaignTab = Window:CreateTab("Campaign Achievements", 4483362458)
+local FarmTab = Window:CreateTab("Auto Farm / Combat", 4483362458)
+local InfoTab = Window:CreateTab("Credits", 4483362458)
+
+-- Thông tin tác giả hiển thị trong Tab Credits
+InfoTab:CreateParagraph({Title = "Script Information", Content = "• Author: minos\n• Script Creator: minos\n• Script by minos\n\nChúc các bạn hack game vui vẻ!"})
+
+-- Biến cấu hình trạng thái
+local AutoClaim = false
+local HitRemote = game:GetService("ReplicatedStorage"):FindFirstChild("Hit")
+
+-- ==========================================
+-- LOGIC PHẦN 1: NHẬN THÀNH TỰU CAMPAIGN 1-3
+-- ==========================================
+local function ClaimSBSD_Campaign(campaignNumber)
+    Rayfield:Notify({
+       Title = "SBSD Hub (minos)",
+       Content = "Đang gửi yêu cầu nhận thưởng Campaign " .. tostring(campaignNumber),
+       Duration = 3,
+       Image = 4483362458,
+    })
+    
+    local campaignRemote = game:GetService("ReplicatedStorage"):FindFirstChild("ClaimCampaignReward") or game:GetService("ReplicatedStorage"):FindFirstChild("CampaignReward")
+    if campaignRemote then
+        campaignRemote:FireServer(campaignNumber)
+    else
+        local achRemote = game:GetService("ReplicatedStorage"):FindFirstChild("Reward") or game:GetService("ReplicatedStorage"):FindFirstChild("AchievementEvent")
+        if achRemote then
+            achRemote:FireServer("Campaign" .. tostring(campaignNumber))
+        end
+    end
+end
+
+-- Tạo giao diện nút bấm cho Tab Campaign
+CampaignTab:CreateButton({
+   Name = "Nhận Thành Tựu: Campaign 1",
+   Callback = function()
+       ClaimSBSD_Campaign(1)
+   end,
+})
+
+CampaignTab:CreateButton({
+   Name = "Nhận Thành Tựu: Campaign 2",
+   Callback = function()
+       ClaimSBSD_Campaign(2)
+   end,
+})
+
+CampaignTab:CreateButton({
+   Name = "Nhận Thành Tựu: Campaign 3",
+   Callback = function()
+       ClaimSBSD_Campaign(3)
+   end,
+})
+
+CampaignTab:CreateButton({
+   Name = "⚡ Nhận Toàn Bộ Cúp Campaign (1-3)",
+   Callback = function()
+       for i = 1, 3 do
+           ClaimSBSD_Campaign(i)
+           task.wait(0.5)
+       end
+   end,
+})
+
+-- ==========================================
+-- LOGIC PHẦN 2: AUTO FARM ĐỂ TỰ QUA ẢI CAMPAIGN
+-- ==========================================
+FarmTab:CreateToggle({
+   Name = "Auto Attack / Farm Boxes (Dùng để vượt Campaign)",
+   CurrentValue = false,
+   Flag = "AutoAttackFlag", 
+   Callback = function(Value)
+       AutoClaim = Value
+       while AutoClaim do
+           for _, enemy in pairs(workspace:FindFirstChild("Enemies") or workspace:GetChildren()) do
+               if enemy:IsA("Model") and enemy:FindFirstChild("Humanoid") and enemy.Humanoid.Health > 0 then
+                   if HitRemote then
+                       HitRemote:FireServer(enemy.HumanoidRootPart)
+                   end
+               end
+           end
+           task.wait(0.1)
+       end
+   end,
+})
+
+-- Thông báo khi tải xong menu
+Rayfield:Notify({
+   Title = "Script by minos",
+   Content = "Đã kích hoạt menu SBSD thành công!",
+   Duration = 5,
+   Image = 4483362458,
+})
