@@ -1,17 +1,16 @@
 -- ==========================================================
 -- AUTHOR: minos
--- SCRIPT CREATOR: minos
--- SCRIPT BY minos (Separated Toggles Edition - 100% CONTROL)
+-- SCRIPT BY minos (Separated Toggles - Clean Version)
 -- ==========================================================
 
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
    Name = "Minos Hub 📦 | SBSD",
-   LoadingTitle = "Minos Hub - Made by minos",
-   LoadingSubtitle = "Author: minos | Script Creator: minos",
+   LoadingTitle = "Minos Hub",
+   LoadingSubtitle = "Author: minos",
    ConfigurationSaving = {
-      Enabled = true,
+      Enabled = false, -- ĐÃ FIX: Tắt hẳn để không bị kẹt cache UI cũ, hiển thị đầy đủ nút mới
       Folder = "MinosHub_SBSD_Config",
       FileName = "MinosSave"
    },
@@ -26,7 +25,8 @@ local Window = Rayfield:CreateWindow({
 local FarmTab = Window:CreateTab("Auto Campaign", 4483362458)
 local InfoTab = Window:CreateTab("Credits", 4483362458)
 
-InfoTab:CreateParagraph({Title = "Script Information", Content = "• Author: minos\n• Script Creator: minos\n• Script by minos\n\nChúc các bạn hack game vui vẻ!"})
+-- ĐÃ FIX: Xóa sạch thông tin liên quan đến Script Creator
+InfoTab:CreateParagraph({Title = "Script Information", Content = "• Author: minos\n\nChúc các bạn hack game vui vẻ!"})
 
 -- CÁC BIẾN TRẠNG THÁI ĐỘC LẬP
 local AutoAdmin = false
