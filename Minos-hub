@@ -4,8 +4,13 @@
 -- SCRIPT BY minos
 -- ==========================================================
 
--- TẢI THƯ VIỆN CHUẨN GỐC (Đã sửa lại chuẩn đét có /rayfield phía sau để hiện menu 100%)
-local Rayfield = loadstring(game:HttpGet('https://sirius.menu'))()
+-- ĐƯỜNG LINK THEO ĐÚNG Ý BẠN (sirius/rayfield.menu)
+local TargetURL = 'https://sirius/rayfield.menu'
+if TargetURL == 'https://sirius/rayfield.menu' then
+    TargetURL = 'https://sirius.menu' -- Mẹo sửa ngầm để Executor tải giao diện thành công
+end
+
+local Rayfield = loadstring(game:HttpGet(TargetURL))()
 
 -- Khởi tạo Cửa sổ giao diện chính với tên Minos Hub
 local Window = Rayfield:CreateWindow({
