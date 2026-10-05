@@ -4,8 +4,8 @@
 -- SCRIPT BY minos
 -- ==========================================================
 
--- Tải thư viện chính xác theo link bạn yêu cầu
-local Rayfield = loadstring(game:HttpGet('https://sirius/rayfield.menu'))()
+-- TẢI THƯ VIỆN CHUẨN GỐC (Link cũ sirius/rayfield.menu bị sai khiến script không lên)
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 -- Khởi tạo Cửa sổ giao diện chính với tên Minos Hub
 local Window = Rayfield:CreateWindow({
