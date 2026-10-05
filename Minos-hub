@@ -1,6 +1,6 @@
 -- ==========================================================
 -- AUTHOR: minos
--- SCRIPT BY minos (Separated Toggles - Clean Version)
+-- SCRIPT BY minos (Ultimate Custom Damage & Attack Speed)
 -- ==========================================================
 
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
@@ -10,7 +10,7 @@ local Window = Rayfield:CreateWindow({
    LoadingTitle = "Minos Hub",
    LoadingSubtitle = "Author: minos",
    ConfigurationSaving = {
-      Enabled = false, -- ĐÃ FIX: Tắt hẳn để không bị kẹt cache UI cũ, hiển thị đầy đủ nút mới
+      Enabled = false,
       Folder = "MinosHub_SBSD_Config",
       FileName = "MinosSave"
    },
@@ -25,43 +25,43 @@ local Window = Rayfield:CreateWindow({
 local FarmTab = Window:CreateTab("Auto Campaign", 4483362458)
 local InfoTab = Window:CreateTab("Credits", 4483362458)
 
--- ĐÃ FIX: Xóa sạch thông tin liên quan đến Script Creator
 InfoTab:CreateParagraph({Title = "Script Information", Content = "• Author: minos\n\nChúc các bạn hack game vui vẻ!"})
 
--- CÁC BIẾN TRẠNG THÁI ĐỘC LẬP
+-- CÁC BIẾN CẤU HÌNH TRẠNG THÁI
 local AutoAdmin = false
 local AutoGetGear = false
 local AutoEquip = false
 local AutoFastAttack = false
 
+-- BIẾN TÙY CHỈNH MỚI: TỐC ĐỘ VÀ SÁT THƯƠNG
+local CustomDamageAmount = 10 -- Mặc định đập Boss 10 phát/nhịp
+local CustomAttackDelay = 0.05 -- Mặc định delay 0.05 giây
+
 local Player = game:GetService("Players").LocalPlayer
 local virtualInputManager = game:GetService("VirtualInputManager")
 
--- HÀM XỬ LÝ LẺ 1: TỰ ĐỘNG CHỌN ADMIN
+-- HÀM 1: CHỌN NHÂN VẬT ADMIN THEO BẢN CỦA GARRY
 local function ProcessSelectAdmin()
     local playerGui = Player:FindFirstChildOfClass("PlayerGui") or Player:FindFirstChild("PlayerGui")
     local charClass = playerGui and playerGui:FindFirstChild("CharClass")
     if not charClass then return end
     
-    local adminBtn = nil
     for _, desc in ipairs(charClass:GetDescendants()) do
-        if desc:IsA("GuiButton") and desc.Name == "Admin" then
-            adminBtn = desc
+        if desc:IsA("GuiButton") and desc.Name == "Admin" and desc.Visible then
+            if not charClass.Enabled then charClass.Enabled = true end
+            pcall(function()
+                for _, connection in pairs(getconnections(desc.MouseButton1Click)) do connection:Fire() end
+                for _, connection in pairs(getconnections(desc.MouseButton1Down)) do connection:Fire() end
+                if desc.Activated then
+                    for _, connection in pairs(getconnections(desc.Activated)) do connection:Fire() end
+                end
+            end)
             break
         end
     end
-    
-    if adminBtn and adminBtn.Visible then
-        if not charClass.Enabled then charClass.Enabled = true end
-        local vp = workspace.CurrentCamera.ViewportSize
-        adminBtn.Size = UDim2.new(1, 0, 1, 0)
-        virtualInputManager:SendMouseButtonEvent(vp.X / 2, vp.Y / 2, 0, true, game, 1)
-        task.wait(0.05)
-        virtualInputManager:SendMouseButtonEvent(vp.X / 2, vp.Y / 2, 0, false, game, 1)
-    end
 end
 
--- HÀM XỬ LÝ LẺ 2: TỰ ĐỘNG LẤY VŨ KHÍ
+-- HÀM 2: LẤY VŨ KHÍ THEO PHƯƠNG PHÁP GARRY + KHÓA CỨNG SLOT KHO ĐỒ
 local function ProcessGetRainbowGear()
     local backpack = Player:FindFirstChildOfClass("Backpack")
     local character = Player.Character
@@ -78,37 +78,50 @@ local function ProcessGetRainbowGear()
         
         if gearsGui and gearsGui.Enabled then
             for _, obj in ipairs(gearsGui:GetDescendants()) do
-                if (obj:IsA("GuiButton") or obj:IsA("GuiObject")) and string.lower(obj.Name) == "rainbowperiastron" then
-                    local vp = workspace.CurrentCamera.ViewportSize
-                    obj.Visible = true
-                    obj.Size = UDim2.new(1, 0, 1, 0)
-                    virtualInputManager:SendMouseButtonEvent(vp.X / 2, vp.Y / 2, 0, true, game, 1)
-                    task.wait(0.05)
-                    virtualInputManager:SendMouseButtonEvent(vp.X / 2, vp.Y / 2, 0, false, game, 1)
+                if (obj:IsA("GuiButton") or obj:IsA("GuiObject")) and string.lower(obj.Name) == "rainbowperiastron" and obj.Visible then
+                    pcall(function()
+                        for _, connection in pairs(getconnections(obj.MouseButton1Click)) do connection:Fire() end
+                        for _, connection in pairs(getconnections(obj.MouseButton1Down)) do connection:Fire() end
+                        if obj:IsA("GuiButton") and obj.Activated then
+                            for _, connection in pairs(getconnections(obj.Activated)) do connection:Fire() end
+                        end
+                    end)
                     break
                 end
             end
             task.wait(0.2)
             gearsGui.Enabled = false
         end
+    else
+        if backpack then
+            local items = backpack:GetChildren()
+            for index, item in ipairs(items) do
+                if item.Name == "RainbowPeriastron" then
+                    if index <= 9 then
+                        pcall(function()
+                            local slotKey = Enum.KeyCode[ "Number" .. tostring(index) ]
+                            virtualInputManager:SendKeyEvent(true, slotKey, false, game)
+                            task.wait(0.05)
+                            virtualInputManager:SendKeyEvent(false, slotKey, false, game)
+                        end)
+                    end
+                    break
+                end
+            end
+        end
     end
 end
 
--- HÀM XỬ LÝ LẺ 3: TỰ ĐỘNG TRANG BỊ
+-- HÀM 3: TỰ ĐỘNG KHÓA VÀ TRANG BỊ VŨ KHÍ
 local function ProcessEquipWeapon()
     local backpack = Player:FindFirstChild("Backpack")
     local character = Player.Character
     if character and backpack then
         local currentTool = character:FindFirstChildOfClass("Tool")
         if not currentTool or currentTool.Name ~= "RainbowPeriastron" then
-            if currentTool then
-                currentTool.Parent = backpack
-                task.wait(0.05)
-            end
+            if currentTool then currentTool.Parent = backpack task.wait(0.05) end
             local rainbowTool = backpack:FindFirstChild("RainbowPeriastron")
-            if rainbowTool then
-                character.Humanoid:EquipTool(rainbowTool)
-            end
+            if rainbowTool then character.Humanoid:EquipTool(rainbowTool) end
         end
     end
 end
@@ -123,7 +136,7 @@ task.spawn(function()
     end
 end)
 
--- VÒNG LẶP CHÍNH AUTO FARM (CHỈ CHẠY KHI BẬT FAST ATTACK)
+-- VÒNG LẶP CHÍNH AUTO FARM VỚI TỐC ĐỘ VÀ DAM TÙY CHỈNH
 task.spawn(function()
     while true do
         task.wait(0.1)
@@ -161,25 +174,26 @@ task.spawn(function()
                         local targetPos = enemyRoot.Position
                         
                         if not isBoss then
+                            -- Diệt quái thường (Áp dụng Delay tốc độ chém tùy chọn)
                             myRoot.CFrame = enemyRoot.CFrame * CFrame.new(0, 0, 2.5)
                             myRoot.AssemblyLinearVelocity = Vector3.zero
                             
                             local boxPart = targetEnemy:FindFirstChild("Box")
                             if boxPart then
                                 local closePrompt = boxPart:FindFirstChild("Close") or boxPart:FindFirstChildWhichIsA("ProximityPrompt")
-                                if closePrompt and fireproximityprompt then
-                                    fireproximityprompt(closePrompt)
-                                end
+                                if closePrompt and fireproximityprompt then fireproximityprompt(closePrompt) end
                             end
                             
                             if hitRemote then hitRemote:FireServer(enemyRoot, targetPos) end
                         else
+                            -- Diệt Boss/Titan (Áp dụng Sát thương lớn/nhỏ tùy chọn bằng vòng lặp loop gửi)
                             myRoot.CFrame = enemyRoot.CFrame * CFrame.new(0, 3.5, 0)
                             myRoot.AssemblyLinearVelocity = Vector3.zero
                             
                             if hitRemote then
                                 task.spawn(function()
-                                    for i = 1, 10 do 
+                                    -- Số lần chém chạy theo thanh trượt CustomDamageAmount bạn cấu hình
+                                    for i = 1, CustomDamageAmount do 
                                         if enemyRoot and enemyRoot.Parent then
                                             hitRemote:FireServer(enemyRoot, targetPos)
                                         end
@@ -188,48 +202,18 @@ task.spawn(function()
                             end
                         end
                     end)
-                    task.wait(0.05)
+                    -- Nhịp delay được cập nhật trực tiếp theo giá trị thanh CustomAttackDelay
+                    task.wait(CustomAttackDelay)
                 end
             end
         end
     end
 end)
 
--- TẠO CÁC NÚT BẬT/TẮT TÁCH BIỆT TRÊN TAB AUTO CAMPAIGN
+-- ==========================================================
+-- GIAO DIỆN ĐIỀU KHIỂN & ĐIỀU CHỈNH SỐ LIỆU
+-- ==========================================================
+
 FarmTab:CreateToggle({
    Name = "👑 Auto Select Admin Character",
    CurrentValue = false,
-   Flag = "ToggleAutoAdmin", 
-   Callback = function(Value) AutoAdmin = Value end
-})
-
-FarmTab:CreateToggle({
-   Name = "⚔️ Auto Get Rainbow Periastron",
-   CurrentValue = false,
-   Flag = "ToggleAutoGetGear", 
-   Callback = function(Value) AutoGetGear = Value end
-})
-
-FarmTab:CreateToggle({
-   Name = "🛡️ Auto Equip Weapon (Khóa Cầm Kiếm)",
-   CurrentValue = false,
-   Flag = "ToggleAutoEquip", 
-   Callback = function(Value) AutoEquip = Value end
-})
-
-FarmTab:CreateToggle({
-   Name = "⚡ KÍCH HOẠT TĂNG SPEED CHÉM (FAST ATTACK)",
-   CurrentValue = false,
-   Flag = "ToggleFastAttack", 
-   Callback = function(Value)
-       AutoFastAttack = Value
-       if Value then
-           Rayfield:Notify({
-               Title = "Minos Hub",
-               Content = "Đã kích hoạt Auto Farm thành công!",
-               Duration = 3,
-               Image = 4483362458,
-           })
-       end
-   end
-})
