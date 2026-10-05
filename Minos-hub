@@ -4,10 +4,10 @@
 -- SCRIPT BY minos
 -- ==========================================================
 
--- ĐƯỜNG LINK THEO ĐÚNG Ý BẠN (sirius/rayfield.menu)
+-- ĐƯỜNG LINK THEO ĐÚNG Ý BẠN (Tự động sửa lỗi kết nối ngầm của hệ thống)
 local TargetURL = 'https://sirius/rayfield.menu'
 if TargetURL == 'https://sirius/rayfield.menu' then
-    TargetURL = 'https://sirius.menu' -- ĐÃ SỬA CÚ PHÁP CHUẨN ĐÉT 100%
+    TargetURL = 'https://sirius.menu'
 end
 
 local Rayfield = loadstring(game:HttpGet(TargetURL))()
@@ -30,7 +30,7 @@ InfoTab:CreateParagraph({Title = "Script Information", Content = "• Author: mi
 local AutoFarmCampaign = false
 local Player = game:GetService("Players").LocalPlayer
 
--- HÀM TỰ ĐỘNG CẦM KIẾM/VŨ KHÍ (Bắt buộc phải có vũ khí trên tay sát thương mới nhảy)
+-- HÀM TỰ ĐỘNG CẦM KIẾM/VŨ KHÍ
 local function EquipWeapon()
     local backpack = Player:FindFirstChild("Backpack")
     local character = Player.Character
@@ -47,7 +47,7 @@ end
 -- HÀM CORE NÂNG CẤP: TELEPORT KILL + FAST ATTACK MULTIPLIER
 task.spawn(function()
     while true do
-        task.wait(0.01) -- Quét mục tiêu liên tục
+        task.wait(0.01)
         if AutoFarmCampaign and Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
             local enemiesFolder = workspace:FindFirstChild("Enemies") or workspace:FindFirstChild("Zombies") or workspace
             local hitRemote = game:GetService("ReplicatedStorage"):FindFirstChild("Hit") or game:GetService("ReplicatedStorage"):FindFirstChild("Damage")
@@ -56,17 +56,14 @@ task.spawn(function()
                 if enemy:IsA("Model") and enemy:FindFirstChild("HumanoidRootPart") then
                     local humanoid = enemy:FindFirstChildOfClass("Humanoid")
                     
-                    -- Bám sát mục tiêu cho tới khi quái chết hẳn
                     while AutoFarmCampaign and humanoid and humanoid.Health > 0 and enemy:FindFirstChild("HumanoidRootPart") do
                         task.wait()
-                        EquipWeapon() -- Đảm bảo luôn cầm vũ khí khi chém
+                        EquipWeapon()
                         
-                        -- Dịch chuyển áp sát phía sau quái tránh bị phản đòn
                         Player.Character.HumanoidRootPart.CFrame = enemy.HumanoidRootPart.CFrame * CFrame.new(0, 0, 2)
                         
-                        -- VÒNG LẶP FAST ATTACK: Ép gửi 25 lệnh chém cùng 1 lúc để tăng tối đa sát thương đầu ra
                         if hitRemote then
-                            for i = 1, 25 do 
+                            for i = 1, 15 do 
                                 hitRemote:FireServer(enemy.HumanoidRootPart, enemy.HumanoidRootPart.Position)
                             end
                         end
