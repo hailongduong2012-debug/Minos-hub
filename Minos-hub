@@ -1,8 +1,9 @@
 -- ==========================================================
 -- AUTHOR: minos
--- SCRIPT BY minos (100% FIXED CONFIG CRASH - GARRY MODE)
+-- SCRIPT BY minos (100% GARRY & SBSD STRUCTURE MATCH)
 -- ==========================================================
 
+-- KHỞI TẠO THƯ VIỆN RAYFIELD Y HỆT LINK BẢN CHẠY ĐƯỢC CỦA BẠN
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
@@ -11,7 +12,7 @@ local Window = Rayfield:CreateWindow({
    LoadingSubtitle = "Author: minos",
    ConfigurationSaving = {
       Enabled = true,
-      FolderName = "MinosHub_SBSD_Config", -- ĐÃ FIX: Đổi từ Folder thành FolderName theo đúng chuẩn Rayfield
+      Folder = "MinosHub_SBSD_Config",
       FileName = "MinosSave"
    },
    Discord = {
@@ -22,11 +23,11 @@ local Window = Rayfield:CreateWindow({
    KeySystem = false
 })
 
--- Tạo Tab bằng phương thức truyền Chuỗi Thô (String) giống file gốc chạy được
+-- TẠO TAB DẠNG CHUỖI THÔ GIỐNG 100% FILE SBSD
 local FarmTab = Window:CreateTab("Auto Campaign", 4483362458)
 local InfoTab = Window:CreateTab("Credits", 4483362458)
 
--- Xóa bỏ hoàn toàn thông tin liên quan tới Script Creator
+-- Xóa bỏ hoàn toàn thông tin Creator
 InfoTab:CreateParagraph({Title = "Script Information", Content = "• Author: minos\n\nChúc các bạn hack game vui vẻ!"})
 
 -- HỆ THỐNG BIẾN ĐIỀU KHIỂN ĐỘC LẬP
@@ -43,7 +44,7 @@ local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local virtualInputManager = game:GetService("VirtualInputManager")
 
--- HÀM 1: CHỌN NHÂN VẬT ADMIN (DÙNG PHƯƠNG PHÁP CLICK CONNECTION CỦA GARRY)
+-- HÀM 1: CHỌN NHÂN VẬT ADMIN (PHƯƠNG PHÁP GARRY)
 local function ProcessSelectAdmin()
     local playerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui") or LocalPlayer:FindFirstChild("PlayerGui")
     local charClass = playerGui and playerGui:FindFirstChild("CharClass")
@@ -64,7 +65,7 @@ local function ProcessSelectAdmin()
     end
 end
 
--- HÀM 2: LẤY KIẾM (DÙNG PHƯƠNG PHÁP CLICK CỦA GARRY + AUTO SLOT TIẾN HÓA)
+-- HÀM 2: LẤY KIẾM CẦU VỒNG (PHƯƠNG PHÁP GARRY + AUTO Ô HOTBAR)
 local function ProcessGetRainbowGear()
     local backpack = LocalPlayer:FindFirstChildOfClass("Backpack")
     local character = LocalPlayer.Character
@@ -96,7 +97,7 @@ local function ProcessGetRainbowGear()
             gearsGui.Enabled = false
         end
     else
-        -- Luôn ưu tiên kích hoạt slot chứa thanh kiếm trong kho đồ
+        -- Luôn quét slot của thanh Rainbow trong kho đồ để ưu tiên dùng
         if backpack then
             local items = backpack:GetChildren()
             for index, item in ipairs(items) do
@@ -130,7 +131,7 @@ local function ProcessEquipWeapon()
     end
 end
 
--- KHỞI CHẠY LUỒNG TÍNH NĂNG ĐỘC LẬP
+-- KHỞI CHẠY LUỒNG TÍNH NĂNG ĐỘC LẬP (ADMIN, GEAR, EQUIP)
 task.spawn(function()
     while true do
         task.wait(0.1)
@@ -140,7 +141,7 @@ task.spawn(function()
     end
 end)
 
--- VÒNG LẶP CHÍNH AUTO FARM VỚI TỐC ĐỘ VÀ SÁT THƯƠNG TÙY CHỈNH CHỐNG KẸT BOSS
+-- VÒNG LẶP CHÍNH AUTO FARM VƯỢT ẢI (ĐÃ FIX KẸT HOÀN TOÀN)
 task.spawn(function()
     while true do
         task.wait(0.1)
@@ -190,7 +191,7 @@ task.spawn(function()
                             
                             if hitRemote then hitRemote:FireServer(enemyRoot, targetPos) end
                         else
-                            -- Diệt Boss/Titan (Sát thương to nhỏ chỉnh bằng CustomDamageAmount qua Slider)
+                            -- Diệt Boss/Titan (Chỉnh lượng sát thương to/nhỏ qua biến CustomDamageAmount)
                             myRoot.CFrame = enemyRoot.CFrame * CFrame.new(0, 3.5, 0)
                             myRoot.AssemblyLinearVelocity = Vector3.zero
                             
@@ -213,3 +214,8 @@ task.spawn(function()
 end)
 
 -- ==========================================================
+-- GIAO DIỆN HÌNH HỌC THEO ĐÚNG KỊCH BẢN SBSD
+-- ==========================================================
+
+FarmTab:CreateToggle({
+   Name = "👑 Auto Select Admin Character",
