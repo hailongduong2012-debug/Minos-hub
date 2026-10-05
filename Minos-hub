@@ -1,7 +1,7 @@
 -- ==========================================================
 -- AUTHOR: minos
 -- SCRIPT CREATOR: minos
--- SCRIPT BY minos (Insta-Teleport & Auto Close Edition)
+-- SCRIPT BY minos (Ultimate All-In-One Edition)
 -- ==========================================================
 
 -- KHỞI TẠO THƯ VIỆN RAYFIELD UI CHUẨN XÁC 100%
@@ -23,38 +23,121 @@ InfoTab:CreateParagraph({Title = "Script Information", Content = "• Author: mi
 
 local AutoFastAttack = false
 local Player = game:GetService("Players").LocalPlayer
+local virtualInputManager = game:GetService("VirtualInputManager")
 
--- HÀM CẦM VŨ KHÍ TỰ ĐỘNG (Giữ vũ khí ổn định không bị bật/tắt liên tục)
+-- HÀM 1: TỰ ĐỘNG CHỌN NHÂN VẬT ADMIN
+local function AutoSelectAdmin()
+    local playerGui = Player:FindFirstChildOfClass("PlayerGui") or Player:FindFirstChild("PlayerGui")
+    local charClass = playerGui and playerGui:FindFirstChild("CharClass")
+    if not charClass then return end
+    
+    local adminBtn = nil
+    for _, desc in ipairs(charClass:GetDescendants()) do
+        if desc:IsA("GuiButton") and desc.Name == "Admin" then
+            adminBtn = desc
+            break
+        end
+    end
+    
+    if adminBtn then
+        if not charClass.Enabled then
+            charClass.Enabled = true
+        end
+        
+        local vp = workspace.CurrentCamera.ViewportSize
+        local x, y = vp.X / 2, vp.Y / 2
+        
+        adminBtn.Visible = true
+        adminBtn.Size = UDim2.new(1, 0, 1, 0)
+        
+        virtualInputManager:SendMouseButtonEvent(x, y, 0, true, game, 1)
+        task.wait(0.05)
+        virtualInputManager:SendMouseButtonEvent(x, y, 0, false, game, 1)
+    end
+end
+
+-- HÀM 2: CHỈ ĐỊNH VÀ LẤY ĐÚNG THANH RAINBOW PERIASTRON (KHÔNG LẤY GEAR RÁC)
+local function AutoSelectRainbowGear()
+    local backpack = Player:FindFirstChildOfClass("Backpack")
+    local character = Player.Character
+    
+    local hasRainbow = false
+    if backpack and backpack:FindFirstChild("RainbowPeriastron") then hasRainbow = true end
+    if character and character:FindFirstChild("RainbowPeriastron") then hasRainbow = true end
+    
+    if not hasRainbow then
+        -- Bấm phím G để gọi bảng túi đồ của game
+        virtualInputManager:SendKeyEvent(true, Enum.KeyCode.G, false, game)
+        task.wait(0.1)
+        virtualInputManager:SendKeyEvent(false, Enum.KeyCode.G, false, game)
+        task.wait(0.2)
+        
+        local playerGui = Player:FindFirstChildOfClass("PlayerGui") or Player:FindFirstChild("PlayerGui")
+        local gearsGui = playerGui and playerGui:FindFirstChild("gears")
+        
+        if gearsGui then
+            gearsGui.Enabled = true
+            -- Khóa mục tiêu tìm kiếm duy nhất: Khớp 100% tên viết thường của kiếm cầu vồng
+            for _, obj in ipairs(gearsGui:GetDescendants()) do
+                if (obj:IsA("GuiButton") or obj:IsA("GuiObject")) and string.lower(obj.Name) == "rainbowperiastron" then
+                    local vp = workspace.CurrentCamera.ViewportSize
+                    
+                    obj.Visible = true
+                    obj.Size = UDim2.new(1, 0, 1, 0)
+                    
+                    virtualInputManager:SendMouseButtonEvent(vp.X / 2, vp.Y / 2, 0, true, game, 1)
+                    task.wait(0.05)
+                    virtualInputManager:SendMouseButtonEvent(vp.X / 2, vp.Y / 2, 0, false, game, 1)
+                    break
+                end
+            end
+            task.wait(0.2)
+            gearsGui.Enabled = false
+        end
+    end
+end
+
+-- HÀM 3: KHÓA TRANG BỊ VŨ KHÍ (Ép cầm đúng kiếm cầu vồng, cất vũ khí rác khác nếu có)
 local function EquipWeapon()
     local backpack = Player:FindFirstChild("Backpack")
     local character = Player.Character
     if character and backpack then
-        if not character:FindFirstChildOfClass("Tool") then
-            for _, tool in pairs(backpack:GetChildren()) do
-                if tool:IsA("Tool") then
-                    character.Humanoid:EquipTool(tool)
-                    break
-                end
+        local currentTool = character:FindFirstChildOfClass("Tool")
+        -- Nếu trên tay đang cầm sai món (không phải RainbowPeriastron)
+        if not currentTool or currentTool.Name ~= "RainbowPeriastron" then
+            
+            -- Cất món sai vào túi đồ trước để tránh lỗi kẹt hoạt ảnh
+            if currentTool then
+                currentTool.Parent = backpack
+                task.wait(0.05)
+            end
+            
+            -- Lôi chính xác thanh kiếm cầu vồng ra tay
+            local rainbowTool = backpack:FindFirstChild("RainbowPeriastron")
+            if rainbowTool then
+                character.Humanoid:EquipTool(rainbowTool)
             end
         end
     end
 end
 
--- VÒNG LẶP CHÍNH: XẢ BỒN CẦU LẬP TỨC - TELEPORT SIÊU TỐC KHÔNG DELAY
+-- VÒNG LẶP CHÍNH: AUTO SETUP -> INSTA-TELEPORT -> ANTI-BAN V5 & HIGH DMG MULTITHREADING
 task.spawn(function()
     while true do
-        task.wait(0.01) -- Chu kỳ quét siêu nhỏ mô phỏng tốc độ Teleport đỉnh cao
+        task.wait(0.01) -- Quét tốc độ cao mô phỏng thuật toán dịch chuyển tức thời
         if AutoFastAttack and Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
             local myRoot = Player.Character.HumanoidRootPart
             local enemiesFolder = workspace:FindFirstChild("Enemies") or workspace:FindFirstChild("Zombies") or workspace
             local hitRemote = game:GetService("ReplicatedStorage"):FindFirstChild("Hit") or game:GetService("ReplicatedStorage"):FindFirstChild("Damage")
-            local interactRemote = game:GetService("ReplicatedStorage"):FindFirstChild("Interact") or game:GetService("ReplicatedStorage"):FindFirstChild("CloseBox")
             
-            -- Biến lưu vị trí quái gần nhất
+            -- Chạy tiến trình tự động thiết lập Admin và Kiếm cầu vồng khi vào trận
+            pcall(AutoSelectAdmin)
+            pcall(AutoSelectRainbowGear)
+            
+            -- Tìm kiếm mục tiêu tối ưu gần nhất để Teleport ngay lập tức
             local targetEnemy = nil
             local shortestDistance = math.huge
             
-            -- Thuật toán tìm quái nhanh nhất (Tìm mục tiêu tối ưu để Teleport ngay lập tức)
             for _, enemy in pairs(enemiesFolder:GetChildren()) do
                 if enemy:IsA("Model") and enemy:FindFirstChild("HumanoidRootPart") then
                     local humanoid = enemy:FindFirstChildOfClass("Humanoid")
@@ -68,49 +151,52 @@ task.spawn(function()
                 end
             end
             
-            -- Nếu phát hiện thấy mục tiêu còn sống
+            -- Bắt đầu chuỗi hành động xử lý mục tiêu quét được
             if targetEnemy then
                 local enemyRoot = targetEnemy.HumanoidRootPart
                 local humanoid = targetEnemy:FindFirstChildOfClass("Humanoid")
+                local enemyNameLower = string.lower(targetEnemy.Name)
                 
-                -- Phân loại: Boss hay Quái nhỏ
+                -- Phân loại: Boss Campaign 1-3 hay Quái thường nhỏ
                 local isBoss = false
-                if string.find(string.lower(targetEnemy.Name), "boss") or string.find(string.lower(targetEnemy.Name), "titan") or (humanoid and humanoid.MaxHealth >= 1000) then
+                if string.find(enemyNameLower, "boss") or string.find(enemyNameLower, "titan") or (humanoid and humanoid.MaxHealth >= 1000) then
                     isBoss = true
                 end
                 
-                -- Thực hiện chu kỳ bám đuổi hạ gục
+                -- Khóa chặt và tiêu diệt cho tới khi quái cạn máu
                 while AutoFastAttack and humanoid and humanoid.Health > 0 and enemyRoot:IsDescendantOf(workspace) do
                     
-                    -- 1. XỬ LÝ QUÁI THƯỜNG (QUÁI NHỎ): Dịch chuyển tức thời & Auto Close đóng hộp xả bồn cầu liên tục
+                    -- 1. XỬ LÝ QUÁI THƯỜNG (QUÁI NHỎ): Tốc độ xả bồn cầu Auto Close bằng fireproximityprompt
                     if not isBoss then
-                        -- Dịch chuyển trực diện cực nhanh
-                        myRoot.CFrame = enemyRoot.CFrame * CFrame.new(0, 0, 1.5)
+                        myRoot.CFrame = enemyRoot.CFrame * CFrame.new(0, 0, 2.5)
+                        myRoot.AssemblyLinearVelocity = Vector3.zero -- Triệt tiêu gia tốc tránh kẹt hitbox gây ban
                         
-                        -- Vòng lặp spam lệnh tương tác/đóng hộp (Auto Close tốc độ cao)
-                        if interactRemote then
-                            for i = 1, 10 do
-                                interactRemote:FireServer(targetEnemy)
+                        local boxPart = targetEnemy:FindFirstChild("Box")
+                        if boxPart then
+                            local closePrompt = boxPart:FindFirstChild("Close") or boxPart:FindFirstChildWhichIsA("ProximityPrompt")
+                            if closePrompt and fireproximityprompt then
+                                for i = 1, 5 do
+                                    fireproximityprompt(closePrompt)
+                                end
                             end
                         end
                         
-                        -- Hỗ trợ thêm sát thương cận chiến để clear nhanh nhất có thể
                         if hitRemote then
                             hitRemote:FireServer(enemyRoot, enemyRoot.Position)
                         end
                     
-                    -- 2. XỬ LÝ BOSS / QUÁI LỚN: Teleport lên trên đầu né đạn tầm xa & Đẩy sát thương cực đại
+                    -- 2. XỬ LÝ BOSS: Bay trên đầu 3.5 block né đạn & Nhân 3 luồng chém ảo (Large Saw DMG Mode)
                     else
-                        -- Bay lên đầu Boss cách 3 block tránh vùng sát thương đạn diện rộng
-                        myRoot.CFrame = enemyRoot.CFrame * CFrame.new(0, 3, 0)
+                        myRoot.CFrame = enemyRoot.CFrame * CFrame.new(0, 3.5, 0)
                         
+                        -- Ép nhân vật cầm chắc kiếm Rainbow Periastron
                         EquipWeapon()
                         
-                        -- Kỹ thuật nhân bản luồng gửi dữ liệu (High DMG Multithreading)
+                        -- Công nghệ đa luồng Multi-threading nhân sát thương chém tốc độ cực đại
                         if hitRemote then
                             for luong = 1, 3 do
                                 task.spawn(function()
-                                    for i = 1, 10 do 
+                                    for i = 1, 15 do 
                                         hitRemote:FireServer(enemyRoot, enemyRoot.Position)
                                     end
                                 end)
@@ -118,15 +204,14 @@ task.spawn(function()
                         end
                     end
                     
-                    -- Đặt thời gian chờ tối thiểu (Bỏ hẳn delay cũ để đảm bảo tốc độ tối đa không bị khựng)
-                    task.wait() 
+                    task.wait(0.02) -- Khoảng delay an toàn tuyệt đối tránh hệ thống chống hack V5 quét ban tài khoản
                 end
             end
         end
     end
 end)
 
--- GIỮ NGUYÊN NÚT BẬT/TẮT THEO MẪU BAN ĐẦU
+-- NÚT BẬT/TẮT THEO MẪU BAN ĐẦU
 FarmTab:CreateToggle({
    Name = "⚡ KÍCH HOẠT TĂNG SPEED CHÉM (FAST ATTACK)",
    CurrentValue = false,
@@ -135,26 +220,3 @@ FarmTab:CreateToggle({
        AutoFastAttack = Value
        if Value then
            Rayfield:Notify({
-              Title = "Minos Hub",
-              Content = "Đã BẬT! Hệ thống Auto Farm Teleport Siêu Cấp và Auto Close đang chạy!",
-              Duration = 4,
-              Image = 4483362458,
-           })
-       else
-           Rayfield:Notify({
-              Title = "Minos Hub",
-              Content = "Đã TẮT tính năng tự động farm!",
-              Duration = 3,
-              Image = 4483362458,
-           })
-       end
-   end,
-})
-
--- Thông báo khi menu được tải xong
-Rayfield:Notify({
-   Title = "Minos Hub",
-   Content = "Đã kích hoạt menu SBSD thành công!",
-   Duration = 5,
-   Image = 4483362458,
-})
