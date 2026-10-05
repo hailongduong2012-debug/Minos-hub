@@ -1,19 +1,17 @@
 -- ==========================================================
 -- AUTHOR: minos
--- SCRIPT BY minos (Garry Hub Standard Integration - FIXED 2026)
+-- SCRIPT BY minos (100% FIXED CONFIG CRASH - GARRY MODE)
 -- ==========================================================
 
--- ĐỒNG BỘ 100%: Dùng link nạp thư viện UI chính xác của bản Garry
-local Rayfield = loadstring(game:HttpGet('https://sirius/rayfield.menu'))()
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
--- ĐỒNG BỘ 100%: Khởi tạo Window với các thông số cơ bản, xóa config thừa
 local Window = Rayfield:CreateWindow({
    Name = "Minos Hub 📦 | SBSD",
    LoadingTitle = "Minos Hub",
    LoadingSubtitle = "Author: minos",
    ConfigurationSaving = {
-      Enabled = false,
-      Folder = "MinosHub_SBSD_Config",
+      Enabled = true,
+      FolderName = "MinosHub_SBSD_Config", -- ĐÃ FIX: Đổi từ Folder thành FolderName theo đúng chuẩn Rayfield
       FileName = "MinosSave"
    },
    Discord = {
@@ -24,11 +22,11 @@ local Window = Rayfield:CreateWindow({
    KeySystem = false
 })
 
--- ĐỒNG BỘ 100%: Tạo Tab bằng phương thức truyền Chuỗi Thô (String) giống file Garry
+-- Tạo Tab bằng phương thức truyền Chuỗi Thô (String) giống file gốc chạy được
 local FarmTab = Window:CreateTab("Auto Campaign", 4483362458)
 local InfoTab = Window:CreateTab("Credits", 4483362458)
 
--- Đã xóa sạch thông tin liên quan tới Creator
+-- Xóa bỏ hoàn toàn thông tin liên quan tới Script Creator
 InfoTab:CreateParagraph({Title = "Script Information", Content = "• Author: minos\n\nChúc các bạn hack game vui vẻ!"})
 
 -- HỆ THỐNG BIẾN ĐIỀU KHIỂN ĐỘC LẬP
@@ -142,7 +140,7 @@ task.spawn(function()
     end
 end)
 
--- VÒNG LẶP CHÍNH AUTO FARM (CHỈ CHẠY KHI BẬT FAST ATTACK)
+-- VÒNG LẶP CHÍNH AUTO FARM VỚI TỐC ĐỘ VÀ SÁT THƯƠNG TÙY CHỈNH CHỐNG KẸT BOSS
 task.spawn(function()
     while true do
         task.wait(0.1)
