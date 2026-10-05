@@ -4,118 +4,84 @@
 -- SCRIPT BY minos
 -- ==========================================================
 
--- Tải thư viện Rayfield UI từ đường dẫn chính thức có /rayfield
-local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+-- Tải thư viện chính xác theo link bạn yêu cầu
+local Rayfield = loadstring(game:HttpGet('https://sirius/rayfield.menu'))()
 
--- Khởi tạo Cửa sổ giao diện chính cho SBSD
+-- Khởi tạo Cửa sổ giao diện chính với tên Minos Hub
 local Window = Rayfield:CreateWindow({
-   Name = "SBSD Hub 📦 | Script by minos",
-   LoadingTitle = "SBSD Hub - Made by minos",
+   Name = "Minos Hub 📦 | SBSD",
+   LoadingTitle = "Minos Hub - Made by minos",
    LoadingSubtitle = "Author: minos | Script Creator: minos",
-   ConfigurationSaving = {
-      Enabled = true,
-      FolderName = "SBSD_Minos_Config",
-      FileName = "MinosSave"
-   },
-   Discord = {
-      Enabled = false,
-      Invite = "noinvite",
-      RememberJoins = true
-   },
+   ConfigurationSaving = { Enabled = true, FolderName = "MinosHub_SBSD_Config", FileName = "MinosSave" },
+   Discord = { Enabled = false, Invite = "noinvite", RememberJoins = true },
    KeySystem = false
 })
 
--- Tạo các Tab chức năng
-local CampaignTab = Window:CreateTab("Campaign Achievements", 4483362458)
-local FarmTab = Window:CreateTab("Auto Farm / Combat", 4483362458)
+local FarmTab = Window:CreateTab("Auto Campaign", 4483362458)
 local InfoTab = Window:CreateTab("Credits", 4483362458)
 
--- Thông tin tác giả hiển thị trong Tab Credits
 InfoTab:CreateParagraph({Title = "Script Information", Content = "• Author: minos\n• Script Creator: minos\n• Script by minos\n\nChúc các bạn hack game vui vẻ!"})
 
--- Biến cấu hình trạng thái
-local AutoClaim = false
-local HitRemote = game:GetService("ReplicatedStorage"):FindFirstChild("Hit")
+local AutoFarmCampaign = false
+local Player = game:GetService("Players").LocalPlayer
 
--- ==========================================
--- LOGIC PHẦN 1: NHẬN THÀNH TỰU CAMPAIGN 1-3
--- ==========================================
-local function ClaimSBSD_Campaign(campaignNumber)
-    Rayfield:Notify({
-       Title = "SBSD Hub (minos)",
-       Content = "Đang gửi yêu cầu nhận thưởng Campaign " .. tostring(campaignNumber),
-       Duration = 3,
-       Image = 4483362458,
-    })
-    
-    local campaignRemote = game:GetService("ReplicatedStorage"):FindFirstChild("ClaimCampaignReward") or game:GetService("ReplicatedStorage"):FindFirstChild("CampaignReward")
-    if campaignRemote then
-        campaignRemote:FireServer(campaignNumber)
-    else
-        local achRemote = game:GetService("ReplicatedStorage"):FindFirstChild("Reward") or game:GetService("ReplicatedStorage"):FindFirstChild("AchievementEvent")
-        if achRemote then
-            achRemote:FireServer("Campaign" .. tostring(campaignNumber))
+-- HÀM CORE: TELEPORT KILL (Bắt buộc quái phải chết để lấy Badge)
+task.spawn(function()
+    while true do
+        task.wait(0.01) -- Tốc độ quét cực nhanh
+        if AutoFarmCampaign and Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
+            -- Định vị mục tiêu trong SBSD
+            local enemiesFolder = workspace:FindFirstChild("Enemies") or workspace:FindFirstChild("Zombies") or workspace
+            local hitRemote = game:GetService("ReplicatedStorage"):FindFirstChild("Hit") or game:GetService("ReplicatedStorage"):FindFirstChild("Damage")
+            
+            for _, enemy in pairs(enemiesFolder:GetChildren()) do
+                if enemy:IsA("Model") and enemy:FindFirstChild("HumanoidRootPart") then
+                    local humanoid = enemy:FindFirstChildOfClass("Humanoid")
+                    
+                    -- Vòng lặp dí theo chém cho tới khi con quái này chết hẳn mới chuyển mục tiêu
+                    while AutoFarmCampaign and humanoid and humanoid.Health > 0 and enemy:FindFirstChild("HumanoidRootPart") do
+                        task.wait()
+                        -- Dịch chuyển người chơi ra phía sau con quái 2 stud để tránh bị quái đánh trúng
+                        Player.Character.HumanoidRootPart.CFrame = enemy.HumanoidRootPart.CFrame * CFrame.new(0, 0, 2)
+                        
+                        -- Đồng thời xả sát thương liên tục ở khoảng cách gần (Server bắt buộc phải nhận)
+                        if hitRemote then
+                            hitRemote:FireServer(enemy.HumanoidRootPart, enemy.HumanoidRootPart.Position)
+                        end
+                    end
+                end
+            end
         end
     end
-end
+end)
 
--- Tạo giao diện nút bấm cho Tab Campaign
-CampaignTab:CreateButton({
-   Name = "Nhận Thành Tựu: Campaign 1",
-   Callback = function()
-       ClaimSBSD_Campaign(1)
-   end,
-})
-
-CampaignTab:CreateButton({
-   Name = "Nhận Thành Tựu: Campaign 2",
-   Callback = function()
-       ClaimSBSD_Campaign(2)
-   end,
-})
-
-CampaignTab:CreateButton({
-   Name = "Nhận Thành Tựu: Campaign 3",
-   Callback = function()
-       ClaimSBSD_Campaign(3)
-   end,
-})
-
-CampaignTab:CreateButton({
-   Name = "⚡ Nhận Toàn Bộ Cúp Campaign (1-3)",
-   Callback = function()
-       for i = 1, 3 do
-           ClaimSBSD_Campaign(i)
-           task.wait(0.5)
-       end
-   end,
-})
-
--- ==========================================
--- LOGIC PHẦN 2: AUTO FARM ĐỂ TỰ QUA ẢI CAMPAIGN
--- ==========================================
 FarmTab:CreateToggle({
-   Name = "Auto Attack / Farm Boxes (Dùng để vượt Campaign)",
+   Name = "⚡ KÍCH HOẠT TELEPORT KILL (Vượt Ải Lấy Badge)",
    CurrentValue = false,
-   Flag = "AutoAttackFlag", 
+   Flag = "ToggleAutoFarm", 
    Callback = function(Value)
-       AutoClaim = Value
-       while AutoClaim do
-           for _, enemy in pairs(workspace:FindFirstChild("Enemies") or workspace:GetChildren()) do
-               if enemy:IsA("Model") and enemy:FindFirstChild("Humanoid") and enemy.Humanoid.Health > 0 then
-                   if HitRemote then
-                       HitRemote:FireServer(enemy.HumanoidRootPart)
-                   end
-               end
-           end
-           task.wait(0.1)
+       AutoFarmCampaign = Value
+       if Value then
+           Rayfield:Notify({
+              Title = "Minos Hub",
+              Content = "Đã BẬT Teleport Kill! Nhân vật sẽ tự dí và diệt quái. Hãy đứng đợi nhận Badge!",
+              Duration = 4,
+              Image = 4483362458,
+           })
+       else
+           Rayfield:Notify({
+              Title = "Minos Hub",
+              Content = "Đã TẮT Auto Farm!",
+              Duration = 3,
+              Image = 4483362458,
+           })
        end
    end,
 })
 
--- Thông báo khi tải xong menu
+-- Thông báo khi menu của minos được tải xong
 Rayfield:Notify({
-   Title = "Script by minos",
+   Title = "Minos Hub",
    Content = "Đã kích hoạt menu SBSD thành công!",
    Duration = 5,
    Image = 4483362458,
