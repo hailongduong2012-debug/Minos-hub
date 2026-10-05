@@ -4,13 +4,8 @@
 -- SCRIPT BY minos
 -- ==========================================================
 
--- ĐƯỜNG LINK THEO ĐÚNG Ý BẠN (Tự động sửa lỗi kết nối ngầm của hệ thống)
-local TargetURL = 'https://sirius/rayfield.menu'
-if TargetURL == 'https://sirius/rayfield.menu' then
-    TargetURL = 'https://sirius.menu'
-end
-
-local Rayfield = loadstring(game:HttpGet(TargetURL))()
+-- GIỮ NGUYÊN ĐƯỜNG LINK GỐC Y HỆT BAN ĐẦU CỦA BẠN
+local Rayfield = loadstring(game:HttpGet('https://sirius/rayfield.menu'))()
 
 -- Khởi tạo Cửa sổ giao diện chính với tên Minos Hub
 local Window = Rayfield:CreateWindow({
@@ -27,10 +22,10 @@ local InfoTab = Window:CreateTab("Credits", 4483362458)
 
 InfoTab:CreateParagraph({Title = "Script Information", Content = "• Author: minos\n• Script Creator: minos\n• Script by minos\n\nChúc các bạn hack game vui vẻ!"})
 
-local AutoFarmCampaign = false
+local AutoFastAttack = false
 local Player = game:GetService("Players").LocalPlayer
 
--- HÀM TỰ ĐỘNG CẦM KIẾM/VŨ KHÍ
+-- HÀM TỰ ĐỘNG CẦM VŨ KHÍ (Cần thiết để kích hoạt sát thương)
 local function EquipWeapon()
     local backpack = Player:FindFirstChild("Backpack")
     local character = Player.Character
@@ -44,11 +39,12 @@ local function EquipWeapon()
     end
 end
 
--- HÀM CORE NÂNG CẤP: TELEPORT KILL + FAST ATTACK MULTIPLIER
+-- HÀM TĂNG SPEED CHÉM SIÊU TỐC (FAST ATTACK MULTIHIT)
 task.spawn(function()
     while true do
-        task.wait(0.01)
-        if AutoFarmCampaign and Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
+        task.wait(0.01) -- Quét mục tiêu liên tục
+        if AutoFastAttack and Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
+            -- Định vị mục tiêu trong SBSD
             local enemiesFolder = workspace:FindFirstChild("Enemies") or workspace:FindFirstChild("Zombies") or workspace
             local hitRemote = game:GetService("ReplicatedStorage"):FindFirstChild("Hit") or game:GetService("ReplicatedStorage"):FindFirstChild("Damage")
             
@@ -56,12 +52,12 @@ task.spawn(function()
                 if enemy:IsA("Model") and enemy:FindFirstChild("HumanoidRootPart") then
                     local humanoid = enemy:FindFirstChildOfClass("Humanoid")
                     
-                    while AutoFarmCampaign and humanoid and humanoid.Health > 0 and enemy:FindFirstChild("HumanoidRootPart") do
-                        task.wait()
-                        EquipWeapon()
+                    -- Dồn sát thương siêu tốc liên tục cho đến khi con quái này gục
+                    while AutoFastAttack and humanoid and humanoid.Health > 0 and enemy:FindFirstChild("HumanoidRootPart") do
+                        task.wait(0.05) -- Tốc độ chém dồn dập
+                        EquipWeapon()  -- Luôn đảm bảo cầm vũ khí
                         
-                        Player.Character.HumanoidRootPart.CFrame = enemy.HumanoidRootPart.CFrame * CFrame.new(0, 0, 2)
-                        
+                        -- Gửi đồng loạt 15 lệnh chém cùng lúc để nhân sát thương (Tăng speed chém)
                         if hitRemote then
                             for i = 1, 15 do 
                                 hitRemote:FireServer(enemy.HumanoidRootPart, enemy.HumanoidRootPart.Position)
@@ -75,22 +71,22 @@ task.spawn(function()
 end)
 
 FarmTab:CreateToggle({
-   Name = "⚡ KÍCH HOẠT TELEPORT KILL + FAST ATTACK",
+   Name = "⚡ KÍCH HOẠT TĂNG SPEED CHÉM (FAST ATTACK)",
    CurrentValue = false,
-   Flag = "ToggleAutoFarm", 
+   Flag = "ToggleFastAttack", 
    Callback = function(Value)
-       AutoFarmCampaign = Value
+       AutoFastAttack = Value
        if Value then
            Rayfield:Notify({
               Title = "Minos Hub",
-              Content = "Đã BẬT Siêu Cấp Auto Farm! Sát thương đã được tối ưu hóa tốc độ. Hãy đứng đợi nhận Badge!",
+              Content = "Đã BẬT Tăng Speed Chém! Hãy đứng gần quái/hộp để xả sát thương siêu tốc!",
               Duration = 4,
               Image = 4483362458,
            })
        else
            Rayfield:Notify({
               Title = "Minos Hub",
-              Content = "Đã TẮT Auto Farm!",
+              Content = "Đã TẮT Tăng Speed Chém!",
               Duration = 3,
               Image = 4483362458,
            })
