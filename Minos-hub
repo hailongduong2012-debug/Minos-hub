@@ -1,51 +1,51 @@
 -- ==========================================================
 -- AUTHOR: minos
--- SCRIPT BY minos (Ultimate Custom Damage & Attack Speed - Standard Fix)
+-- SCRIPT BY minos (Garry Hub Standard Integration - FIXED 2026)
 -- ==========================================================
 
--- KHỞI TẠO THƯ VIỆN RAYFIELD THEO ĐÚNG LINK SBSD CỦA BẠN
+-- ĐỒNG BỘ 100%: Dùng link nạp thư viện UI chính xác của bản Garry
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
+-- ĐỒNG BỘ 100%: Khởi tạo Window với các thông số cơ bản, xóa config thừa
 local Window = Rayfield:CreateWindow({
    Name = "Minos Hub 📦 | SBSD",
    LoadingTitle = "Minos Hub",
    LoadingSubtitle = "Author: minos",
-   Theme = "Default",
-   DisableRayfieldPrompts = false,
-   DisableBuildWarnings = false,
-   ConfigurationSaving = { Enabled = false } -- Tắt để tránh cache UI cũ đè nút mới
+   ConfigurationSaving = {
+      Enabled = false,
+      Folder = "MinosHub_SBSD_Config",
+      FileName = "MinosSave"
+   },
+   Discord = {
+      Enabled = false,
+      Invite = "noinvite",
+      RememberJoins = true
+   },
+   KeySystem = false
 })
 
--- ĐÃ FIX: Đồng bộ cấu trúc tạo Tab dạng Table chuẩn Rayfield giống hệt file gốc của bạn
-local FarmTab = Window:CreateTab({
-    Name = "Auto Campaign",
-    Icon = 4483362458
-})
+-- ĐỒNG BỘ 100%: Tạo Tab bằng phương thức truyền Chuỗi Thô (String) giống file Garry
+local FarmTab = Window:CreateTab("Auto Campaign", 4483362458)
+local InfoTab = Window:CreateTab("Credits", 4483362458)
 
-local InfoTab = Window:CreateTab({
-    Name = "Credits",
-    Icon = 4483362458
-})
-
--- Xóa bỏ hoàn toàn thông tin liên quan tới Script Creator
+-- Đã xóa sạch thông tin liên quan tới Creator
 InfoTab:CreateParagraph({Title = "Script Information", Content = "• Author: minos\n\nChúc các bạn hack game vui vẻ!"})
 
--- CÁC BIẾN CẤU HÌNH TRẠNG THÁI ĐỘC LẬP
+-- HỆ THỐNG BIẾN ĐIỀU KHIỂN ĐỘC LẬP
 local AutoAdmin = false
 local AutoGetGear = false
 local AutoEquip = false
 local AutoFastAttack = false
 
--- BIẾN ĐIỀU CHỈNH SÁT THƯƠNG VÀ TỐC ĐỘ CHÉM
+-- BIẾN TÙY CHỈNH SÁT THƯƠNG VÀ TỐC ĐỘ CHÉM
 local CustomDamageAmount = 10 
 local CustomAttackDelay = 0.05 
 
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local virtualInputManager = game:GetService("VirtualInputManager")
-local runService = game:GetService("RunService")
 
--- HÀM 1: CHỌN NHÂN VẬT ADMIN THEO BẢN KÍCH HOẠT GARRY
+-- HÀM 1: CHỌN NHÂN VẬT ADMIN (DÙNG PHƯƠNG PHÁP CLICK CONNECTION CỦA GARRY)
 local function ProcessSelectAdmin()
     local playerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui") or LocalPlayer:FindFirstChild("PlayerGui")
     local charClass = playerGui and playerGui:FindFirstChild("CharClass")
@@ -66,7 +66,7 @@ local function ProcessSelectAdmin()
     end
 end
 
--- HÀM 2: LẤY VŨ KHÍ GARRY METHOD + KHÓA CỨNG SLOT KHO ĐỒ TIẾN HÓA
+-- HÀM 2: LẤY KIẾM (DÙNG PHƯƠNG PHÁP CLICK CỦA GARRY + AUTO SLOT TIẾN HÓA)
 local function ProcessGetRainbowGear()
     local backpack = LocalPlayer:FindFirstChildOfClass("Backpack")
     local character = LocalPlayer.Character
@@ -98,6 +98,7 @@ local function ProcessGetRainbowGear()
             gearsGui.Enabled = false
         end
     else
+        -- Luôn ưu tiên kích hoạt slot chứa thanh kiếm trong kho đồ
         if backpack then
             local items = backpack:GetChildren()
             for index, item in ipairs(items) do
@@ -131,7 +132,7 @@ local function ProcessEquipWeapon()
     end
 end
 
--- LUỒNG CHẠY CÁC TÍNH NĂNG ĐỘC LẬP
+-- KHỞI CHẠY LUỒNG TÍNH NĂNG ĐỘC LẬP
 task.spawn(function()
     while true do
         task.wait(0.1)
@@ -141,7 +142,7 @@ task.spawn(function()
     end
 end)
 
--- VÒNG LẶP CHÍNH AUTO FARM VỚI TỐC ĐỘ VÀ SÁT THƯƠNG TÙY CHỈNH CHỐNG KẸT BOSS
+-- VÒNG LẶP CHÍNH AUTO FARM (CHỈ CHẠY KHI BẬT FAST ATTACK)
 task.spawn(function()
     while true do
         task.wait(0.1)
@@ -191,7 +192,7 @@ task.spawn(function()
                             
                             if hitRemote then hitRemote:FireServer(enemyRoot, targetPos) end
                         else
-                            -- Diệt Boss/Titan (Gửi số lượng Remote chém dựa theo Slider chọn sát thương to hay nhỏ)
+                            -- Diệt Boss/Titan (Sát thương to nhỏ chỉnh bằng CustomDamageAmount qua Slider)
                             myRoot.CFrame = enemyRoot.CFrame * CFrame.new(0, 3.5, 0)
                             myRoot.AssemblyLinearVelocity = Vector3.zero
                             
@@ -214,4 +215,3 @@ task.spawn(function()
 end)
 
 -- ==========================================================
--- GIAO DIỆN PHÂN TÁCH NÚT TOGGLE & THANH KÉO SLIDER
