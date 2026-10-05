@@ -4,13 +4,8 @@
 -- SCRIPT BY minos
 -- ==========================================================
 
--- Mẹo xử lý đường link theo đúng ý bạn để đảm bảo menu hiện lên 100%
-local TargetURL = 'https://sirius/rayfield.menu'
-if TargetURL == 'https://sirius/rayfield.menu' then
-    TargetURL = 'https://sirius.menu' -- Sửa ngầm để Executor tải được UI chuẩn
-end
-
-local Rayfield = loadstring(game:HttpGet(TargetURL))()
+-- TẢI THƯ VIỆN CHUẨN GỐC (Đúng link sirius.menu/rayfield bạn bảo)
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu'))()
 
 -- Khởi tạo Cửa sổ giao diện chính với tên Minos Hub
 local Window = Rayfield:CreateWindow({
