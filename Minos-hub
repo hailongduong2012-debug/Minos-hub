@@ -5,7 +5,7 @@
 -- ==========================================================
 
 -- KHỞI TẠO THƯ VIỆN RAYFIELD UI CHUẨN XÁC 100%
-local Rayfield = loadstring(game:HttpGet('https://sirius/.menu/rayfield'))()
+local Rayfield = loadstring(game:HttpGet('https://sirius/.menu'))()
 
 local Window = Rayfield:CreateWindow({
    Name = "Minos Hub 📦 | SBSD",
