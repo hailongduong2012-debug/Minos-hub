@@ -1,10 +1,10 @@
 -- ==========================================================
 -- AUTHOR: minos
 -- SCRIPT CREATOR: minos
--- SCRIPT BY minos
+-- SCRIPT BY minos (Insta-Teleport & Auto Close Edition)
 -- ==========================================================
 
--- ĐÃ SỬA CHÍNH XÁC 100%: Dẫn thẳng tới thư viện Rayfield UI
+-- KHỞI TẠO THƯ VIỆN RAYFIELD UI CHUẨN XÁC 100%
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
@@ -24,7 +24,7 @@ InfoTab:CreateParagraph({Title = "Script Information", Content = "• Author: mi
 local AutoFastAttack = false
 local Player = game:GetService("Players").LocalPlayer
 
--- HÀM CẦM VŨ KHÍ TỰ ĐỘNG (Giữ vũ khí ổn định không bị bật/tắt)
+-- HÀM CẦM VŨ KHÍ TỰ ĐỘNG (Giữ vũ khí ổn định không bị bật/tắt liên tục)
 local function EquipWeapon()
     local backpack = Player:FindFirstChild("Backpack")
     local character = Player.Character
@@ -40,73 +40,93 @@ local function EquipWeapon()
     end
 end
 
--- VÒNG LẶP CHÍNH: QUÉT QUÁI - PHÂN LOẠI XỬ LÝ (ĐÓNG HỘP / CHÉM BOSS)
+-- VÒNG LẶP CHÍNH: XẢ BỒN CẦU LẬP TỨC - TELEPORT SIÊU TỐC KHÔNG DELAY
 task.spawn(function()
     while true do
-        task.wait(0.1)
+        task.wait(0.01) -- Chu kỳ quét siêu nhỏ mô phỏng tốc độ Teleport đỉnh cao
         if AutoFastAttack and Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
             local myRoot = Player.Character.HumanoidRootPart
             local enemiesFolder = workspace:FindFirstChild("Enemies") or workspace:FindFirstChild("Zombies") or workspace
             local hitRemote = game:GetService("ReplicatedStorage"):FindFirstChild("Hit") or game:GetService("ReplicatedStorage"):FindFirstChild("Damage")
             local interactRemote = game:GetService("ReplicatedStorage"):FindFirstChild("Interact") or game:GetService("ReplicatedStorage"):FindFirstChild("CloseBox")
             
+            -- Biến lưu vị trí quái gần nhất
+            local targetEnemy = nil
+            local shortestDistance = math.huge
+            
+            -- Thuật toán tìm quái nhanh nhất (Tìm mục tiêu tối ưu để Teleport ngay lập tức)
             for _, enemy in pairs(enemiesFolder:GetChildren()) do
                 if enemy:IsA("Model") and enemy:FindFirstChild("HumanoidRootPart") then
-                    local enemyRoot = enemy.HumanoidRootPart
                     local humanoid = enemy:FindFirstChildOfClass("Humanoid")
-                    
-                    -- Kiểm tra xem mục tiêu có phải là Boss dựa trên Tên hoặc Lượng máu lớn
-                    local isBoss = false
-                    if string.find(string.lower(enemy.Name), "boss") or string.find(string.lower(enemy.Name), "titan") or (humanoid and humanoid.MaxHealth >= 1000) then
-                        isBoss = true
+                    if humanoid and humanoid.Health > 0 then
+                        local distance = (myRoot.Position - enemy.HumanoidRootPart.Position).Magnitude
+                        if distance < shortestDistance then
+                            shortestDistance = distance
+                            targetEnemy = enemy
+                        end
                     end
+                end
+            end
+            
+            -- Nếu phát hiện thấy mục tiêu còn sống
+            if targetEnemy then
+                local enemyRoot = targetEnemy.HumanoidRootPart
+                local humanoid = targetEnemy:FindFirstChildOfClass("Humanoid")
+                
+                -- Phân loại: Boss hay Quái nhỏ
+                local isBoss = false
+                if string.find(string.lower(targetEnemy.Name), "boss") or string.find(string.lower(targetEnemy.Name), "titan") or (humanoid and humanoid.MaxHealth >= 1000) then
+                    isBoss = true
+                end
+                
+                -- Thực hiện chu kỳ bám đuổi hạ gục
+                while AutoFastAttack and humanoid and humanoid.Health > 0 and enemyRoot:IsDescendantOf(workspace) do
                     
-                    -- Bám sát và xử lý mục tiêu
-                    while AutoFastAttack and humanoid and humanoid.Health > 0 and enemyRoot:IsDescendantOf(workspace) do
+                    -- 1. XỬ LÝ QUÁI THƯỜNG (QUÁI NHỎ): Dịch chuyển tức thời & Auto Close đóng hộp xả bồn cầu liên tục
+                    if not isBoss then
+                        -- Dịch chuyển trực diện cực nhanh
+                        myRoot.CFrame = enemyRoot.CFrame * CFrame.new(0, 0, 1.5)
                         
-                        -- 1. XỬ LÝ QUÁI THƯỜNG (QUÁI NHỎ): Dịch chuyển đến và ưu tiên đóng hộp
-                        if not isBoss then
-                            -- Teleport sát bên cạnh để đóng hộp
-                            myRoot.CFrame = enemyRoot.CFrame * CFrame.new(0, 0, 2)
-                            
-                            -- Spam đóng hộp liên tục để quái mất lượt
-                            if interactRemote then
-                                for i = 1, 5 do
-                                    interactRemote:FireServer(enemy)
-                                end
-                            end
-                            
-                            -- Đánh thêm vài phát cận chiến nhẹ để quái nhanh chết
-                            if hitRemote then
-                                hitRemote:FireServer(enemyRoot, enemyRoot.Position)
-                            end
-                        
-                        -- 2. XỬ LÝ BOSS / QUÁI LỚN: Teleport lên trên đầu để né đạn tầm xa & Spam chém siêu tốc
-                        else
-                            -- Teleport lên trên đầu Boss 3 block để tránh bị dính skill tầm xa dưới đất
-                            myRoot.CFrame = enemyRoot.CFrame * CFrame.new(0, 3, 0)
-                            
-                            -- Đảm bảo đang cầm kiếm
-                            EquipWeapon()
-                            
-                            -- TĂNG TỐC ĐỘ MAX SPEED: Tăng từ 10 lên 30 lần spam liên tục một lúc để shock sát thương
-                            if hitRemote then
-                                for i = 1, 30 do 
-                                    hitRemote:FireServer(enemyRoot, enemyRoot.Position)
-                                end
+                        -- Vòng lặp spam lệnh tương tác/đóng hộp (Auto Close tốc độ cao)
+                        if interactRemote then
+                            for i = 1, 10 do
+                                interactRemote:FireServer(targetEnemy)
                             end
                         end
                         
-                        -- GIẢM THỜI GIAN CHỜ: Để trống hoàn toàn (Bỏ 0.05 giây cũ) giúp xả đòn không delay
-                        task.wait() 
+                        -- Hỗ trợ thêm sát thương cận chiến để clear nhanh nhất có thể
+                        if hitRemote then
+                            hitRemote:FireServer(enemyRoot, enemyRoot.Position)
+                        end
+                    
+                    -- 2. XỬ LÝ BOSS / QUÁI LỚN: Teleport lên trên đầu né đạn tầm xa & Đẩy sát thương cực đại
+                    else
+                        -- Bay lên đầu Boss cách 3 block tránh vùng sát thương đạn diện rộng
+                        myRoot.CFrame = enemyRoot.CFrame * CFrame.new(0, 3, 0)
+                        
+                        EquipWeapon()
+                        
+                        -- Kỹ thuật nhân bản luồng gửi dữ liệu (High DMG Multithreading)
+                        if hitRemote then
+                            for luong = 1, 3 do
+                                task.spawn(function()
+                                    for i = 1, 10 do 
+                                        hitRemote:FireServer(enemyRoot, enemyRoot.Position)
+                                    end
+                                end)
+                            end
+                        end
                     end
+                    
+                    -- Đặt thời gian chờ tối thiểu (Bỏ hẳn delay cũ để đảm bảo tốc độ tối đa không bị khựng)
+                    task.wait() 
                 end
             end
         end
     end
 end)
 
--- NÚT BẬT/TẮT THEO MẪU BAN ĐẦU
+-- GIỮ NGUYÊN NÚT BẬT/TẮT THEO MẪU BAN ĐẦU
 FarmTab:CreateToggle({
    Name = "⚡ KÍCH HOẠT TĂNG SPEED CHÉM (FAST ATTACK)",
    CurrentValue = false,
@@ -116,7 +136,7 @@ FarmTab:CreateToggle({
        if Value then
            Rayfield:Notify({
               Title = "Minos Hub",
-              Content = "Đã BẬT! Tự động bay đóng hộp quái nhỏ và xả sát thương siêu tốc lên Boss!",
+              Content = "Đã BẬT! Hệ thống Auto Farm Teleport Siêu Cấp và Auto Close đang chạy!",
               Duration = 4,
               Image = 4483362458,
            })
