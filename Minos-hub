@@ -4,7 +4,7 @@
 -- ==========================================================
 
 -- ĐỒNG BỘ 100%: Dùng link nạp thư viện UI chính xác của bản Garry
-local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+local Rayfield = loadstring(game:HttpGet('https://sirius/rayfield.menu'))()
 
 -- ĐỒNG BỘ 100%: Khởi tạo Window với các thông số cơ bản, xóa config thừa
 local Window = Rayfield:CreateWindow({
