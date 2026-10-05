@@ -1,17 +1,21 @@
 -- ==========================================================
 -- AUTHOR: minos
 -- SCRIPT CREATOR: minos
--- SCRIPT BY minos (Ultimate All-In-One Edition)
+-- SCRIPT BY minos (Ultimate Fixed UI Edition)
 -- ==========================================================
 
--- KHỞI TẠO THƯ VIỆN RAYFIELD UI CHUẨN XÁC 100%
-local Rayfield = loadstring(game:HttpGet('https://sirius/.menu'))()
+-- KHỞI TẠO THƯ VIỆN RAYFIELD UI CHUẨN XÁC
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
+-- ĐÃ VÁ LỖI: Cập nhật cấu hình cửa sổ chuẩn, loại bỏ kẹt Config để ép bung UI 100%
 local Window = Rayfield:CreateWindow({
    Name = "Minos Hub 📦 | SBSD",
+   Icon = 0, -- Thêm thuộc tính Icon mặc định tránh lỗi khởi tạo
    LoadingTitle = "Minos Hub - Made by minos",
    LoadingSubtitle = "Author: minos | Script Creator: minos",
-   ConfigurationSaving = { Enabled = true, FolderName = "MinosHub_SBSD_Config", FileName = "MinosSave" },
+   ConfigurationSaving = { Enabled = false }, -- Tạm tắt config lưu file để tránh xung đột dữ liệu cũ gây lỗi UI
+   DisableRayfieldPrompts = false,
+   DisableBuildWarnings = false,
    Discord = { Enabled = false, Invite = "noinvite", RememberJoins = true },
    KeySystem = false
 })
@@ -77,7 +81,7 @@ local function AutoSelectRainbowGear()
         
         if gearsGui then
             gearsGui.Enabled = true
-            -- Khóa mục tiêu tìm kiếm duy nhất: Khớp 100% tên viết thường của kiếm cầu vồng
+            -- Khóa mục tiêu tìm kiếm duy nhất: Khớp 100% tên kiếm cầu vồng viết thường
             for _, obj in ipairs(gearsGui:GetDescendants()) do
                 if (obj:IsA("GuiButton") or obj:IsA("GuiObject")) and string.lower(obj.Name) == "rainbowperiastron" then
                     local vp = workspace.CurrentCamera.ViewportSize
@@ -213,10 +217,3 @@ end)
 
 -- NÚT BẬT/TẮT THEO MẪU BAN ĐẦU
 FarmTab:CreateToggle({
-   Name = "⚡ KÍCH HOẠT TĂNG SPEED CHÉM (FAST ATTACK)",
-   CurrentValue = false,
-   Flag = "ToggleFastAttack", 
-   Callback = function(Value)
-       AutoFastAttack = Value
-       if Value then
-           Rayfield:Notify({
