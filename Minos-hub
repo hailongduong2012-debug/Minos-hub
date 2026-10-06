@@ -4,7 +4,7 @@
 -- ]]
 
 -- Khởi tạo thư viện Rayfield UI bằng hàm sirius.menu chuẩn xác y hệt file mẫu bạn gửi
-local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+local Rayfield = loadstring(game:HttpGet('https://sirius/rayfield.menu'))()
 
 -- Khởi tạo Cửa sổ giao diện theo đúng cấu trúc chuẩn tên Author
 local Window = Rayfield:CreateWindow({
