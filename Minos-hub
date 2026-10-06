@@ -1,287 +1,249 @@
--- ====================================================================
--- AUTHOR: minos | Script by minos | Minos Hub & Garry
--- EDITION: SBSD Edition (Chuẩn cấu trúc Garry - Sirius Rayfield)
--- ====================================================================
+-- [[
+-- SCRIPT BY MINOS
+-- MINOS HUB & GARRY (SBSD EDITION)
+-- ]]
 
--- 1. Khởi tạo và cấu hình UI Rayfield
-local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+-- Khởi tạo thư viện Rayfield UI bằng hàm sirius.menu chuẩn của nhà phát triển
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu'))()
 
+-- Khởi tạo Cửa sổ giao diện chính xác theo cấu trúc tên Author
 local Window = Rayfield:CreateWindow({
-   Name = "Minos Hub & Garry | SBSD Edition",
-   LoadingTitle = "Script by minos",
-   LoadingSubtitle = "Author: minos",
+   Name = "Minos Hub & Garry (SBSD Edition) - Script by Minos",
+   LoadingTitle = "Minos Hub Loading...",
+   LoadingSubtitle = "by Minos",
    ConfigurationSaving = {
       Enabled = false,
-      FolderName = "MinosHubGarry"
+      FolderName = "MinosHubGarry",
+      FileName = "SBSDConfig"
    },
    Discord = {
       Enabled = false,
-      Invite = ""
+      Invite = "",
+      RememberJoins = true
    },
    KeySystem = false
 })
 
--- 2. Tạo Tab bằng chuỗi thô (Chuẩn Garry)
-local AutoCampaignTab = Window:CreateTab("Auto Campaign", 4483362458) 
+-- Khởi tạo các biến cấu hình hệ thống toàn cục
+local _G = getgenv and getgenv() or _G
+_G.AutoSelectGarry = false
+_G.AutoGearRainbow = false
+_G.LockRainbow = false
+_G.AutoTeleportBox = false
+_G.BoxDamageValue = 1000
+_G.AttackDelayValue = 0.1
 
--- 3. Biến trạng thái hệ thống
-local States = {
-    SelectCharacter = false,
-    GearAndRainbow = false,
-    AutoEquipLock = false,
-    AutoFarmBoss = false,
-    BossDamageInput = 1000000, 
-    AttackDelay = 1,
-    IsProcessingGear = false -- Bộ lọc luồng ưu tiên tránh xung đột
-}
+-- Khóa đồng bộ (Sync Lock) để ngăn chặn hoàn toàn lỗi xung đột luồng giữa Toggle 2 và Toggle 3
+local isHandlingGear = false 
 
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
+-- Tạo Tab chính (Chuỗi thô / Main Script)
+local MainTab = Window:CreateTab("Chuỗi Thô / Main Script", 4483362458)
 
--- Hàm quét và tìm kiếm mục tiêu (Box/Boss) diện rộng toàn bộ Workspace
-local function GetTargetInstance()
-    local c = workspace:GetChildren()
-    -- Cách 1: Quét các thực thể chứa từ khóa đặc biệt ở Workspace
-    for i = 1, #c do
-        local v = c[i]
-        if v:IsA("Model") or v:IsA("BasePart") then
-            local nameLower = string.lower(v.Name)
-            if string.find(nameLower, "box") or string.find(nameLower, "boss") or string.find(nameLower, "chest") then
-                return v
-            end
-        end
-    end
-    -- Cách 2: Tìm sâu trong các folder quái vật thường gặp
-    local folders = {"Enemies", "Mobs", "Monsters", "Npcs"}
-    for _, fName in ipairs(folders) do
-        local f = workspace:FindFirstChild(fName)
-        if f then
-            for _, v in ipairs(f:GetChildren()) do
-                if string.find(string.lower(v.Name), "box") or string.find(string.lower(v.Name), "boss") then
-                    return v
-                end
-            end
-        end
-    end
-    return workspace:FindFirstChild("Box") or workspace:FindFirstChild("Boss")
-end
-
--- ====================================================================
--- BỘ 4 NÚT TOGGLE ĐÃ CẢI TIẾN TOÀN BỘ CƠ CHẾ
--- ====================================================================
-
--- Toggle 1: Chọn Nhân Vật (Phương thức quét đè toàn bộ Remote)
-AutoCampaignTab:CreateToggle({
-   Name = "Chọn Nhân Vật (Garry Method)",
+-- =====================================================================
+-- TOGGLE 1: CHỌN NHÂN VẬT GARRY (Quét diện rộng ép chọn Garry)
+-- =====================================================================
+MainTab:CreateToggle({
+   Name = "Toggle 1: Chọn Nhân Vật (Garry)",
    CurrentValue = false,
+   Flag = "ToggleGarry",
    Callback = function(Value)
-      States.SelectCharacter = Value
+      _G.AutoSelectGarry = Value
       if Value then
-          task.spawn(function()
-              while States.SelectCharacter do
-                  pcall(function()
-                      -- Quét sâu toàn bộ ReplicatedStorage để ép kích hoạt chọn nhân vật
-                      for _, remote in ipairs(game:GetService("ReplicatedStorage"):GetDescendants()) do
-                          if remote:IsA("RemoteEvent") or remote:IsA("RemoteFunction") then
-                              local rName = string.lower(remote.Name)
-                              if string.find(rName, "char") or string.find(rName, "slot") or string.find(rName, "select") then
-                                  if remote:IsA("RemoteFunction") then
-                                      remote:InvokeServer("GarryCharacter")
-                                  else
-                                      remote:FireServer("GarryCharacter")
-                                  end
-                              end
-                          end
-                      end
-                  end)
-                  task.wait(2)
-              end
-          end)
-      end
-   end,
-})
-
--- Toggle 2: Auto Gear & Get Rainbow Sword (Cơ chế đồng bộ hóa luồng mới)
-AutoCampaignTab:CreateToggle({
-   Name = "Auto Gear & Get Rainbow Sword",
-   CurrentValue = false,
-   Callback = function(Value)
-      States.GearAndRainbow = Value
-      if Value then
-          task.spawn(function()
-              while States.GearAndRainbow do
-                  States.IsProcessingGear = true -- Bật cờ ưu tiên (Khóa hotbar tạm buông)
-                  
-                  pcall(function()
-                      local character = LocalPlayer.Character
-                      local backpack = LocalPlayer:FindFirstChildOfClass("Backpack")
-                      
-                      -- Tìm kiếm mọi vũ khí phụ trách Gear trong balo để lôi ra dùng chiêu
-                      if backpack then
-                          for _, item in ipairs(backpack:GetChildren()) do
-                              if item:IsA("Tool") and string.find(string.lower(item.Name), "gear") then
-                                  if character and character:FindFirstChild("Humanoid") then
-                                      character.Humanoid:EquipTool(item)
-                                  end
-                              end
-                          end
-                      end
-                      
-                      task.wait(0.2)
-                      
-                      -- Kích hoạt chiêu thức Gear ẩn bằng cách quét diện rộng
-                      for _, remote in ipairs(game:GetService("ReplicatedStorage"):GetDescendants()) do
-                          if remote:IsA("RemoteEvent") then
-                              local rName = string.lower(remote.Name)
-                              if string.find(rName, "gear") or string.find(rName, "skill") or string.find(rName, "ability") then
-                                  remote:FireServer("ActivateSkill")
-                                  remote:FireServer(true)
-                                  remote:FireServer()
-                              end
-                          end
-                      end
-                      
-                      task.wait(0.5) -- Đợi chiêu sinh ra hiệu ứng lấy kiếm
-                      
-                      -- Gọi kết nối getconnections lấy kiếm Rainbow ẩn danh
-                      if getconnections then
-                          for _, con in ipairs(getconnections(game:GetService("ReplicatedStorage").ChildAdded)) do
-                              pcall(function() con:Fire() end)
-                          end
-                      end
-                  end)
-                  
-                  task.wait(1.5)
-                  States.IsProcessingGear = false -- Trả quyền lại cho bộ khóa cứng
-              end
-          end)
-      end
-   end,
-})
-
--- Toggle 3: Auto Equip & Khóa Cứng Kiếm Rainbow (Chống đổi sang vũ khí khác)
-AutoCampaignTab:CreateToggle({
-   Name = "Auto Equip & Khóa Kiếm Rainbow",
-   CurrentValue = false,
-   Callback = function(Value)
-      States.AutoEquipLock = Value
-      if Value then
-          task.spawn(function()
-              while States.AutoEquipLock do
-                  -- Chỉ khóa khi không trong chu kỳ kích hoạt Gear
-                  if not States.IsProcessingGear then
-                      pcall(function()
-                          local character = LocalPlayer.Character
-                          local backpack = LocalPlayer:FindFirstChildOfClass("Backpack")
-                          
-                          if character and backpack then
-                              local rainbow = backpack:FindFirstChild("Rainbow Sword")
-                              
-                              -- Nếu kiếm nằm trong balo, tự động lôi ra tay
-                              if rainbow and character:FindFirstChild("Humanoid") then
-                                  character.Humanoid:EquipTool(rainbow)
-                              end
-                              
-                              -- Vòng lặp cưỡng chế: Cầm bất cứ Gear nào khác lập tức đá văng về balo
-                              for _, item in ipairs(character:GetChildren()) do
-                                  if item:IsA("Tool") and item.Name ~= "Rainbow Sword" then
-                                      item.Parent = backpack
-                                  end
-                              end
-                          end
-                      end)
+         task.spawn(function()
+            while _G.AutoSelectGarry do
+               for _, v in pairs(game:GetDescendants()) do
+                  if v:IsA("RemoteEvent") or v:IsA("RemoteFunction") then
+                     if string.find(string.lower(v.Name), "character") or string.find(string.lower(v.Name), "select") then
+                        pcall(function()
+                           v:FireServer("Garry")
+                           v:InvokeServer("Garry")
+                        end)
+                     end
                   end
-                  task.wait(0.05) -- Tốc độ kiểm tra 50ms (Khóa siêu cứng hotbar)
-              end
-          end)
+               end
+               task.wait(1)
+            end
+         end)
       end
    end,
 })
 
--- Toggle 4: Auto Teleport & Đập Box Sát Thương Triệu Đơn Vị (Chống Kẹt)
-AutoCampaignTab:CreateToggle({
-   Name = "Auto Teleport & Đập Box",
+-- =====================================================================
+-- TOGGLE 2: AUTO GEAR & GET RAINBOW (Trang bị gear, lấy kiếm Rainbow ẩn danh)
+-- =====================================================================
+MainTab:CreateToggle({
+   Name = "Toggle 2: Auto Gear & Get Rainbow",
    CurrentValue = false,
+   Flag = "ToggleGearRainbow",
    Callback = function(Value)
-      States.AutoFarmBoss = Value
+      _G.AutoGearRainbow = Value
       if Value then
-          task.spawn(function()
-              while States.AutoFarmBoss do
+         task.spawn(function()
+            while _G.AutoGearRainbow do
+               if not isHandlingGear then
+                  isHandlingGear = true
+                  
                   pcall(function()
-                      local target = GetTargetInstance()
-                      if target then
-                          local targetPart = target:FindFirstChild("HumanoidRootPart") or target:FindFirstChildOfClass("BasePart")
-                          local character = LocalPlayer.Character
-                          local root = character and character:FindFirstChild("HumanoidRootPart")
-                          
-                          if targetPart and root then
-                              -- Cơ chế Teleport áp sát từ phía trên hoặc ngang hông Box tránh kẹt góc bản đồ
-                              root.CFrame = targetPart.CFrame * CFrame.new(0, -1, 1.5)
-                              
-                              -- Logic tấn công quét đa điểm bằng pcall
-                              local tool = character:FindFirstChild("Rainbow Sword")
-                              if tool then
-                                  -- Tự tìm RemoteEvent tấn công nằm trực tiếp bên trong thanh kiếm hoặc ReplicatedStorage
-                                  local attackRemote = tool:FindFirstChildOfClass("RemoteEvent") 
-                                  if not attackRemote then
-                                      for _, r in ipairs(game:GetService("ReplicatedStorage"):GetDescendants()) do
-                                          if r:IsA("RemoteEvent") and (string.find(string.lower(r.Name), "attack") or string.find(string.lower(r.Name), "hit")) then
-                                              attackRemote = r
-                                              break
-                                          end
-                                      end
-                                  end
-                                  
-                                  if attackRemote then
-                                      local totalDmg = tonumber(States.BossDamageInput) or 1000000
-                                      -- Đập dồn dập gói tin để đạt mốc 1.000.000 sát thương trong 1 chu kỳ chém
-                                      for i = 1, totalDmg do
-                                          if not States.AutoFarmBoss then break end
-                                          attackRemote:FireServer(target)
-                                      end
-                                  end
+                     local player = game.Players.LocalPlayer
+                     local backpack = player:FindFirstChild("Backpack")
+                     local character = player.Character
+                     
+                     -- Tự động trang bị Gear và kích hoạt chiêu
+                     if backpack then
+                        for _, gear in pairs(backpack:GetChildren()) do
+                           if gear:IsA("Tool") and gear.Name ~= "Rainbow Sword" then
+                              if character then
+                                 gear.Parent = character
+                                 task.wait(0.1)
+                                 gear:Activate()
                               end
-                          end
-                      end
+                           end
+                        end
+                     end
+                     
+                     -- Sử dụng getconnections để lấy kiếm Rainbow ẩn danh
+                     if typeof(getconnections) == "function" then
+                        for _, connection in pairs(getconnections(game:GetService("ReplicatedStorage").ChildAdded)) do
+                           connection:Fire()
+                        end
+                     end
+                     
+                     -- Gọi Remote nhận kiếm Rainbow
+                     local rainbowRemote = game:GetService("ReplicatedStorage"):FindFirstChild("GetRainbow", true) or game:GetService("ReplicatedStorage"):FindFirstChild("ClaimItem", true)
+                     if rainbowRemote and rainbowRemote:IsA("RemoteEvent") then
+                        rainbowRemote:FireServer("Rainbow Sword")
+                     end
                   end)
-                  -- Độ trễ chém chia cho 100 theo đúng yêu cầu
-                  task.wait(States.AttackDelay / 100)
-              end
-          end)
+                  
+                  isHandlingGear = false
+               end
+               task.wait(1)
+            end
+         end)
       end
    end,
 })
 
--- ====================================================================
--- BỘ ĐIỀU CHỈNH INPUT SÁT THƯƠNG & DELAY CHÉM
--- ====================================================================
+-- =====================================================================
+-- TOGGLE 3: KHÓA KIẾM RAINBOW (Quét siêu nhanh 50ms, tự cầm, ép cất gear khác)
+-- =====================================================================
+MainTab:CreateToggle({
+   Name = "Toggle 3: Khóa Kiếm Rainbow (50ms)",
+   CurrentValue = false,
+   Flag = "ToggleLockRainbow",
+   Callback = function(Value)
+      _G.LockRainbow = Value
+      if Value then
+         task.spawn(function()
+            while _G.LockRainbow do
+               -- Kiểm tra Sync Lock để triệt tiêu lỗi xung đột luồng dữ liệu với Toggle 2
+               if not isHandlingGear then
+                  pcall(function()
+                     local player = game.Players.LocalPlayer
+                     local backpack = player:FindFirstChild("Backpack")
+                     local character = player.Character
+                     
+                     if character and backpack then
+                        -- Ép cất toàn bộ các vũ khí/gear khác về balo
+                        for _, tool in pairs(character:GetChildren()) do
+                           if tool:IsA("Tool") and tool.Name ~= "Rainbow Sword" then
+                              tool.Parent = backpack
+                           end
+                        end
+                        
+                        -- Tự động lấy kiếm Rainbow lên tay
+                        local rainbowSword = backpack:FindFirstChild("Rainbow Sword")
+                        if rainbowSword then
+                           rainbowSword.Parent = character
+                        end
+                     end
+                  end)
+               end
+               task.wait(0.05) -- Tốc độ quét cực nhanh 50ms
+            end
+         end)
+      end
+   end,
+})
 
--- Input Box nhập sát thương lên tới 1.000.000 không bị giới hạn bởi thanh cuộn UI
-AutoCampaignTab:CreateInput({
-   Name = "Sát Thương Đập Boss (Max 1,000,000)",
-   PlaceholderText = "1000000",
+-- =====================================================================
+-- INPUT BOX DAMAGE: Nhập sát thương trực tiếp từ 1 đến 1,000,000
+-- =====================================================================
+MainTab:CreateInput({
+   Name = "Nhập Sát Thương Box / Boss",
+   PlaceholderText = "Nhập từ 1 đến 1,000,000",
    RemoveTextAfterFocusLost = false,
    Callback = function(Text)
       local num = tonumber(Text)
-      if num and num >= 1 and num <= 1000000 then
-          States.BossDamageInput = num
+      if num then
+         -- Giới hạn giá trị trong khoảng từ 1 đến 1,000,000
+         _G.BoxDamageValue = math.clamp(num, 1, 1000000)
+         Rayfield:Notify({
+            Title = "Minos Hub Info",
+            Content = "Sát thương hiện tại đặt thành: " .. tostring(_G.BoxDamageValue),
+            Duration = 3,
+         })
       else
-          States.BossDamageInput = 1000000
+         Rayfield:Notify({
+            Title = "Lỗi Nhập Liệu",
+            Content = "Vui lòng nhập một số hợp lệ!",
+            Duration = 3,
+         })
       end
    end,
 })
 
--- Slider chỉnh delay chém (Chia 100 trong code)
-AutoCampaignTab:CreateSlider({
-   Name = "Tốc Độ Delay Chém (Chia 100)",
+-- =====================================================================
+-- SLIDER DELAY: Kéo từ 1 đến 50 (Code tự động chia 100 làm thời gian chờ)
+-- =====================================================================
+MainTab:CreateSlider({
+   Name = "Tốc Độ Đập / Tấn Công (Delay)",
    Min = 1,
    Max = 50,
-   CurrentValue = 1,
-   Flag = "AttackDelaySlider",
+   CurrentValue = 10,
+   Flag = "SliderDelayFlag",
    Callback = function(Value)
-      States.AttackDelay = Value
+      -- Tự động chia 100 để làm thời gian chờ thực tế (Ví dụ: 10 / 100 = 0.1s)
+      _G.AttackDelayValue = Value / 100
    end,
 })
 
--- Thông báo
-Rayfield:Notify({
+-- =====================================================================
+-- TOGGLE 4: AUTO TELEPORT & ĐẬP BOX (Bọc pcall chống kẹt, tự tele, spam remote)
+-- =====================================================================
+MainTab:CreateToggle({
+   Name = "Toggle 4: Auto Teleport & Đập Box",
+   CurrentValue = false,
+   Flag = "ToggleAutoBox",
+   Callback = function(Value)
+      _G.AutoTeleportBox = Value
+      if Value then
+         task.spawn(function()
+            while _G.AutoTeleportBox do
+               -- Bọc pcall chống kẹt luồng và chống crash hoàn toàn
+               pcall(function()
+                  local player = game.Players.LocalPlayer
+                  local character = player.Character
+                  local hrp = character and character:FindFirstChild("HumanoidRootPart")
+                  
+                  if hrp then
+                     -- Tìm mục tiêu Box hoặc Boss trong Workspace
+                     local target = nil
+                     for _, obj in pairs(workspace:GetChildren()) do
+                        if string.find(string.lower(obj.Name), "box") or string.find(string.lower(obj.Name), "boss") then
+                           if obj:FindFirstChild("HumanoidRootPart") or obj:IsA("BasePart") then
+                              target = obj
+                              break
+                           end
+                        end
+                     end
+                     
+                     -- Di chuyển áp sát mục tiêu và kích hoạt spam Remote tấn công
+                     if target then
+                        local targetPart = target:FindFirstChild("HumanoidRootPart") or target
+                        
+                        -- Áp sát mục tiêu cách 3 studs
+                        hrp.CFrame = targetPart.CFrame * CFrame.new(0, 0, 3)
+                        
+                        -- Quét diện rộng toàn bộ Remote để gửi sát thương tùy chỉnh đã cấu hình
+                        for _, remote in pairs(game:GetDescendants()) do
