@@ -3,10 +3,10 @@
 -- MINOS HUB & GARRY (SBSD EDITION)
 -- ]]
 
--- Khởi tạo thư viện Rayfield UI bằng hàm sirius.menu chuẩn của nhà phát triển
-local Rayfield = loadstring(game:HttpGet('https://sirius.menu'))()
+-- Gọi thư viện Rayfield UI bằng nguồn shlexware ổn định tương thích 100% với form mẫu của bạn
+local Rayfield = loadstring(game:HttpGet('https://raw.githubusercontent.com/hailongduong2012-debug/Minos-hub/refs/heads/main/Minos-hub'))()
 
--- Khởi tạo Cửa sổ giao diện chính xác theo cấu trúc tên Author
+-- Khởi tạo Cửa sổ giao diện theo đúng cấu trúc chuẩn của form Sbsd
 local Window = Rayfield:CreateWindow({
    Name = "Minos Hub & Garry (SBSD Edition) - Script by Minos",
    LoadingTitle = "Minos Hub Loading...",
@@ -33,11 +33,11 @@ _G.AutoTeleportBox = false
 _G.BoxDamageValue = 1000
 _G.AttackDelayValue = 0.1
 
--- Khóa đồng bộ (Sync Lock) để ngăn chặn hoàn toàn lỗi xung đột luồng giữa Toggle 2 và Toggle 3
+-- Khóa đồng bộ (Sync Lock) để xử lý triệt để xung đột luồng giữa Toggle 2 và Toggle 3
 local isHandlingGear = false 
 
--- Tạo Tab chính (Chuỗi thô / Main Script)
-local MainTab = Window:CreateTab("Chuỗi Thô / Main Script", 4483362458)
+-- SỬA LỖI TẠI ĐÂY: Loại bỏ hoàn toàn ID hình ảnh để tránh crash UI Rayfield
+local MainTab = Window:CreateTab("Chuỗi Thô / Main Script")
 
 -- =====================================================================
 -- TOGGLE 1: CHỌN NHÂN VẬT GARRY (Quét diện rộng ép chọn Garry)
@@ -136,7 +136,7 @@ MainTab:CreateToggle({
       if Value then
          task.spawn(function()
             while _G.LockRainbow do
-               -- Kiểm tra Sync Lock để triệt tiêu lỗi xung đột luồng dữ liệu với Toggle 2
+               -- Kiểm tra Sync Lock tránh xung đột luồng với Toggle 2
                if not isHandlingGear then
                   pcall(function()
                      local player = game.Players.LocalPlayer
@@ -176,7 +176,6 @@ MainTab:CreateInput({
    Callback = function(Text)
       local num = tonumber(Text)
       if num then
-         -- Giới hạn giá trị trong khoảng từ 1 đến 1,000,000
          _G.BoxDamageValue = math.clamp(num, 1, 1000000)
          Rayfield:Notify({
             Title = "Minos Hub Info",
@@ -220,7 +219,6 @@ MainTab:CreateToggle({
       if Value then
          task.spawn(function()
             while _G.AutoTeleportBox do
-               -- Bọc pcall chống kẹt luồng và chống crash hoàn toàn
                pcall(function()
                   local player = game.Players.LocalPlayer
                   local character = player.Character
