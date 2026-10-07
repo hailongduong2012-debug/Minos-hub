@@ -11,10 +11,10 @@ local PlaceId = game.PlaceId
 -- KIỂM TRA PLACEID
 -----------------------------------------------------
 local supportedPlaces = {
-    [13151311229] = true,
-    [14852797539] = true,
-    [12377995562] = true, 
     [15735896047] = true,
+    [12377995562] = true,
+    [13151311229] = true, 
+    [14852797539] = true,
 }
 
 local function showNotSupportedMessage()
@@ -95,17 +95,17 @@ LocalPlayer.Idled:Connect(function()
 end)
 
 -----------------------------------------------------
--- RAYFIELD GUI SETUP
+-- RAYFIELD GUI SETUP (MINOS HUB)
 -----------------------------------------------------
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu'))()
 
-local windowName = "garry hub"
+local windowName = "Minos Hub"
 
 local Window = Rayfield:CreateWindow({
    Name = windowName,
    Icon = 10044538000,
    LoadingTitle = "Loading Script...",
-   LoadingSubtitle = "Script by garry",
+   LoadingSubtitle = "Script by minos",
    Theme = "Default",
    DisableRayfieldPrompts = false,
    DisableBuildWarnings = false,
@@ -281,4 +281,3 @@ local function getGearFromParent(container)
       local lowerName = string.lower(child.Name)
       if isNewGame then
           if string.find(lowerName, "trollge_tui axe") or lowerName == "rainbowperiastron" then return child end
-      else
