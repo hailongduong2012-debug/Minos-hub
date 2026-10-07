@@ -8,13 +8,12 @@ local LocalPlayer = Players.LocalPlayer
 local PlaceId = game.PlaceId
 
 -----------------------------------------------------
--- KIỂM TRA PLACEID (ĐÃ SỬA LỖI XÓA NHẦM KÝ TỰ KHÔNG LÊN UI)
+-- KIỂM TRA PLACEID (ĐÃ FIX LỖI TRỐNG ID GÂY CRASH CODE)
 -----------------------------------------------------
 local supportedPlaces = {
     [15735896047] = true,
     [12377995562] = true,
     [13151311229] = true, 
-    [14852797539] = true,
 }
 
 local function showNotSupportedMessage()
