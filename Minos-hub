@@ -1,6 +1,6 @@
 -----------------------------------------------------
 -- ENVIRONMENT SETUP
--- Author: garry
+-- Author: minos
 -----------------------------------------------------
 local StarterGui = game:GetService('StarterGui')
 local Players = game:GetService('Players')
