@@ -5,78 +5,6 @@
 local StarterGui = game:GetService('StarterGui')
 local Players = game:GetService('Players')
 local LocalPlayer = Players.LocalPlayer
-local PlaceId = game.PlaceId
-
------------------------------------------------------
--- KIỂM TRA PLACEID (ĐÃ FIX LỖI TRỐNG ID GÂY CRASH CODE)
------------------------------------------------------
-local supportedPlaces = {
-    [15735896047] = true,
-    [12377995562] = true,
-    [13151311229] = true, 
-}
-
-local function showNotSupportedMessage()
-    local sg = Instance.new("ScreenGui")
-    sg.Name = "NotSupportedMsg"
-    if gethui then
-        sg.Parent = gethui()
-    else
-        local success = pcall(function() sg.Parent = game:GetService("CoreGui") end)
-        if not success then sg.Parent = LocalPlayer:WaitForChild("PlayerGui") end
-    end
-    
-    local txt = Instance.new("TextLabel")
-    txt.Parent = sg
-    txt.Size = UDim2.new(1, 0, 1, 0)
-    txt.Position = UDim2.new(0, 0, 0, 0)
-    txt.BackgroundTransparency = 1
-    txt.Text = "This game is not supported"
-    txt.Font = Enum.Font.GothamBlack
-    txt.TextSize = 50
-    txt.TextColor3 = Color3.fromRGB(255, 50, 50)
-    txt.TextStrokeTransparency = 0
-    txt.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
-    
-    task.delay(5, function()
-        if sg then
-            sg:Destroy()
-        end
-    end)
-end
-
-if not supportedPlaces[PlaceId] then
-    showNotSupportedMessage()
-end
-
------------------------------------------------------
--- SCRIPT CHÍNH (LOGIC GAME, AUTO FARM & PARRY)
------------------------------------------------------
-
-if PlaceId == 14852797539 then
-    local sg = Instance.new("ScreenGui")
-    sg.Name = "ElevatorMsg"
-    if gethui then
-        sg.Parent = gethui()
-    else
-        local success = pcall(function() sg.Parent = game:GetService("CoreGui") end)
-        if not success then sg.Parent = LocalPlayer:WaitForChild("PlayerGui") end
-    end
-    
-    local txt = Instance.new("TextLabel")
-    txt.Parent = sg
-    txt.Size = UDim2.new(1, 0, 1, 0)
-    txt.Position = UDim2.new(0, 0, 0, 0)
-    txt.BackgroundTransparency = 1
-    txt.Text = "Get in the elevator, you idiot"
-    txt.Font = Enum.Font.GothamBlack
-    txt.TextSize = 60
-    txt.TextColor3 = Color3.fromRGB(255, 50, 50)
-    txt.TextStrokeTransparency = 0
-    txt.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
-    
-    return
-end
 
 -----------------------------------------------------
 -- SERVICE & ANTI-AFK KHỞI TẠO
@@ -96,7 +24,7 @@ end)
 -----------------------------------------------------
 -- RAYFIELD GUI SETUP (MINOS HUB)
 -----------------------------------------------------
-local Rayfield = loadstring(game:HttpGet('https://sirius.menu'))()
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local windowName = "Minos Hub"
 
@@ -275,7 +203,77 @@ local v15 = {
 
 local function getGearFromParent(container)
   if not container then return nil end
-  local isNewGame = (PlaceId == 12377995562 or PlaceId == 15735896047)
+  local isNewGame = (game.PlaceId == 12377995562 or game.PlaceId == 15735896047)
   for _, child in ipairs(container:GetChildren()) do
       local lowerName = string.lower(child.Name)
       if isNewGame then
+          if string.find(lowerName, "trollge_tui axe") or lowerName == "rainbowperiastron" then return child end
+      else
+          if string.find(lowerName, "whig sword")
+          or lowerName == "rainbowperiastron"
+          or lowerName == "dragonslayersswordandshield"
+          or lowerName == "uppersword"
+          or string.find(lowerName, "pe") then
+              return child
+          end
+      end
+  end
+  return nil
+end
+
+local function f22()
+  virtualInputManager:SendKeyEvent(true, Enum.KeyCode.E, false, game)
+  task.wait(0.2)
+  virtualInputManager:SendKeyEvent(false, Enum.KeyCode.E, false, game)
+end
+local function f24()
+  virtualInputManager:SendKeyEvent(true, Enum.KeyCode.G, false, game)
+  task.wait(0.1)
+  virtualInputManager:SendKeyEvent(false, Enum.KeyCode.G, false, game)
+end
+
+local function f28(p8)
+  if not p8 then return false end
+  local proximityPrompt = p8:FindFirstChild("ProximityPrompt") or p8:FindFirstChildWhichIsA("ProximityPrompt")
+  if not proximityPrompt or not proximityPrompt:IsA("ProximityPrompt") then return false end
+
+  proximityPrompt.HoldDuration = 0
+
+  if fireproximityprompt then
+      fireproximityprompt(proximityPrompt)
+      return true
+  end
+
+  local humanoidRootPart = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+  if humanoidRootPart then
+      humanoidRootPart.CFrame = p8.CFrame + Vector3.new(0, 3, 0)
+      task.wait(0.15)
+      f22()
+      return true
+  end
+  return false
+end
+
+local function f29() return f28(v14[map]()) end
+local function f30() return f28(v15[mode]()) end
+
+local function getPlayerGui() return LocalPlayer:FindFirstChildOfClass("PlayerGui") or LocalPlayer:FindFirstChild("PlayerGui") end
+
+local function clickScreenCenter()
+  local vp = workspace.CurrentCamera.ViewportSize
+  local x, y = vp.X / 2, vp.Y / 2
+  if mousemoveabs and mouse1click then
+    mousemoveabs(x, y)
+    task.wait(0.1)
+    mouse1click()
+  else
+    virtualInputManager:SendMouseButtonEvent(x, y, 0, true, game, 1)
+    task.wait(0.05)
+    virtualInputManager:SendMouseButtonEvent(x, y, 0, false, game, 1)
+  end
+end
+
+local FULLSCREEN_SIZE = UDim2.new(9999, 9999, 99999, 99999)
+local function stretch(gui, size)
+  if gui and gui:IsA("GuiObject") then
+    gui.Visible = true
