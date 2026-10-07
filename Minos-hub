@@ -8,7 +8,7 @@ local LocalPlayer = Players.LocalPlayer
 local PlaceId = game.PlaceId
 
 -----------------------------------------------------
--- KIỂM TRA PLACEID
+-- KIỂM TRA PLACEID (ĐÃ SỬA LỖI XÓA NHẦM KÝ TỰ KHÔNG LÊN UI)
 -----------------------------------------------------
 local supportedPlaces = {
     [15735896047] = true,
@@ -280,4 +280,3 @@ local function getGearFromParent(container)
   for _, child in ipairs(container:GetChildren()) do
       local lowerName = string.lower(child.Name)
       if isNewGame then
-          if string.find(lowerName, "trollge_tui axe") or lowerName == "rainbowperiastron" then return child end
