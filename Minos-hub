@@ -1,272 +1,233 @@
--- ENVIRONMENT SETUP
--- Author: garry (Modified to add Freeze Boss for Game 131)
-local StarterGui = game:GetService('StarterGui')
-local Players = game:GetService('Players')
+-- ========================================================
+-- SCRIPT SBSD KHÔNG SỬ DỤNG LINK GITHUB - TỰ TẠO UI THUẦN
+-- Tích hợp thêm tính năng Freeze Boss cho Ahat Man & God Demon
+-- ========================================================
+
+local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
-local PlaceId = game.PlaceId
-
--- Cờ kiểm tra: game 131 thì tắt Anti-Cheat + Silent Aim
-local IS_131_GAME = tostring(PlaceId):sub(1, 3) == "131"
-
------------------------------------------------------
--- KIỂM TRA PLACEID
------------------------------------------------------
-local supportedPlaces = {
-    [13151311229] = true,
-    [14852797539] = true,
-    [12377995562] = true,
-    [15735896047] = true,
-}
-
-local function showNotSupportedMessage()
-    local sg = Instance.new("ScreenGui")
-    sg.Name = "NotSupportedMsg"
-    if gethui then sg.Parent = gethui() else
-        local success = pcall(function() sg.Parent = game:GetService("CoreGui") end)
-        if not success then sg.Parent = LocalPlayer:WaitForChild("PlayerGui") end
-    end
-    local txt = Instance.new("TextLabel")
-    txt.Parent = sg
-    txt.Size = UDim2.new(1, 0, 1, 0)
-    txt.BackgroundTransparency = 1
-    txt.Text = "This game is not supported"
-    txt.Font = Enum.Font.GothamBlack
-    txt.TextSize = 50
-    txt.TextColor3 = Color3.fromRGB(255, 50, 50)
-    txt.TextStrokeTransparency = 0
-    task.delay(5, function() if sg then sg:Destroy() end end)
-end
-
-if not supportedPlaces[PlaceId] then
-    showNotSupportedMessage()
-end
-
------------------------------------------------------
--- SCRIPT CHÍNH (LOGIC GAME, AUTO FARM & PARRY)
------------------------------------------------------
-if PlaceId == 14852797539 then
-    local sg = Instance.new("ScreenGui")
-    sg.Name = "ElevatorMsg"
-    if gethui then sg.Parent = gethui() else
-        local success = pcall(function() sg.Parent = game:GetService("CoreGui") end)
-        if not success then sg.Parent = LocalPlayer:WaitForChild("PlayerGui") end
-    end
-    local txt = Instance.new("TextLabel")
-    txt.Parent = sg
-    txt.Size = UDim2.new(1, 0, 1, 0)
-    txt.BackgroundTransparency = 1
-    txt.Text = "Get in the elevator, you idiot"
-    txt.Font = Enum.Font.GothamBlack
-    txt.TextSize = 60
-    txt.TextColor3 = Color3.fromRGB(255, 50, 50)
-    txt.TextStrokeTransparency = 0
-    return
-end
-
------------------------------------------------------
--- SERVICE & ANTI-AFK
------------------------------------------------------
-local workspace = game:GetService("Workspace")
 local runService = game:GetService("RunService")
+local workspace = game:GetService("Workspace")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local virtualInputManager = game:GetService("VirtualInputManager")
 local VirtualUser = game:GetService("VirtualUser")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local UserInputService = game:GetService("UserInputService")
 
+-- CHỐNG TREO MÁY (ANTI-AFK)
 LocalPlayer.Idled:Connect(function()
     VirtualUser:CaptureController()
     VirtualUser:ClickButton2(Vector2.new())
 end)
 
------------------------------------------------------
--- ANTI-CHEAT / ANTI-KICK BYPASS
------------------------------------------------------
-if not IS_131_GAME then
-    task.spawn(function()
-        local gc = getgc(true)
-        for _, v in pairs(gc) do
-            pcall(function()
-                local idx = rawget(v, "indexInstance")
-                if type(idx) == "table" and idx[1] == "kick" then
-                    setreadonly(v, false)
-                    v.tvk = { "kick", function() return workspace:WaitForChild("") end }
-                end
-            end)
+-- TỰ ĐỘNG KHỞI TẠO GIAO DIỆN THUẦN (100% LÊN UI)
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "SbsdLocalUI"
+ScreenGui.ResetOnSpawn = false
+if gethui then ScreenGui.Parent = gethui() else
+    pcall(function() ScreenGui.Parent = game:GetService("CoreGui") end)
+    if not ScreenGui.Parent then ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui") end
+end
+
+-- KHUNG MENU CHÍNH
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Size = UDim2.new(0, 300, 0, 320)
+MainFrame.Position = UDim2.new(0.5, -150, 0.4, -160)
+MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+MainFrame.BorderSizePixel = 2
+MainFrame.BorderColor3 = Color3.fromRGB(0, 255, 255)
+MainFrame.Active = true
+MainFrame.Draggable = true
+MainFrame.Parent = ScreenGui
+
+-- TIÊU ĐỀ MENU
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1, 0, 0, 40)
+Title.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+Title.Text = "SBSD UTILS + FREEZE BOSS"
+Title.TextColor3 = Color3.fromRGB(0, 255, 255)
+Title.Font = Enum.Font.GothamBold
+Title.TextSize = 16
+Title.Parent = MainFrame
+
+-- NÚT ĐÓNG/MỞ
+local ToggleBtn = Instance.new("TextButton")
+ToggleBtn.Size = UDim2.new(0, 60, 0, 30)
+ToggleBtn.Position = UDim2.new(0, 10, 0, 5)
+ToggleBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+ToggleBtn.Text = "ẨN/HIỆN"
+ToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+ToggleBtn.TextSize = 12
+ToggleBtn.Font = Enum.Font.GothamBold
+ToggleBtn.Parent = ScreenGui
+ToggleBtn.MouseButton1Click:Connect(function()
+    MainFrame.Visible = not MainFrame.Visible
+end)
+
+-- HÀM TẠO NÚT GẠT (TOGGLE CHỨC NĂNG)
+local yOffset = 50
+local function createToggle(name, description, callback)
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(1, -20, 0, 45)
+    frame.Position = UDim2.new(0, 10, 0, yOffset)
+    frame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+    frame.BorderSizePixel = 0
+    frame.Parent = MainFrame
+
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(0.7, 0, 1, 0)
+    label.Position = UDim2.new(0, 5, 0, 0)
+    label.BackgroundTransparency = 1
+    label.Text = name
+    label.TextColor3 = Color3.fromRGB(255, 255, 255)
+    label.Font = Enum.Font.Gotham
+    label.TextSize = 13
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.Parent = frame
+
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0.25, 0, 0.7, 0)
+    btn.Position = UDim2.new(0.7, 0, 0.15, 0)
+    btn.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+    btn.Text = "OFF"
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.Font = Enum.Font.GothamBold
+    btn.TextSize = 12
+    btn.Parent = frame
+
+    local state = false
+    btn.MouseButton1Click:Connect(function()
+        state = not state
+        if state then
+            btn.BackgroundColor3 = Color3.fromRGB(50, 255, 50)
+            btn.Text = "ON"
+        else
+            btn.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+            btn.Text = "OFF"
         end
+        callback(state)
     end)
-
-    task.spawn(function()
-        local PATH = {"Workspace", "Packages", "_Index", "Squads", "Squads", "Components", "SquadLobby", "SquadLobbyBanners"}
-
-        local function getCorePackages()
-            local ok, cp = pcall(function() return game:GetService("CorePackages") end)
-            if ok and cp then return cp end
-            return game:FindFirstChild("CorePackages")
-        end
-
-        local function resolvePath()
-            local node = getCorePackages()
-            if not node then return nil end
-            for _, name in ipairs(PATH) do
-                if not node then return nil end
-                node = node:FindFirstChild(name)
-            end
-            return node
-        end
-
-        local function tryDestroy()
-            local target = resolvePath()
-            if target then
-                pcall(function() target:Destroy() end)
-                pcall(function() target.Parent = nil end)
-                return true
-            end
-            return false
-        end
-
-        for _ = 1, 20 do
-            if tryDestroy() then break end
-            task.wait(0.25)
-        end
-
-        task.spawn(function()
-            while task.wait(1) do
-                tryDestroy()
-            end
-        end)
-    end)
+    yOffset = yOffset + 50
 end
 
------------------------------------------------------
--- SILENT AIM 360°
------------------------------------------------------
-local silentAimEnabled    = false
-local silentAimDistance   = 5000
-local silentAimPrediction = 0.165
+-- ========================================================
+-- 1. KÍCH HOẠT TÍNH NĂNG ❄️ FREEZE BOSS (Đã thêm vào bản Sbsd)
+-- ========================================================
+local freezeState = false
+local freezeConnection = nil
 
-local SA_TargetPart  = nil
-local SA_CurrentNPC  = nil
-local SA_Mouse       = LocalPlayer:GetMouse()
-
-local function SA_IsCameraOrSystemScript()
-    if not getcallingscript then return false end
-    local sc = getcallingscript()
-    if not sc then return false end
-    local name = sc.Name:lower()
-    local parent = sc.Parent
-    local parentName = parent and parent.Name:lower() or ""
-    if name:find("camera") or name:find("popper") or name:find("control")
-       or name:find("player") or name:find("zoom") or name:find("shiftlock")
-       or name:find("animate") or name:find("mouse")
-       or parentName:find("camera") or parentName:find("player") or parentName:find("control") then
-        return true
-    end
-    return false
-end
-
-local function SA_IsValidNPC(model)
-    if not model or not model:IsA("Model") then return false end
-    if Players:GetPlayerFromCharacter(model) or model == LocalPlayer.Character then return false end
-    local hum = model:FindFirstChildOfClass("Humanoid")
-    if not hum or hum.Health <= 0 then return false end
-    local root = model:FindFirstChild("HumanoidRootPart") or model:FindFirstChild("Torso") or model:FindFirstChild("UpperTorso")
-    if not root then return false end
-
-    local nameLower = model.Name:lower()
-    local hasBox = nameLower:find("box") and not nameLower:find("boombox")
-    local isCorrupted = nameLower:find("corrupted") ~= nil
-
-    return hasBox or isCorrupted
-end
-
-local function SA_GetTargetPart(char)
-    return char:FindFirstChild("UpperTorso")
-        or char:FindFirstChild("Torso")
-        or char:FindFirstChild("HumanoidRootPart")
-end
-
-local function SA_UpdateTarget()
-    local localRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-    if not localRoot then SA_CurrentNPC = nil; SA_TargetPart = nil; return end
-
-    if SA_CurrentNPC and SA_IsValidNPC(SA_CurrentNPC) then
-        local tPart = SA_GetTargetPart(SA_CurrentNPC)
-        if tPart and (tPart.Position - localRoot.Position).Magnitude <= silentAimDistance then
-            SA_TargetPart = tPart
-            return
-        end
-    end
-
-    local closestDist = silentAimDistance
-    local closestPart, closestModel = nil, nil
-
-    for _, obj in pairs(workspace:GetDescendants()) do
-        if obj:IsA("Model") and SA_IsValidNPC(obj) then
-            local tPart = SA_GetTargetPart(obj)
-            if tPart then
-                local tPos = tPart.Position
-                if silentAimPrediction > 0 and obj:FindFirstChild("HumanoidRootPart") then
-                    tPos = tPos + (obj.HumanoidRootPart.Velocity * silentAimPrediction)
-                end
-                local dist3D = (tPos - localRoot.Position).Magnitude
-                if dist3D <= closestDist then
-                    closestDist = dist3D
-                    closestPart = tPart
-                    closestModel = obj
-                end
-            end
-        end
-    end
-
-    SA_CurrentNPC = closestModel
-    SA_TargetPart = closestPart
-end
-
-if not IS_131_GAME then
-    local SA_oldNamecall = nil
-    SA_oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
-        if checkcaller() or not silentAimEnabled or not SA_TargetPart then return SA_oldNamecall(self, ...) end
-        if SA_IsCameraOrSystemScript() then return SA_oldNamecall(self, ...) end
-
-        local method = getnamecallmethod()
-        local args = {...}
-
-        if (method == "FireServer" or method == "InvokeServer") then
-            local nameLower = self.Name:lower()
-            if nameLower:match("fire") or nameLower:match("hit") or nameLower:match("attack") or nameLower:match("shoot") or nameLower:match("mouse") then
-                local modified = false
-                for i = 1, #args do
-                    if typeof(args[i]) == "Vector3" then
-                        args[i] = SA_TargetPart.Position
-                        modified = true
-                    elseif typeof(args[i]) == "CFrame" then
-                        args[i] = CFrame.new(args[i].Position, SA_TargetPart.Position)
-                        modified = true
+createToggle("❄️ Freeze Boss (Đóng Băng)", "Khóa cứng chuyển động của Boss", function(Value)
+    freezeState = Value
+    if freezeState then
+        freezeConnection = runService.Heartbeat:Connect(function()
+            for _, v in pairs(workspace:GetDescendants()) do
+                if v:IsA("Humanoid") and not Players:GetPlayerFromCharacter(v.Parent) then
+                    local hrp = v.Parent:FindFirstChild("HumanoidRootPart")
+                    if hrp then
+                        hrp.Anchored = true
+                        hrp.Velocity = Vector3.new(0, 0, 0)
                     end
                 end
-                if modified then return SA_oldNamecall(self, unpack(args)) end
+            end
+        end)
+    else
+        if freezeConnection then freezeConnection:Disconnect(); freezeConnection = nil end
+        for _, v in pairs(workspace:GetDescendants()) do
+            if v:IsA("Humanoid") and not Players:GetPlayerFromCharacter(v.Parent) then
+                local hrp = v.Parent:FindFirstChild("HumanoidRootPart")
+                if hrp then hrp.Anchored = false end
             end
         end
+    end
+end)
 
-        if method == "Raycast" and self == workspace then
-            local origin = args[1]
-            if origin then
-                local newDir = (SA_TargetPart.Position - origin).Unit * args[2].Magnitude
-                return SA_oldNamecall(self, origin, newDir, args[3], args[4])
-            end
+-- ========================================================
+-- 2. TÍNH NĂNG 🛡️ AUTO PARRY (Từ bản Sbsd gốc của bạn)
+-- ========================================================
+local isParryToggled = false
+
+createToggle("🛡️ Auto Parry (Đỡ Đòn)", "Tự động kích hoạt đỡ đòn", function(Value)
+    isParryToggled = Value
+end)
+
+local function equipTool(toolName)
+    local character = LocalPlayer.Character
+    local backpack = LocalPlayer:FindFirstChildOfClass("Backpack")
+    if character and character:FindFirstChildOfClass("Humanoid") then
+        local tool = (backpack and backpack:FindFirstChild(toolName)) or (character and character:FindFirstChild(toolName))
+        if tool and tool.Parent ~= character then
+            character.Humanoid:EquipTool(tool)
+            return tool
         end
+        return character:FindFirstChild(toolName)
+    end
+    return nil
+end
 
-        if method == "FindPartOnRay" or method == "FindPartOnRayWithIgnoreList" or method == "FindPartOnRayWithWhitelist" then
-            local ray = args[1]
-            if ray then
-                local origin = ray.Origin
-                local newDir = (SA_TargetPart.Position - origin).Unit * ray.Direction.Magnitude
-                args[1] = Ray.new(origin, newDir)
-                return SA_oldNamecall(self, unpack(args))
-            end
+local function executeParry()
+    equipTool("Ivory Periastron")
+    task.wait(0.01)
+    local character = LocalPlayer.Character
+    if character and character:FindFirstChild("Ivory Periastron") then
+        local r = character["Ivory Periastron"]:FindFirstChild("Remote")
+        if r then r:FireServer(Enum.KeyCode.E) end
+    end
+    task.wait(0.01)
+    local azure = equipTool("Azure Periastron")
+    if azure and azure:FindFirstChild("Remote") then azure.Remote:FireServer(Enum.KeyCode.E) end
+end
+
+local function handleDetection(descendant)
+    if not isParryToggled then return end
+    local character = LocalPlayer.Character
+    if not character then return end
+    local id = ""
+    if descendant:IsA("ParticleEmitter") then
+        id = string.match(descendant.Texture, "%d+") or ""
+    elseif descendant:IsA("MeshPart") or descendant:IsA("SpecialMesh") then
+        id = string.match(descendant.MeshId, "%d+") or ""
+    end
+    if id == "214269134" then
+        local parent = descendant.Parent
+        if parent and parent.Name == "IFrame" and parent.Parent and parent.Parent.Parent == character then
+            task.spawn(executeParry)
         end
+    end
+end
 
-        return SA_oldNamecall(self, ...)
+if LocalPlayer.Character then LocalPlayer.Character.DescendantAdded:Connect(handleDetection) end
+LocalPlayer.CharacterAdded:Connect(function(char) char.DescendantAdded:Connect(handleDetection) end)
+
+-- ========================================================
+-- 3. TÍNH NĂNG 🔄 AUTO REVIVE ALL (Từ bản Sbsd gốc)
+-- ========================================================
+local isAutoReviveToggled = false
+
+createToggle("➕ Auto Revive All", "Tự động cứu đồng đội", function(Value)
+    isAutoReviveToggled = Value
+    if isAutoReviveToggled then
+        task.spawn(function()
+            while isAutoReviveToggled do
+                for _, player in ipairs(Players:GetPlayers()) do
+                    if player ~= LocalPlayer and workspace:FindFirstChild(player.Name) then
+                        local head = workspace[player.Name]:FindFirstChild("Head")
+                        if head and head:FindFirstChild("Revive") then
+                            if fireproximityprompt then fireproximityprompt(head.Revive) end
+                        end
+                    end
+                end
+                task.wait(0.2)
+            end
+        end)
+    end
+end)
+
+-- ========================================================
+-- 4. TÍNH NĂNG 🚫 ANTI-FLING / UNFF (Từ bản Sbsd gốc)
+-- ========================================================
+createToggle("🚫 Anti Admin Powers", "Chống bị Boss hất văng", function(state)
+    runService.Heartbeat:Connect(function()
+        if state and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            LocalPlayer.Character.HumanoidRootPart.Velocity = Vector3.new(0,0,0)
+            LocalPlayer.Character.HumanoidRootPart.RotVelocity = Vector3.new(0,0,0)
+        end
     end)
-
-    local SA_oldIndex = nil
+end)
