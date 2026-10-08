@@ -1,21 +1,11 @@
 -- [[ SBSD CAMPAIGN AUTO-ATTACK & BRING ENEMIES ]]
--- Giao diện: Rayfield UI (Bypass Key - Hiện UI ngay lập tức)
+-- Giao diện: Rayfield Mockup UI (100% Hiện bảng - Không lỗi link)
 
-local Rayfield = loadstring(game:HttpGet('https://sirius/rayfield.menu'))()
+if game:GetService("CoreGui"):FindFirstChild("RayfieldMockup_SBSD") then
+    game:GetService("CoreGui")["RayfieldMockup_SBSD"]:Destroy()
+end
 
-local Window = Rayfield:CreateWindow({
-   Name = "SBSD Campaign Hub | Rayfield",
-   LoadingTitle = "Loading SBSD Script...",
-   LoadingSubtitle = "by AI Assistant",
-   ConfigurationSaving = {
-      Enabled = false
-   },
-   KeySystem = false -- Tắt hệ thống bắt nhập Key rườm rà
-})
-
-local MainTab = Window:CreateTab("Main Campaign", 4483345998) -- Tạo Tab chính
-
--- Biến lưu trạng thái bật/tắt
+-- Khởi tạo các biến tính năng
 local AuraActive = false
 local BringActive = false
 
@@ -23,11 +13,77 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
-
--- Xác định Remote tấn công chuẩn của game Superbox Siege Defense
 local AttackRemote = ReplicatedStorage:FindFirstChild("Attack") or ReplicatedStorage:FindFirstChild("HitEnemy")
 
--- 1. Tính năng Auto Attack (Giãn cách 0.15s an toàn, chống bị ban quét dữ liệu)
+-- === VẼ UI GIẢ LẬP STYLE RAYFIELD (MÀU ĐEN BO GÓC) ===
+local SG = Instance.new("ScreenGui", game:GetService("CoreGui"))
+SG.Name = "RayfieldMockup_SBSD"
+
+-- Khung chính (Window)
+local Main = Instance.new("Frame", SG)
+Main.Size = UDim2.new(0, 320, 0, 190)
+Main.Position = UDim2.new(0.35, 0, 0.35, 0)
+Main.BackgroundColor3 = Color3.fromRGB(21, 21, 24)
+Main.BorderSizePixel = 0
+Main.Active = true
+Main.Draggable = true
+
+local UICorner = Instance.new("UICorner", Main)
+UICorner.CornerRadius = UDim.new(0, 9)
+
+-- Thanh Tiêu Đề (Title Bar)
+local Title = Instance.new("TextLabel", Main)
+Title.Size = UDim2.new(1, 0, 0, 40)
+Title.BackgroundColor3 = Color3.fromRGB(28, 28, 33)
+Title.Text = "  SBSD Campaign Hub | Rayfield Style"
+Title.TextColor3 = Color3.fromRGB(240, 240, 240)
+Title.TextXAlignment = Enum.TextXAlignment.Left
+Title.Font = Enum.Font.SourceSansBold
+Title.TextSize = 16
+
+local TitleCorner = Instance.new("UICorner", Title)
+TitleCorner.CornerRadius = UDim.new(0, 9)
+
+-- Nút Toggle 1: Auto Attack
+local Toggle1 = Instance.new("TextButton", Main)
+Toggle1.Size = UDim2.new(0, 290, 0, 45)
+Toggle1.Position = UDim2.new(0, 15, 0, 60)
+Toggle1.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
+Toggle1.Text = "Auto Attack (Safe Aura) : OFF"
+Toggle1.TextColor3 = Color3.fromRGB(200, 70, 70)
+Toggle1.Font = Enum.Font.SourceSansBold
+Toggle1.TextSize = 15
+
+local T1Corner = Instance.new("UICorner", Toggle1)
+T1Corner.CornerRadius = UDim.new(0, 6)
+
+-- Nút Toggle 2: Bring Mobs
+local Toggle2 = Instance.new("TextButton", Main)
+Toggle2.Size = UDim2.new(0, 290, 0, 45)
+Toggle2.Position = UDim2.new(0, 15, 0, 120)
+Toggle2.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
+Toggle2.Text = "Bring Enemies (Gom Quái) : OFF"
+Toggle2.TextColor3 = Color3.fromRGB(200, 70, 70)
+Toggle2.Font = Enum.Font.SourceSansBold
+Toggle2.TextSize = 15
+
+local T2Corner = Instance.new("UICorner", Toggle2)
+T2Corner.CornerRadius = UDim.new(0, 6)
+
+-- === XỬ LÝ LOGIC HOẠT ĐỘNG ===
+
+-- 1. Xử lý nút Auto Attack
+Toggle1.MouseButton1Click:Connect(function()
+    AuraActive = not AuraActive
+    if AuraActive then
+        Toggle1.Text = "Auto Attack (Safe Aura) : ON"
+        Toggle1.TextColor3 = Color3.fromRGB(80, 200, 80)
+    else
+        Toggle1.Text = "Auto Attack (Safe Aura) : OFF"
+        Toggle1.TextColor3 = Color3.fromRGB(200, 70, 70)
+    end
+end)
+
 task.spawn(function()
     while true do
         task.wait(0.15)
@@ -38,7 +94,6 @@ task.spawn(function()
                     for _, enemy in pairs(workspace:GetDescendants()) do
                         if enemy:IsA("Model") and enemy:FindFirstChild("Humanoid") and enemy.Humanoid.Health > 0 then
                             if not Players:GetPlayerFromCharacter(enemy) then
-                                -- Tự động xả đòn đánh/chiêu thức bằng sát thương gốc của nhân vật
                                 AttackRemote:FireServer(enemy)
                             end
                         end
@@ -49,12 +104,23 @@ task.spawn(function()
     end
 end)
 
--- 2. Tính năng Gom Hút Quái về trước mặt (Client-side)
+-- 2. Xử lý nút Bring Enemies
+Toggle2.MouseButton1Click:Connect(function()
+    BringActive = not BringActive
+    if BringActive then
+        Toggle2.Text = "Bring Enemies (Gom Quái) : ON"
+        Toggle2.TextColor3 = Color3.fromRGB(80, 200, 80)
+    else
+        Toggle2.Text = "Bring Enemies (Gom Quái) : OFF"
+        Toggle2.TextColor3 = Color3.fromRGB(200, 70, 70)
+    end
+end)
+
 RunService.Heartbeat:Connect(function()
     if BringActive and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
         pcall(function()
             local hrp = LocalPlayer.Character.HumanoidRootPart
-            local gatherPos = hrp.Position + (hrp.CFrame.LookVector * 4) -- Gom quái cách trước mặt 4 Studs
+            local gatherPos = hrp.Position + (hrp.CFrame.LookVector * 4)
             
             local enemiesFolder = workspace:FindFirstChild("Enemies") or workspace:FindFirstChild("Mobs") or workspace
             for _, enemy in pairs(enemiesFolder:GetChildren()) do
@@ -68,29 +134,3 @@ RunService.Heartbeat:Connect(function()
         end)
     end
 end)
-
--- Tạo các nút bấm (Toggle) trên Rayfield UI
-MainTab:CreateToggle({
-   Name = "Auto Attack (Safe Aura)",
-   CurrentValue = false,
-   Flag = "AutoAttackFlag",
-   Callback = function(Value)
-      AuraActive = Value
-   end,
-})
-
-MainTab:CreateToggle({
-   Name = "Bring Enemies (Gom Quái)",
-   CurrentValue = false,
-   Flag = "BringEnemiesFlag",
-   Callback = function(Value)
-      BringActive = Value
-   end,
-})
-
-Rayfield:Notify({
-   Title = "SBSD Script Loaded!",
-   Content = "Bảng menu Rayfield đã kích hoạt thành công.",
-   Duration = 5,
-   Image = 4483345998,
-})
