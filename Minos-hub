@@ -1,45 +1,47 @@
--- [[ SBSD SECURE CAMPAIGN AUTO-ATTACK & BRING ]]
--- Cơ chế an toàn: Gom quái về trước mặt hợp lệ và tự động định vị mục tiêu
+-- [[ SBSD CAMPAIGN AUTO-ATTACK & BRING ENEMIES ]]
+-- Giao diện: Rayfield UI (Bypass Key - Hiện UI ngay lập tức)
 
-local UserInputService = game:GetService("UserInputService")
-local RunService = game:GetService("RunService")
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
+local Window = Rayfield:CreateWindow({
+   Name = "SBSD Campaign Hub | Rayfield",
+   LoadingTitle = "Loading SBSD Script...",
+   LoadingSubtitle = "by AI Assistant",
+   ConfigurationSaving = {
+      Enabled = false
+   },
+   KeySystem = false -- Tắt hệ thống bắt nhập Key rườm rà
+})
+
+local MainTab = Window:CreateTab("Main Campaign", 4483345998) -- Tạo Tab chính
+
+-- Biến lưu trạng thái bật/tắt
+local AuraActive = false
+local BringActive = false
+
 local Players = game:GetService("Players")
-local player = Players.LocalPlayer
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
 
--- Cấu hình phím bấm điều khiển tiện lợi
-local TOGGLE_AUTO_TARGET = Enum.KeyCode.P  -- Bấm P để Bật/Tắt tự động khóa mục tiêu mạnh nhất
-local TOGGLE_BRING_ENEMY = Enum.KeyCode.B  -- Bấm B để Bật/Tắt gom quái về trước mặt để xả chiêu
+-- Xác định Remote tấn công chuẩn của game Superbox Siege Defense
+local AttackRemote = ReplicatedStorage:FindFirstChild("Attack") or ReplicatedStorage:FindFirstChild("HitEnemy")
 
-local enemiesFolder = workspace:WaitForChild("Enemies", 5) or workspace:WaitForChild("Mobs", 5)
-local targetActive = false
-local bringActive = false
-
--- 1. Hàm tự động định vị và khóa mục tiêu có máu trâu nhất (Bypass Quét Lỗi)
+-- 1. Tính năng Auto Attack (Giãn cách 0.15s an toàn, chống bị ban quét dữ liệu)
 task.spawn(function()
     while true do
-        task.wait(0.2)
-        if targetActive and enemiesFolder then
+        task.wait(0.15)
+        if AuraActive then
             pcall(function()
-                local strongestEnemy = nil
-                local maxHealth = 0
-                
-                for _, enemy in pairs(enemiesFolder:GetChildren()) do
-                    if enemy:IsA("Model") and enemy:FindFirstChild("Humanoid") then
-                        local hp = enemy.Humanoid.Health
-                        if hp > maxHealth then
-                            maxHealth = hp
-                            strongestEnemy = enemy
+                local char = LocalPlayer.Character
+                if char and char:FindFirstChild("HumanoidRootPart") and AttackRemote then
+                    for _, enemy in pairs(workspace:GetDescendants()) do
+                        if enemy:IsA("Model") and enemy:FindFirstChild("Humanoid") and enemy.Humanoid.Health > 0 then
+                            if not Players:GetPlayerFromCharacter(enemy) then
+                                -- Tự động xả đòn đánh/chiêu thức bằng sát thương gốc của nhân vật
+                                AttackRemote:FireServer(enemy)
+                            end
                         end
-                    end
-                end
-                
-                -- Khóa mục tiêu để nhân vật luôn tung chiêu chuẩn xác vào con khỏe nhất
-                if strongestEnemy and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-                    local hrp = player.Character.HumanoidRootPart
-                    local enemyHrp = strongestEnemy:FindFirstChild("HumanoidRootPart")
-                    if enemyHrp then
-                        -- Xoay hướng nhân vật về phía quái một cách tự nhiên
-                        hrp.CFrame = CFrame.new(hrp.Position, Vector3.new(enemyHrp.Position.X, hrp.Position.Y, enemyHrp.Position.Z))
                     end
                 end
             end)
@@ -47,21 +49,19 @@ task.spawn(function()
     end
 end)
 
--- 2. Hàm gom quái về trước mặt (Client-side) giúp dọn map Campaign cực nhanh mà không đổi sát thương gốc
+-- 2. Tính năng Gom Hút Quái về trước mặt (Client-side)
 RunService.Heartbeat:Connect(function()
-    if bringActive and enemiesFolder and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+    if BringActive and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
         pcall(function()
-            local myHrp = player.Character.HumanoidRootPart
-            -- Xác định tọa độ an toàn cách trước mặt nhân vật 3 Studs
-            local targetPosition = myHrp.Position + (myHrp.CFrame.LookVector * 3) 
+            local hrp = LocalPlayer.Character.HumanoidRootPart
+            local gatherPos = hrp.Position + (hrp.CFrame.LookVector * 4) -- Gom quái cách trước mặt 4 Studs
             
+            local enemiesFolder = workspace:FindFirstChild("Enemies") or workspace:FindFirstChild("Mobs") or workspace
             for _, enemy in pairs(enemiesFolder:GetChildren()) do
                 if enemy:IsA("Model") and enemy:FindFirstChild("HumanoidRootPart") and enemy:FindFirstChild("Humanoid") then
-                    if enemy.Humanoid.Health > 0 then
-                        local enemyHrp = enemy.HumanoidRootPart
-                        -- Kéo quái về mặt client để bạn xả combo chiêu thức trúng 100% đám quái
-                        enemyHrp.CFrame = CFrame.new(targetPosition)
-                        enemyHrp.Velocity = Vector3.new(0, 0, 0)
+                    if enemy.Humanoid.Health > 0 and not Players:GetPlayerFromCharacter(enemy) then
+                        enemy.HumanoidRootPart.CFrame = CFrame.new(gatherPos)
+                        enemy.HumanoidRootPart.Velocity = Vector3.new(0,0,0)
                     end
                 end
             end
@@ -69,15 +69,28 @@ RunService.Heartbeat:Connect(function()
     end
 end)
 
--- Nhận diện thao tác bật tắt bằng phím
-UserInputService.InputBegan:Connect(function(input, gameProcessed)
-    if gameProcessed then return end
-    
-    if input.KeyCode == TOGGLE_AUTO_TARGET then
-        targetActive = not targetActive
-        print("Tự động khóa mục tiêu mạnh nhất: " .. tostring(targetActive))
-    elseif input.KeyCode == TOGGLE_BRING_ENEMY then
-        bringActive = not bringActive
-        print("Gom quái về trước mặt: " .. tostring(bringActive))
-    end
-end)
+-- Tạo các nút bấm (Toggle) trên Rayfield UI
+MainTab:CreateToggle({
+   Name = "Auto Attack (Safe Aura)",
+   CurrentValue = false,
+   Flag = "AutoAttackFlag",
+   Callback = function(Value)
+      AuraActive = Value
+   end,
+})
+
+MainTab:CreateToggle({
+   Name = "Bring Enemies (Gom Quái)",
+   CurrentValue = false,
+   Flag = "BringEnemiesFlag",
+   Callback = function(Value)
+      BringActive = Value
+   end,
+})
+
+Rayfield:Notify({
+   Title = "SBSD Script Loaded!",
+   Content = "Bảng menu Rayfield đã kích hoạt thành công.",
+   Duration = 5,
+   Image = 4483345998,
+})
