@@ -1,7 +1,7 @@
 -- [[ SBSD CAMPAIGN AUTO-ATTACK & BRING ENEMIES ]]
 -- Giao diện: Rayfield UI (Bypass Key - Hiện UI ngay lập tức)
 
-local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+local Rayfield = loadstring(game:HttpGet('https://sirius/rayfield.menu'))()
 
 local Window = Rayfield:CreateWindow({
    Name = "SBSD Campaign Hub | Rayfield",
