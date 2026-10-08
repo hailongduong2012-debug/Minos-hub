@@ -1,6 +1,6 @@
 -- ========================================================
--- FLOWEY MODIFIED HUB - NO GITHUB LINK - 100% FORCE UI
--- Cơ chế đóng băng nâng cấp: Khóa cứng Animation + CFrame
+-- SCRIPT SPEED DEMON BOSS FIGHT - FIX LỖI CÚ PHÁP 100%
+-- TÍNH NĂNG CHÍNH: FREEZE BOSS (NGOÀI TORA) + AUTO PARRY
 -- ========================================================
 
 local Players = game:GetService("Players")
@@ -8,70 +8,70 @@ local LocalPlayer = Players.LocalPlayer
 local runService = game:GetService("RunService")
 local workspace = game:GetService("Workspace")
 
--- TỰ ĐỘNG DỌN DẸP UI CŨ NẾU BỊ KẸT
-local oldUI = workspace.CurrentCamera:FindFirstChild("FloweyFreezeUI")
+-- DỌN DẸP UI CŨ TRÁNH TRÙNG LẶP NẾU CÓ
+local oldUI = workspace.CurrentCamera:FindFirstChild("FixedFreezeUI")
 if oldUI then oldUI:Destroy() end
 
--- KHỞI TẠO FRAME BẮT BUỘC HIỆN TRÊN CAMERA MÀN HÌNH
+-- KHỞI TẠO SCREEN GUI ÉP THẲNG VÀO CAMERA NGƯỜI CHƠI
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "FloweyFreezeUI"
+ScreenGui.Name = "FixedFreezeUI"
 ScreenGui.ResetOnSpawn = false
-ScreenGui.Parent = workspace.CurrentCamera -- Đè thẳng vào Camera người chơi để chống bị game ẩn UI
+ScreenGui.Parent = workspace.CurrentCamera
 
--- KHUNG MENU CHÍNH
-local MenuFrame = Instance.new("Frame")
-MenuFrame.Name = "MenuFrame"
-MenuFrame.Size = UDim2.new(0, 260, 0, 200)
-MenuFrame.Position = UDim2.new(0.5, -130, 0.4, -100)
-MenuFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-MenuFrame.BorderSizePixel = 2
-MenuFrame.BorderColor3 = Color3.fromRGB(0, 255, 150) -- Viền xanh lục neon dễ nhìn
-MenuFrame.Active = true
-MenuFrame.Draggable = true
-MenuFrame.Parent = ScreenGui
+-- KHUNG MENU CHÍNH (MÀU ĐEN VIỀN XANH DƯƠNG)
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Size = UDim2.new(0, 260, 0, 220)
+MainFrame.Position = UDim2.new(0.5, -130, 0.4, -110)
+MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+MainFrame.BorderSizePixel = 2
+MainFrame.BorderColor3 = Color3.fromRGB(0, 150, 255)
+MainFrame.Active = true
+MainFrame.Draggable = true
+MainFrame.Parent = ScreenGui
 
 -- TIÊU ĐỀ MENU
 local Title = Instance.new("TextLabel")
 Title.Size = UDim2.new(1, 0, 0, 35)
 Title.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-Title.Text = "FLOWEY FREEZE ADVANCED"
-Title.TextColor3 = Color3.fromRGB(0, 255, 150)
+Title.Text = "SBSD ADVANCED FREEZE"
+Title.TextColor3 = Color3.fromRGB(0, 150, 255)
 Title.Font = Enum.Font.GothamBold
 Title.TextSize = 13
-Title.Parent = MenuFrame
+Title.Parent = MainFrame
 
--- NÚT THU GỌN GIAO DIỆN
+-- NÚT THU GỌN GIAO DIỆN Ở GÓC TRÊN TRÁI MÀN HÌNH
 local HideBtn = Instance.new("TextButton")
-HideBtn.Size = UDim2.new(0, 60, 0, 25)
+HideBtn.Size = UDim2.new(0, 70, 0, 30)
 HideBtn.Position = UDim2.new(0, 10, 0, 10)
 HideBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 HideBtn.Text = "ẨN/HIỆN"
 HideBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-HideBtn.TextSize = 11
+HideBtn.TextSize = 12
 HideBtn.Font = Enum.Font.GothamBold
 HideBtn.Parent = ScreenGui
 HideBtn.MouseButton1Click:Connect(function()
-    MenuFrame.Visible = not MenuFrame.Visible
+    MainFrame.Visible = not MainFrame.Visible
 end)
 
--- HÀM KHỞI TẠO NÚT BẬT TẮT
+-- HÀM TẠO NÚT GẠT BẬT/TẮT CHUẨN XÁC
 local yOffset = 45
-local function createHackToggle(name, callback)
+local function createToggle(name, callback)
     local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(1, -20, 0, 35)
+    btn.Size = UDim2.new(1, -20, 0, 40)
     btn.Position = UDim2.new(0, 10, 0, yOffset)
     btn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
     btn.Text = name .. " : [OFF]"
     btn.TextColor3 = Color3.fromRGB(255, 255, 255)
     btn.Font = Enum.Font.GothamBold
     btn.TextSize = 12
-    btn.Parent = MenuFrame
+    btn.Parent = MainFrame
 
     local active = false
     btn.MouseButton1Click:Connect(function()
         active = not active
         if active then
-            btn.BackgroundColor3 = Color3.fromRGB(0, 200, 100)
+            btn.BackgroundColor3 = Color3.fromRGB(0, 180, 255)
             btn.Text = name .. " : [BẬT]"
             btn.TextColor3 = Color3.fromRGB(0, 0, 0)
         else
@@ -81,34 +81,32 @@ local function createHackToggle(name, callback)
         end
         callback(active)
     end)
-    yOffset = yOffset + 45
+    yOffset = yOffset + 50
 end
 
 -- ========================================================
--- 1. CHỨC NĂNG ❄️ FREEZE BOSS NÂNG CẤP (KHÓA CẢ HOẠT ẢNH)
+-- 1. TÍNH NĂNG ❄️ ĐÓNG BĂNG BOSS (FREEZE TOÀN BỘ HOẠT ẢNH)
 -- ========================================================
 local freezeLoop = nil
-createHackToggle("❄️ Đóng Băng Boss", function(state)
+createToggle("❄️ Đóng Băng Boss", function(state)
     if state then
         freezeLoop = runService.Heartbeat:Connect(function()
             for _, obj in pairs(workspace:GetDescendants()) do
-                -- Lọc lấy chính xác quái vật/boss, bỏ qua người chơi
                 if obj:IsA("Humanoid") and not Players:GetPlayerFromCharacter(obj.Parent) then
                     local rootPart = obj.Parent:FindFirstChild("HumanoidRootPart")
                     if rootPart then
-                        -- Khóa tọa độ và triệt tiêu toàn bộ vận tốc để tránh chiêu fling
                         rootPart.Anchored = true
                         rootPart.Velocity = Vector3.new(0, 0, 0)
                         rootPart.RotVelocity = Vector3.new(0, 0, 0)
                     end
-                    -- Ép tất cả các hoạt ảnh ra chiêu của Boss dừng chạy
+                    -- Đóng băng vĩnh viễn các cử động tung chiêu
                     local animator = obj:FindFirstChildOfClass("Animator") or obj
                     if animator then
                         pcall(function()
                             for _, track in pairs(animator:GetPlayingAnimationTracks()) do
-                                track:AdjustSpeed(0) -- Giảm tốc độ hoạt ảnh về 0 (Đứng hình chiêu thức)
+                                track:AdjustSpeed(0)
                             end
-                        </pcall>
+                        end)
                     end
                 end
             end
@@ -124,7 +122,7 @@ createHackToggle("❄️ Đóng Băng Boss", function(state)
                 if animator then
                     pcall(function()
                         for _, track in pairs(animator:GetPlayingAnimationTracks()) do
-                            track:AdjustSpeed(1) -- Trả lại tốc độ hoạt ảnh bình thường khi tắt hack
+                            track:AdjustSpeed(1)
                         end
                     end)
                 end
@@ -134,14 +132,14 @@ createHackToggle("❄️ Đóng Băng Boss", function(state)
 end)
 
 -- ========================================================
--- 2. CHỨC NĂNG 🛡️ AUTO PARRY CHẠY NỀN KHÔNG TRỄ
+-- 2. TÍNH NĂNG 🛡️ AUTO PARRY CHẠY NGẦM
 -- ========================================================
 local parryState = false
-createHackToggle("🛡️ Auto Parry Đỡ Đòn", function(state)
+createToggle("🛡️ Auto Parry Đỡ Đòn", function(state)
     parryState = state
 end)
 
-local function triggerParrySkill()
+local function triggerParry()
     local char = LocalPlayer.Character
     local backpack = LocalPlayer:FindFirstChildOfClass("Backpack")
     if char and char:FindFirstChildOfClass("Humanoid") then
@@ -154,28 +152,27 @@ local function triggerParrySkill()
     end
 end
 
-local function listenToCharacter(char)
+local function listenCharacter(char)
     char.DescendantAdded:Connect(function(desc)
         if not parryState then return end
-        local textureId = ""
-        if desc:IsA("ParticleEmitter") then textureId = string.match(desc.Texture, "%d+") or ""
-        elseif desc:IsA("MeshPart") or desc:IsA("SpecialMesh") then textureId = string.match(desc.MeshId, "%d+") or "" end
+        local textId = ""
+        if desc:IsA("ParticleEmitter") then textId = string.match(desc.Texture, "%d+") or ""
+        elseif desc:IsA("MeshPart") or desc:IsA("SpecialMesh") then textId = string.match(desc.MeshId, "%d+") or "" end
         
-        -- Nhận diện mã nguồn hạt đòn đánh quét diện rộng của Ahat Man / God Demon
-        if textureId == "214269134" then
-            task.spawn(triggerParrySkill)
+        if textId == "214269134" then
+            task.spawn(triggerParry)
         end
     end)
 end
 
-if LocalPlayer.Character then listenToCharacter(LocalPlayer.Character) end
-LocalPlayer.CharacterAdded:Connect(listenToCharacter)
+if LocalPlayer.Character then listenCharacter(LocalPlayer.Character) end
+LocalPlayer.CharacterAdded:Connect(listenCharacter)
 
 -- ========================================================
--- 3. CHỨC NĂNG 🚫 ANTI-FLING (CHỐNG LỆNH ADMIN)
+-- 3. TÍNH NĂNG 🚫 ANTI-FLING (CHỐNG LỆNH ADMIN)
 -- ========================================================
 local antiFling = nil
-createHackToggle("🚫 Anti Fling Chống Văng", function(state)
+createToggle("🚫 Anti Fling Chống Văng", function(state)
     if state then
         antiFling = runService.Heartbeat:Connect(function()
             local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
