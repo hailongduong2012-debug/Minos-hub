@@ -1,6 +1,6 @@
 -- ========================================================
--- SCRIPT SBSD - PHIÊN BẢN CƯỠNG BỨC HIỆN UI 100%
--- ÉP GIAO DIỆN HIỆN THẲNG TRÊN SCREEN CAMERA
+-- SCRIPT SBSD - PHIÊN BẢN CHẠY NGẦM KHÔNG UI (ANTI-BAN & AUTO-ACTIVATE)
+-- Tự động kích hoạt Đóng băng Boss, Auto Parry và Anti-Fling
 -- ========================================================
 
 local Players = game:GetService("Players")
@@ -8,110 +8,36 @@ local LocalPlayer = Players.LocalPlayer
 local runService = game:GetService("RunService")
 local workspace = game:GetService("Workspace")
 
--- XÓA BỎ UI CŨ NẾU CÓ ĐỂ TRÁNH TRÙNG LẶP LỖI
-local oldUI = workspace.CurrentCamera:FindFirstChild("SbsdCameraUI")
-if oldUI then oldUI:Destroy() end
-
--- KHỞI TẠO FRAME HIỆN THỊ TRÊN TẦM NHÌN CAMERA CỦA NGƯỜI CHƠI
-local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "SbsdCameraUI"
-ScreenGui.ResetOnSpawn = false
-ScreenGui.Parent = workspace.CurrentCamera -- Ép hiện thẳng vào Camera để không bị chặn
-
--- BẢNG MENU CHÍNH
-local MainFrame = Instance.new("Frame")
-MainFrame.Name = "MainFrame"
-MainFrame.Size = UDim2.new(0, 280, 0, 240)
-MainFrame.Position = UDim2.new(0.5, -140, 0.35, -120)
-MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-MainFrame.BorderSizePixel = 3
-MainFrame.BorderColor3 = Color3.fromRGB(255, 0, 0) -- Viền đỏ cảnh báo dễ nhìn
-MainFrame.Active = true
-MainFrame.Draggable = true
-MainFrame.Parent = ScreenGui
-
--- TIÊU ĐỀ
-local Title = Instance.new("TextLabel")
-Title.Size = UDim2.new(1, 0, 0, 35)
-Title.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-Title.Text = "MENU DIỆT AHAT & GOD DEMON"
-Title.TextColor3 = Color3.fromRGB(255, 255, 255)
-Title.Font = Enum.Font.GothamBold
-Title.TextSize = 14
-Title.Parent = MainFrame
-
--- HÀM TẠO CÁC NÚT TÍNH NĂNG
-local yPos = 45
-local function addHackButton(text, callback)
-    local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(1, -20, 0, 40)
-    btn.Position = UDim2.new(0, 10, 0, yPos)
-    btn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-    btn.Text = text .. " [OFF]"
-    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    btn.Font = Enum.Font.GothamBold
-    btn.TextSize = 12
-    btn.Parent = MainFrame
-
-    local active = false
-    btn.MouseButton1Click:Connect(function()
-        active = not active
-        if active then
-            btn.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
-            btn.Text = text .. " [ON]"
-            btn.TextColor3 = Color3.fromRGB(0, 0, 0)
-        else
-            btn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-            btn.Text = text .. " [OFF]"
-            btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-        end
-        callback(active)
-    end)
-    yPos = yPos + 45
-end
+-- Thông báo chạy thành công dưới góc màn hình bằng hệ thống gốc của Roblox
+game:GetService("StarterGui"):SetCore("SendNotification", {
+    Title = "SBSD CHẠY NGẦM",
+    Text = "Đang đóng băng Boss + Auto Parry... Không cần UI!",
+    Duration = 5
+})
 
 -- ========================================================
--- 1. CHỨC NĂNG ❄️ FREEZE BOSS (KHÓA CỨNG AHAT MAN / GOD DEMON)
+-- LOGIC 1: ❄️ TỰ ĐỘNG ĐÓNG BĂNG BOSS VĨNH VIỄN (FREEZE ALL BOSSES)
 -- ========================================================
-local freezeConn = nil
-addHackButton("❄️ Freeze Boss (Đóng Băng)", function(state)
-    if state then
-        freezeConn = runService.Heartbeat:Connect(function()
-            for _, v in pairs(workspace:GetDescendants()) do
-                if v:IsA("Humanoid") and not Players:GetPlayerFromCharacter(v.Parent) then
-                    local hrp = v.Parent:FindFirstChild("HumanoidRootPart")
-                    if hrp then
-                        hrp.Anchored = true
-                        hrp.Velocity = Vector3.new(0, 0, 0)
-                        hrp.RotVelocity = Vector3.new(0, 0, 0)
-                    end
-                end
-            end
-        end)
-    else
-        if freezeConn then freezeConn:Disconnect(); freezeConn = nil end
-        for _, v in pairs(workspace:GetDescendants()) do
-            if v:IsA("Humanoid") and not Players:GetPlayerFromCharacter(v.Parent) then
-                local hrp = v.Parent:FindFirstChild("HumanoidRootPart")
-                if hrp then hrp.Anchored = false end
+runService.Heartbeat:Connect(function()
+    for _, v in pairs(workspace:GetDescendants()) do
+        if v:IsA("Humanoid") and not Players:GetPlayerFromCharacter(v.Parent) then
+            local hrp = v.Parent:FindFirstChild("HumanoidRootPart")
+            if hrp then
+                hrp.Anchored = true
+                hrp.Velocity = Vector3.new(0, 0, 0)
+                hrp.RotVelocity = Vector3.new(0, 0, 0)
             end
         end
     end
 end)
 
 -- ========================================================
--- 2. CHỨC NĂNG 🛡️ AUTO PARRY CHUẨN XÁC
+-- LOGIC 2: 🛡️ AUTO PARRY KHÔNG TRỄ (0-MS AUTO PARRY)
 -- ========================================================
-local parryActive = false
-addHackButton("🛡️ Auto Parry (Đỡ Đòn)", function(state)
-    parryActive = state
-end)
-
 local function equipAndParry()
     local char = LocalPlayer.Character
     local backpack = LocalPlayer:FindFirstChildOfClass("Backpack")
     if char and char:FindFirstChildOfClass("Humanoid") then
-        -- Ưu tiên lấy Azure Periastron để parry lệnh admin từ boss
         local tool = (backpack and backpack:FindFirstChild("Azure Periastron")) or char:FindFirstChild("Azure Periastron")
         if tool then
             if tool.Parent ~= char then char.Humanoid:EquipTool(tool) end
@@ -121,33 +47,32 @@ local function equipAndParry()
     end
 end
 
-LocalPlayer.CharacterAdded:Connect(function(char)
+local function listenToCharacter(char)
     char.DescendantAdded:Connect(function(descendant)
-        if not parryActive then return end
         local id = ""
-        if descendant:IsA("ParticleEmitter") then id = string.match(descendant.Texture, "%d+") or ""
-        elseif descendant:IsA("MeshPart") or descendant:IsA("SpecialMesh") then id = string.match(descendant.MeshId, "%d+") or "" end
+        if descendant:IsA("ParticleEmitter") then 
+            id = string.match(descendant.Texture, "%d+") or ""
+        elseif descendant:IsA("MeshPart") or descendant:IsA("SpecialMesh") then 
+            id = string.match(descendant.MeshId, "%d+") or "" 
+        end
         
-        if id == "214269134" then -- Nhận diện đòn đánh diện rộng của boss
+        -- Nhận diện đúng mã hạt đòn đánh chí mạng của Ahat Man / God Demon
+        if id == "214269134" then
             task.spawn(equipAndParry)
         end
     end)
-end)
+end
+
+if LocalPlayer.Character then listenToCharacter(LocalPlayer.Character) end
+LocalPlayer.CharacterAdded:Connect(listenToCharacter)
 
 -- ========================================================
--- 3. CHỨC NĂNG 🚫 ANTI ADMIN POWERS (CHỐNG LỆNH KICK/FLING)
+-- LOGIC 3: 🚫 CHỐNG LỆNH ADMIN BAN/FLING (ANTI ADMIN POWERS)
 -- ========================================================
-local antiAdminConn = nil
-addHackButton("🚫 Anti Admin Powers (Chống Fling)", function(state)
-    if state then
-        antiAdminConn = runService.Heartbeat:Connect(function()
-            local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-            if hrp then
-                hrp.Velocity = Vector3.new(0, 0, 0)
-                hrp.RotVelocity = Vector3.new(0, 0, 0)
-            end
-        end)
-    else
-        if antiAdminConn then antiAdminConn:Disconnect(); antiAdminConn = nil end
+runService.Heartbeat:Connect(function()
+    local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    if hrp then
+        hrp.Velocity = Vector3.new(0, 0, 0)
+        hrp.RotVelocity = Vector3.new(0, 0, 0)
     end
 end)
