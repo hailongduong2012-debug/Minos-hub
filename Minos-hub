@@ -1,49 +1,92 @@
--- SDBF Freeze Boss Script (Bản cập nhật mới nhất)
--- Loại trừ: Tora và Flower
+-- [[ SDBF PURE GUI - ANTI-ERROR & AUTO FREEZE ]]
+-- Loại trừ tuyệt đối: Tora và Flower
 
-local Workspace = game:GetService("Workspace")
-local RunService = game:GetService("RunService")
+-- Xóa UI cũ nếu có trùng lặp
+if game:GetService("CoreGui"):FindFirstChild("SDBF_Freeze_Hub") then
+    game:GetService("CoreGui")["SDBF_Freeze_Hub"]:Destroy()
+end
 
--- Danh sách các boss không được phép đóng băng
+-- Tạo Giao diện (Không phụ thuộc link ngoài)
+local ScreenGui = Instance.new("ScreenGui")
+local MainFrame = Instance.new("Frame")
+local Title = Instance.new("TextLabel")
+local ToggleBtn = Instance.new("TextButton")
+
+ScreenGui.Name = "SDBF_Freeze_Hub"
+ScreenGui.Parent = game:GetService("CoreGui")
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+MainFrame.Name = "MainFrame"
+MainFrame.Parent = ScreenGui
+MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+MainFrame.Position = UDim2.new(0.05, 0, 0.4, 0)
+MainFrame.Size = UDim2.new(0, 200, 0, 110)
+MainFrame.Active = true
+MainFrame.Draggable = true -- Bạn có thể giữ chuột để di chuyển bảng này đi chỗ khác
+
+Title.Name = "Title"
+Title.Parent = MainFrame
+Title.BackgroundColor3 = Color3.fromRGB(45, 45, 50)
+Title.Size = UDim2.new(1, 0, 0, 30)
+Title.Font = Enum.Font.SourceSansBold
+Title.Text = "SDBF Freeze Boss v2"
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.TextSize = 16
+
+ToggleBtn.Name = "ToggleBtn"
+ToggleBtn.Parent = MainFrame
+ToggleBtn.BackgroundColor3 = Color3.fromRGB(180, 50, 50) -- Đỏ là đang Tắt
+ToggleBtn.Position = UDim2.new(0.05, 0, 0.4, 0)
+ToggleBtn.Size = UDim2.new(0, 180, 0, 50)
+ToggleBtn.Font = Enum.Font.SourceSansBold
+ToggleBtn.Text = "FREEZE: OFF"
+ToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+ToggleBtn.TextSize = 18
+
+-- Cấu hình chức năng đóng băng
+local FreezeActive = false
 local ExcludedBosses = {
     ["Tora"] = true,
     ["Flower"] = true
 }
 
-local function FreezeEnemies()
-    -- Thay đổi đường dẫn bên dưới nếu cấu trúc thư mục chứa Boss trong game có cập nhật
-    local EnemiesFolder = Workspace:FindFirstChild("Enemies") or Workspace:FindFirstChild("Bosses")
-    
-    if EnemiesFolder then
-        for _, enemy in pairs(EnemiesFolder:GetChildren()) do
-            if enemy:IsA("Model") and enemy:FindFirstChild("HumanoidRootPart") then
-                -- Kiểm tra tên boss xem có nằm trong danh sách loại trừ không
-                if not ExcludedBosses[enemy.name] then
-                    local hrp = enemy.HumanoidRootPart
-                    -- Đóng băng bằng cách neo vị trí (Anchor) và xóa vận tốc
-                    hrp.Anchored = true
-                    hrp.Velocity = Vector3.new(0, 0, 0)
-                    hrp.RotVelocity = Vector3.new(0, 0, 0)
-                    
-                    -- Đảm bảo quái không thể hồi phục vị trí di chuyển
-                    local humanoid = enemy:FindFirstChildOfClass("Humanoid")
-                    if humanoid then
-                        humanoid.WalkSpeed = 0
-                        humanoid.JumpPower = 0
-                    end
-                else
-                    -- Nếu là Tora hoặc Flower thì bỏ neo để boss hoạt động bình thường
-                    local hrp = enemy.HumanoidRootPart
-                    if hrp.Anchored then
-                        hrp.Anchored = false
+local function DoFreeze()
+    while FreezeActive do
+        task.wait(0.2)
+        -- Sử dụng pcall để tránh văng script khi boss chết hoặc biến mất bất ngờ
+        pcall(function()
+            for _, v in pairs(workspace:GetDescendants()) do
+                if v:IsA("Model") and v:FindFirstChild("Humanoid") and v:FindFirstChild("HumanoidRootPart") then
+                    -- Kiểm tra nếu không phải Tora/Flower và máu > 0
+                    if not ExcludedBosses[v.Name] and v.Humanoid.Health > 0 then
+                        local hrp = v:FindFirstChild("HumanoidRootPart")
+                        if hrp and not hrp.Anchored then
+                            hrp.Anchored = true
+                        end
                     end
                 end
             end
-        end
+        end)
     end
 end
 
--- Vòng lặp liên tục để tự động đóng băng các boss mới xuất hiện
-RunService.Heartbeat:Connect(function()
-    pcall(FreezeEnemies)
+-- Xử lý sự kiện bấm nút bật/tắt
+ToggleBtn.MouseButton1Click:Connect(function()
+    FreezeActive = not FreezeActive
+    if FreezeActive then
+        ToggleBtn.Text = "FREEZE: ON"
+        ToggleBtn.BackgroundColor3 = Color3.fromRGB(50, 180, 50) -- Xanh là đang Bật
+        task.spawn(DoFreeze)
+    else
+        ToggleBtn.Text = "FREEZE: OFF"
+        ToggleBtn.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
+        -- Tháo băng ngay lập tức cho các boss khi tắt nút
+        pcall(function()
+            for _, v in pairs(workspace:GetDescendants()) do
+                if v:IsA("Model") and v:FindFirstChild("HumanoidRootPart") then
+                    v.HumanoidRootPart.Anchored = false
+                end
+            end
+        end)
+    end
 end)
