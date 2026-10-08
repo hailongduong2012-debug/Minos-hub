@@ -1,187 +1,49 @@
--- ========================================================
--- SCRIPT SPEED DEMON BOSS FIGHT - FIX LỖI CÚ PHÁP 100%
--- TÍNH NĂNG CHÍNH: FREEZE BOSS (NGOÀI TORA) + AUTO PARRY
--- ========================================================
+-- SDBF Freeze Boss Script (Bản cập nhật mới nhất)
+-- Loại trừ: Tora và Flower
 
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-local runService = game:GetService("RunService")
-local workspace = game:GetService("Workspace")
+local Workspace = game:GetService("Workspace")
+local RunService = game:GetService("RunService")
 
--- DỌN DẸP UI CŨ TRÁNH TRÙNG LẶP NẾU CÓ
-local oldUI = workspace.CurrentCamera:FindFirstChild("FixedFreezeUI")
-if oldUI then oldUI:Destroy() end
+-- Danh sách các boss không được phép đóng băng
+local ExcludedBosses = {
+    ["Tora"] = true,
+    ["Flower"] = true
+}
 
--- KHỞI TẠO SCREEN GUI ÉP THẲNG VÀO CAMERA NGƯỜI CHƠI
-local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "FixedFreezeUI"
-ScreenGui.ResetOnSpawn = false
-ScreenGui.Parent = workspace.CurrentCamera
-
--- KHUNG MENU CHÍNH (MÀU ĐEN VIỀN XANH DƯƠNG)
-local MainFrame = Instance.new("Frame")
-MainFrame.Name = "MainFrame"
-MainFrame.Size = UDim2.new(0, 260, 0, 220)
-MainFrame.Position = UDim2.new(0.5, -130, 0.4, -110)
-MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-MainFrame.BorderSizePixel = 2
-MainFrame.BorderColor3 = Color3.fromRGB(0, 150, 255)
-MainFrame.Active = true
-MainFrame.Draggable = true
-MainFrame.Parent = ScreenGui
-
--- TIÊU ĐỀ MENU
-local Title = Instance.new("TextLabel")
-Title.Size = UDim2.new(1, 0, 0, 35)
-Title.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-Title.Text = "SBSD ADVANCED FREEZE"
-Title.TextColor3 = Color3.fromRGB(0, 150, 255)
-Title.Font = Enum.Font.GothamBold
-Title.TextSize = 13
-Title.Parent = MainFrame
-
--- NÚT THU GỌN GIAO DIỆN Ở GÓC TRÊN TRÁI MÀN HÌNH
-local HideBtn = Instance.new("TextButton")
-HideBtn.Size = UDim2.new(0, 70, 0, 30)
-HideBtn.Position = UDim2.new(0, 10, 0, 10)
-HideBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-HideBtn.Text = "ẨN/HIỆN"
-HideBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-HideBtn.TextSize = 12
-HideBtn.Font = Enum.Font.GothamBold
-HideBtn.Parent = ScreenGui
-HideBtn.MouseButton1Click:Connect(function()
-    MainFrame.Visible = not MainFrame.Visible
-end)
-
--- HÀM TẠO NÚT GẠT BẬT/TẮT CHUẨN XÁC
-local yOffset = 45
-local function createToggle(name, callback)
-    local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(1, -20, 0, 40)
-    btn.Position = UDim2.new(0, 10, 0, yOffset)
-    btn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-    btn.Text = name .. " : [OFF]"
-    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    btn.Font = Enum.Font.GothamBold
-    btn.TextSize = 12
-    btn.Parent = MainFrame
-
-    local active = false
-    btn.MouseButton1Click:Connect(function()
-        active = not active
-        if active then
-            btn.BackgroundColor3 = Color3.fromRGB(0, 180, 255)
-            btn.Text = name .. " : [BẬT]"
-            btn.TextColor3 = Color3.fromRGB(0, 0, 0)
-        else
-            btn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-            btn.Text = name .. " : [OFF]"
-            btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-        end
-        callback(active)
-    end)
-    yOffset = yOffset + 50
-end
-
--- ========================================================
--- 1. TÍNH NĂNG ❄️ ĐÓNG BĂNG BOSS (FREEZE TOÀN BỘ HOẠT ẢNH)
--- ========================================================
-local freezeLoop = nil
-createToggle("❄️ Đóng Băng Boss", function(state)
-    if state then
-        freezeLoop = runService.Heartbeat:Connect(function()
-            for _, obj in pairs(workspace:GetDescendants()) do
-                if obj:IsA("Humanoid") and not Players:GetPlayerFromCharacter(obj.Parent) then
-                    local rootPart = obj.Parent:FindFirstChild("HumanoidRootPart")
-                    if rootPart then
-                        rootPart.Anchored = true
-                        rootPart.Velocity = Vector3.new(0, 0, 0)
-                        rootPart.RotVelocity = Vector3.new(0, 0, 0)
+local function FreezeEnemies()
+    -- Thay đổi đường dẫn bên dưới nếu cấu trúc thư mục chứa Boss trong game có cập nhật
+    local EnemiesFolder = Workspace:FindFirstChild("Enemies") or Workspace:FindFirstChild("Bosses")
+    
+    if EnemiesFolder then
+        for _, enemy in pairs(EnemiesFolder:GetChildren()) do
+            if enemy:IsA("Model") and enemy:FindFirstChild("HumanoidRootPart") then
+                -- Kiểm tra tên boss xem có nằm trong danh sách loại trừ không
+                if not ExcludedBosses[enemy.name] then
+                    local hrp = enemy.HumanoidRootPart
+                    -- Đóng băng bằng cách neo vị trí (Anchor) và xóa vận tốc
+                    hrp.Anchored = true
+                    hrp.Velocity = Vector3.new(0, 0, 0)
+                    hrp.RotVelocity = Vector3.new(0, 0, 0)
+                    
+                    -- Đảm bảo quái không thể hồi phục vị trí di chuyển
+                    local humanoid = enemy:FindFirstChildOfClass("Humanoid")
+                    if humanoid then
+                        humanoid.WalkSpeed = 0
+                        humanoid.JumpPower = 0
                     end
-                    -- Đóng băng vĩnh viễn các cử động tung chiêu
-                    local animator = obj:FindFirstChildOfClass("Animator") or obj
-                    if animator then
-                        pcall(function()
-                            for _, track in pairs(animator:GetPlayingAnimationTracks()) do
-                                track:AdjustSpeed(0)
-                            end
-                        end)
+                else
+                    -- Nếu là Tora hoặc Flower thì bỏ neo để boss hoạt động bình thường
+                    local hrp = enemy.HumanoidRootPart
+                    if hrp.Anchored then
+                        hrp.Anchored = false
                     end
                 end
             end
-        end)
-    else
-        if freezeLoop then freezeLoop:Disconnect(); freezeLoop = nil end
-        for _, obj in pairs(workspace:GetDescendants()) do
-            if obj:IsA("Humanoid") and not Players:GetPlayerFromCharacter(obj.Parent) then
-                local rootPart = obj.Parent:FindFirstChild("HumanoidRootPart")
-                if rootPart then rootPart.Anchored = false end
-                
-                local animator = obj:FindFirstChildOfClass("Animator") or obj
-                if animator then
-                    pcall(function()
-                        for _, track in pairs(animator:GetPlayingAnimationTracks()) do
-                            track:AdjustSpeed(1)
-                        end
-                    end)
-                end
-            end
-        end
-    end
-end)
-
--- ========================================================
--- 2. TÍNH NĂNG 🛡️ AUTO PARRY CHẠY NGẦM
--- ========================================================
-local parryState = false
-createToggle("🛡️ Auto Parry Đỡ Đòn", function(state)
-    parryState = state
-end)
-
-local function triggerParry()
-    local char = LocalPlayer.Character
-    local backpack = LocalPlayer:FindFirstChildOfClass("Backpack")
-    if char and char:FindFirstChildOfClass("Humanoid") then
-        local tool = (backpack and backpack:FindFirstChild("Azure Periastron")) or char:FindFirstChild("Azure Periastron")
-        if tool then
-            if tool.Parent ~= char then char.Humanoid:EquipTool(tool) end
-            local remote = tool:FindFirstChild("Remote")
-            if remote then remote:FireServer(Enum.KeyCode.E) end
         end
     end
 end
 
-local function listenCharacter(char)
-    char.DescendantAdded:Connect(function(desc)
-        if not parryState then return end
-        local textId = ""
-        if desc:IsA("ParticleEmitter") then textId = string.match(desc.Texture, "%d+") or ""
-        elseif desc:IsA("MeshPart") or desc:IsA("SpecialMesh") then textId = string.match(desc.MeshId, "%d+") or "" end
-        
-        if textId == "214269134" then
-            task.spawn(triggerParry)
-        end
-    end)
-end
-
-if LocalPlayer.Character then listenCharacter(LocalPlayer.Character) end
-LocalPlayer.CharacterAdded:Connect(listenCharacter)
-
--- ========================================================
--- 3. TÍNH NĂNG 🚫 ANTI-FLING (CHỐNG LỆNH ADMIN)
--- ========================================================
-local antiFling = nil
-createToggle("🚫 Anti Fling Chống Văng", function(state)
-    if state then
-        antiFling = runService.Heartbeat:Connect(function()
-            local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-            if hrp then
-                hrp.Velocity = Vector3.new(0, 0, 0)
-                hrp.RotVelocity = Vector3.new(0, 0, 0)
-            end
-        end)
-    else
-        if antiFling then antiFling:Disconnect(); antiFling = nil end
-    end
+-- Vòng lặp liên tục để tự động đóng băng các boss mới xuất hiện
+RunService.Heartbeat:Connect(function()
+    pcall(FreezeEnemies)
 end)
