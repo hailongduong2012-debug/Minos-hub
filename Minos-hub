@@ -1,90 +1,115 @@
--- [[ SDBF PURE GUI - ANTI-ERROR & AUTO FREEZE ]]
--- Loại trừ tuyệt đối: Tora và Flower
+-- [[ SDBF ANTI-KICK FREEZE + MUTED BOSS GUI ]]
+-- Vô hiệu hóa Boss di chuyển + Chặn tuyệt đối xài chiêu (Trừ Tora & Flower)
 
--- Xóa UI cũ nếu có trùng lặp
-if game:GetService("CoreGui"):FindFirstChild("SDBF_Freeze_Hub") then
-    game:GetService("CoreGui")["SDBF_Freeze_Hub"]:Destroy()
+if game:GetService("CoreGui"):FindFirstChild("SDBF_Bypass_Hub") then
+    game:GetService("CoreGui")["SDBF_Bypass_Hub"]:Destroy()
 end
 
--- Tạo Giao diện (Không phụ thuộc link ngoài)
 local ScreenGui = Instance.new("ScreenGui")
 local MainFrame = Instance.new("Frame")
 local Title = Instance.new("TextLabel")
 local ToggleBtn = Instance.new("TextButton")
 
-ScreenGui.Name = "SDBF_Freeze_Hub"
+ScreenGui.Name = "SDBF_Bypass_Hub"
 ScreenGui.Parent = game:GetService("CoreGui")
-ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
 MainFrame.Name = "MainFrame"
 MainFrame.Parent = ScreenGui
-MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
-MainFrame.Position = UDim2.new(0.05, 0, 0.4, 0)
-MainFrame.Size = UDim2.new(0, 200, 0, 110)
+MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+MainFrame.Position = UDim2.new(0.05, 0, 0.3, 0)
+MainFrame.Size = UDim2.new(0, 220, 0, 120)
 MainFrame.Active = true
-MainFrame.Draggable = true -- Bạn có thể giữ chuột để di chuyển bảng này đi chỗ khác
+MainFrame.Draggable = true
 
 Title.Name = "Title"
 Title.Parent = MainFrame
-Title.BackgroundColor3 = Color3.fromRGB(45, 45, 50)
-Title.Size = UDim2.new(1, 0, 0, 30)
+Title.BackgroundColor3 = Color3.fromRGB(40, 40, 45)
+Title.Size = UDim2.new(1, 0, 0, 35)
 Title.Font = Enum.Font.SourceSansBold
-Title.Text = "SDBF Freeze Boss v2"
+Title.Text = "SDBF Anti-Power v3"
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
 Title.TextSize = 16
 
 ToggleBtn.Name = "ToggleBtn"
 ToggleBtn.Parent = MainFrame
-ToggleBtn.BackgroundColor3 = Color3.fromRGB(180, 50, 50) -- Đỏ là đang Tắt
-ToggleBtn.Position = UDim2.new(0.05, 0, 0.4, 0)
-ToggleBtn.Size = UDim2.new(0, 180, 0, 50)
+ToggleBtn.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
+ToggleBtn.Position = UDim2.new(0.05, 0, 0.45, 0)
+ToggleBtn.Size = UDim2.new(0, 200, 0, 50)
 ToggleBtn.Font = Enum.Font.SourceSansBold
-ToggleBtn.Text = "FREEZE: OFF"
+ToggleBtn.Text = "FREEZE BOSS: OFF"
 ToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-ToggleBtn.TextSize = 18
+ToggleBtn.TextSize = 16
 
--- Cấu hình chức năng đóng băng
 local FreezeActive = false
-local ExcludedBosses = {
-    ["Tora"] = true,
-    ["Flower"] = true
-}
+local Excluded = { ["Tora"] = true, ["Flower"] = true }
 
-local function DoFreeze()
-    while FreezeActive do
-        task.wait(0.2)
-        -- Sử dụng pcall để tránh văng script khi boss chết hoặc biến mất bất ngờ
-        pcall(function()
-            for _, v in pairs(workspace:GetDescendants()) do
-                if v:IsA("Model") and v:FindFirstChild("Humanoid") and v:FindFirstChild("HumanoidRootPart") then
-                    -- Kiểm tra nếu không phải Tora/Flower và máu > 0
-                    if not ExcludedBosses[v.Name] and v.Humanoid.Health > 0 then
-                        local hrp = v:FindFirstChild("HumanoidRootPart")
-                        if hrp and not hrp.Anchored then
-                            hrp.Anchored = true
-                        end
-                    end
+-- Hàm xử lý Boss ngáo: Xóa chiêu + Không cho di chuyển
+local function DebuffBoss(boss)
+    if boss:IsA("Model") and not Excluded[boss.Name] then
+        -- 1. Đóng băng di chuyển hợp lệ (Không làm văng anti-cheat)
+        local humanoid = boss:FindFirstChildOfClass("Humanoid")
+        if humanoid then
+            humanoid.WalkSpeed = 0
+            humanoid.JumpPower = 0
+        end
+        
+        -- 2. Chặn xài chiêu: Xóa hoặc vô hiệu hóa các công cụ vũ khí/script chiêu thức
+        for _, item in pairs(boss:GetChildren()) do
+            if item:IsA("Tool") or item:IsA("Weapon") then
+                item:Destroy() -- Xóa luôn vũ khí khiến boss không có gì để kích hoạt chiêu
+            elseif item:IsA("Script") or item:IsA("LocalScript") then
+                if item.Name:lower():match("skill") or item.Name:lower():match("power") or item.Name:lower():match("attack") then
+                    item.Disabled = true -- Tắt script kích hoạt chiêu thức của Boss
                 end
             end
-        end)
+        end
+        
+        -- Chặn hoạt ảnh xuất chiêu (Anims)
+        if humanoid then
+            local animator = humanoid:FindFirstChildOfClass("Animator")
+            if animator then
+                for _, track in pairs(animator:GetPlayingAnimationTracks()) do
+                    track:Stop()
+                end
+            end
+        end
     end
 end
 
--- Xử lý sự kiện bấm nút bật/tắt
+-- Vòng lặp ngầm điều phối an toàn
+task.spawn(function()
+    while true do
+        task.wait(0.4) -- Quét giãn cách an toàn chống lag/kick
+        if FreezeActive then
+            pcall(function()
+                for _, obj in pairs(workspace:GetDescendants()) do
+                    if obj:IsA("Model") and obj:FindFirstChild("Humanoid") then
+                        if not game.Players:GetPlayerFromCharacter(obj) then
+                            DebuffBoss(obj)
+                        end
+                    end
+                end
+            end)
+        end
+    end
+end)
+
 ToggleBtn.MouseButton1Click:Connect(function()
     FreezeActive = not FreezeActive
     if FreezeActive then
-        ToggleBtn.Text = "FREEZE: ON"
-        ToggleBtn.BackgroundColor3 = Color3.fromRGB(50, 180, 50) -- Xanh là đang Bật
-        task.spawn(DoFreeze)
+        ToggleBtn.Text = "FREEZE & MUTE: ON"
+        ToggleBtn.BackgroundColor3 = Color3.fromRGB(50, 180, 50)
     else
-        ToggleBtn.Text = "FREEZE: OFF"
+        ToggleBtn.Text = "FREEZE BOSS: OFF"
         ToggleBtn.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
-        -- Tháo băng ngay lập tức cho các boss khi tắt nút
+        -- Phục hồi tốc độ di chuyển cho boss khi tắt
         pcall(function()
-            for _, v in pairs(workspace:GetDescendants()) do
-                if v:IsA("Model") and v:FindFirstChild("HumanoidRootPart") then
-                    v.HumanoidRootPart.Anchored = false
+            for _, obj in pairs(workspace:GetDescendants()) do
+                if obj:IsA("Model") and obj:FindFirstChild("Humanoid") then
+                    local hum = obj:FindFirstChildOfClass("Humanoid")
+                    if hum and not Excluded[obj.Name] then
+                        hum.WalkSpeed = 16
+                    end
                 end
             end
         end)
