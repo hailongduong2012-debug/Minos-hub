@@ -1,92 +1,45 @@
--- [[ SDBF ANTI-KICK FREEZE + MUTED BOSS GUI ]]
--- Vô hiệu hóa Boss di chuyển + Chặn tuyệt đối xài chiêu (Trừ Tora & Flower)
+-- [[ SBSD SECURE CAMPAIGN AUTO-ATTACK & BRING ]]
+-- Cơ chế an toàn: Gom quái về trước mặt hợp lệ và tự động định vị mục tiêu
 
-if game:GetService("CoreGui"):FindFirstChild("SDBF_Bypass_Hub") then
-    game:GetService("CoreGui")["SDBF_Bypass_Hub"]:Destroy()
-end
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
 
-local ScreenGui = Instance.new("ScreenGui")
-local MainFrame = Instance.new("Frame")
-local Title = Instance.new("TextLabel")
-local ToggleBtn = Instance.new("TextButton")
+-- Cấu hình phím bấm điều khiển tiện lợi
+local TOGGLE_AUTO_TARGET = Enum.KeyCode.P  -- Bấm P để Bật/Tắt tự động khóa mục tiêu mạnh nhất
+local TOGGLE_BRING_ENEMY = Enum.KeyCode.B  -- Bấm B để Bật/Tắt gom quái về trước mặt để xả chiêu
 
-ScreenGui.Name = "SDBF_Bypass_Hub"
-ScreenGui.Parent = game:GetService("CoreGui")
+local enemiesFolder = workspace:WaitForChild("Enemies", 5) or workspace:WaitForChild("Mobs", 5)
+local targetActive = false
+local bringActive = false
 
-MainFrame.Name = "MainFrame"
-MainFrame.Parent = ScreenGui
-MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
-MainFrame.Position = UDim2.new(0.05, 0, 0.3, 0)
-MainFrame.Size = UDim2.new(0, 220, 0, 120)
-MainFrame.Active = true
-MainFrame.Draggable = true
-
-Title.Name = "Title"
-Title.Parent = MainFrame
-Title.BackgroundColor3 = Color3.fromRGB(40, 40, 45)
-Title.Size = UDim2.new(1, 0, 0, 35)
-Title.Font = Enum.Font.SourceSansBold
-Title.Text = "SDBF Anti-Power v3"
-Title.TextColor3 = Color3.fromRGB(255, 255, 255)
-Title.TextSize = 16
-
-ToggleBtn.Name = "ToggleBtn"
-ToggleBtn.Parent = MainFrame
-ToggleBtn.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
-ToggleBtn.Position = UDim2.new(0.05, 0, 0.45, 0)
-ToggleBtn.Size = UDim2.new(0, 200, 0, 50)
-ToggleBtn.Font = Enum.Font.SourceSansBold
-ToggleBtn.Text = "FREEZE BOSS: OFF"
-ToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-ToggleBtn.TextSize = 16
-
-local FreezeActive = false
-local Excluded = { ["Tora"] = true, ["Flower"] = true }
-
--- Hàm xử lý Boss ngáo: Xóa chiêu + Không cho di chuyển
-local function DebuffBoss(boss)
-    if boss:IsA("Model") and not Excluded[boss.Name] then
-        -- 1. Đóng băng di chuyển hợp lệ (Không làm văng anti-cheat)
-        local humanoid = boss:FindFirstChildOfClass("Humanoid")
-        if humanoid then
-            humanoid.WalkSpeed = 0
-            humanoid.JumpPower = 0
-        end
-        
-        -- 2. Chặn xài chiêu: Xóa hoặc vô hiệu hóa các công cụ vũ khí/script chiêu thức
-        for _, item in pairs(boss:GetChildren()) do
-            if item:IsA("Tool") or item:IsA("Weapon") then
-                item:Destroy() -- Xóa luôn vũ khí khiến boss không có gì để kích hoạt chiêu
-            elseif item:IsA("Script") or item:IsA("LocalScript") then
-                if item.Name:lower():match("skill") or item.Name:lower():match("power") or item.Name:lower():match("attack") then
-                    item.Disabled = true -- Tắt script kích hoạt chiêu thức của Boss
-                end
-            end
-        end
-        
-        -- Chặn hoạt ảnh xuất chiêu (Anims)
-        if humanoid then
-            local animator = humanoid:FindFirstChildOfClass("Animator")
-            if animator then
-                for _, track in pairs(animator:GetPlayingAnimationTracks()) do
-                    track:Stop()
-                end
-            end
-        end
-    end
-end
-
--- Vòng lặp ngầm điều phối an toàn
+-- 1. Hàm tự động định vị và khóa mục tiêu có máu trâu nhất (Bypass Quét Lỗi)
 task.spawn(function()
     while true do
-        task.wait(0.4) -- Quét giãn cách an toàn chống lag/kick
-        if FreezeActive then
+        task.wait(0.2)
+        if targetActive and enemiesFolder then
             pcall(function()
-                for _, obj in pairs(workspace:GetDescendants()) do
-                    if obj:IsA("Model") and obj:FindFirstChild("Humanoid") then
-                        if not game.Players:GetPlayerFromCharacter(obj) then
-                            DebuffBoss(obj)
+                local strongestEnemy = nil
+                local maxHealth = 0
+                
+                for _, enemy in pairs(enemiesFolder:GetChildren()) do
+                    if enemy:IsA("Model") and enemy:FindFirstChild("Humanoid") then
+                        local hp = enemy.Humanoid.Health
+                        if hp > maxHealth then
+                            maxHealth = hp
+                            strongestEnemy = enemy
                         end
+                    end
+                end
+                
+                -- Khóa mục tiêu để nhân vật luôn tung chiêu chuẩn xác vào con khỏe nhất
+                if strongestEnemy and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                    local hrp = player.Character.HumanoidRootPart
+                    local enemyHrp = strongestEnemy:FindFirstChild("HumanoidRootPart")
+                    if enemyHrp then
+                        -- Xoay hướng nhân vật về phía quái một cách tự nhiên
+                        hrp.CFrame = CFrame.new(hrp.Position, Vector3.new(enemyHrp.Position.X, hrp.Position.Y, enemyHrp.Position.Z))
                     end
                 end
             end)
@@ -94,24 +47,37 @@ task.spawn(function()
     end
 end)
 
-ToggleBtn.MouseButton1Click:Connect(function()
-    FreezeActive = not FreezeActive
-    if FreezeActive then
-        ToggleBtn.Text = "FREEZE & MUTE: ON"
-        ToggleBtn.BackgroundColor3 = Color3.fromRGB(50, 180, 50)
-    else
-        ToggleBtn.Text = "FREEZE BOSS: OFF"
-        ToggleBtn.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
-        -- Phục hồi tốc độ di chuyển cho boss khi tắt
+-- 2. Hàm gom quái về trước mặt (Client-side) giúp dọn map Campaign cực nhanh mà không đổi sát thương gốc
+RunService.Heartbeat:Connect(function()
+    if bringActive and enemiesFolder and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
         pcall(function()
-            for _, obj in pairs(workspace:GetDescendants()) do
-                if obj:IsA("Model") and obj:FindFirstChild("Humanoid") then
-                    local hum = obj:FindFirstChildOfClass("Humanoid")
-                    if hum and not Excluded[obj.Name] then
-                        hum.WalkSpeed = 16
+            local myHrp = player.Character.HumanoidRootPart
+            -- Xác định tọa độ an toàn cách trước mặt nhân vật 3 Studs
+            local targetPosition = myHrp.Position + (myHrp.CFrame.LookVector * 3) 
+            
+            for _, enemy in pairs(enemiesFolder:GetChildren()) do
+                if enemy:IsA("Model") and enemy:FindFirstChild("HumanoidRootPart") and enemy:FindFirstChild("Humanoid") then
+                    if enemy.Humanoid.Health > 0 then
+                        local enemyHrp = enemy.HumanoidRootPart
+                        -- Kéo quái về mặt client để bạn xả combo chiêu thức trúng 100% đám quái
+                        enemyHrp.CFrame = CFrame.new(targetPosition)
+                        enemyHrp.Velocity = Vector3.new(0, 0, 0)
                     end
                 end
             end
         end)
+    end
+end)
+
+-- Nhận diện thao tác bật tắt bằng phím
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    
+    if input.KeyCode == TOGGLE_AUTO_TARGET then
+        targetActive = not targetActive
+        print("Tự động khóa mục tiêu mạnh nhất: " .. tostring(targetActive))
+    elseif input.KeyCode == TOGGLE_BRING_ENEMY then
+        bringActive = not bringActive
+        print("Gom quái về trước mặt: " .. tostring(bringActive))
     end
 end)
