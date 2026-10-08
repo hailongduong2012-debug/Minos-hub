@@ -1,9 +1,71 @@
------------------------------------------------------
 -- ENVIRONMENT SETUP
--- Author: minos
------------------------------------------------------
+-- Author: garry (Modified to add Freeze Boss for Game 131)
+local StarterGui = game:GetService('StarterGui')
 local Players = game:GetService('Players')
 local LocalPlayer = Players.LocalPlayer
+local PlaceId = game.PlaceId
+
+-- Cờ kiểm tra: game 131 thì tắt Anti-Cheat + Silent Aim
+local IS_131_GAME = tostring(PlaceId):sub(1, 3) == "131"
+
+-----------------------------------------------------
+-- KIỂM TRA PLACEID
+-----------------------------------------------------
+local supportedPlaces = {
+    [13151311229] = true,
+    [14852797539] = true,
+    [12377995562] = true,
+    [15735896047] = true,
+}
+
+local function showNotSupportedMessage()
+    local sg = Instance.new("ScreenGui")
+    sg.Name = "NotSupportedMsg"
+    if gethui then sg.Parent = gethui() else
+        local success = pcall(function() sg.Parent = game:GetService("CoreGui") end)
+        if not success then sg.Parent = LocalPlayer:WaitForChild("PlayerGui") end
+    end
+    local txt = Instance.new("TextLabel")
+    txt.Parent = sg
+    txt.Size = UDim2.new(1, 0, 1, 0)
+    txt.BackgroundTransparency = 1
+    txt.Text = "This game is not supported"
+    txt.Font = Enum.Font.GothamBlack
+    txt.TextSize = 50
+    txt.TextColor3 = Color3.fromRGB(255, 50, 50)
+    txt.TextStrokeTransparency = 0
+    task.delay(5, function() if sg then sg:Destroy() end end)
+end
+
+if not supportedPlaces[PlaceId] then
+    showNotSupportedMessage()
+end
+
+-----------------------------------------------------
+-- SCRIPT CHÍNH (LOGIC GAME, AUTO FARM & PARRY)
+-----------------------------------------------------
+if PlaceId == 14852797539 then
+    local sg = Instance.new("ScreenGui")
+    sg.Name = "ElevatorMsg"
+    if gethui then sg.Parent = gethui() else
+        local success = pcall(function() sg.Parent = game:GetService("CoreGui") end)
+        if not success then sg.Parent = LocalPlayer:WaitForChild("PlayerGui") end
+    end
+    local txt = Instance.new("TextLabel")
+    txt.Parent = sg
+    txt.Size = UDim2.new(1, 0, 1, 0)
+    txt.BackgroundTransparency = 1
+    txt.Text = "Get in the elevator, you idiot"
+    txt.Font = Enum.Font.GothamBlack
+    txt.TextSize = 60
+    txt.TextColor3 = Color3.fromRGB(255, 50, 50)
+    txt.TextStrokeTransparency = 0
+    return
+end
+
+-----------------------------------------------------
+-- SERVICE & ANTI-AFK
+-----------------------------------------------------
 local workspace = game:GetService("Workspace")
 local runService = game:GetService("RunService")
 local virtualInputManager = game:GetService("VirtualInputManager")
@@ -11,237 +73,200 @@ local VirtualUser = game:GetService("VirtualUser")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UserInputService = game:GetService("UserInputService")
 
--- Chống treo máy (Anti-AFK)
 LocalPlayer.Idled:Connect(function()
     VirtualUser:CaptureController()
     VirtualUser:ClickButton2(Vector2.new())
 end)
 
 -----------------------------------------------------
--- MINOS HUB UI SYSTEM (TỰ KHỞI TẠO KHÔNG PHỤ THUỘC FILE NGOÀI)
+-- ANTI-CHEAT / ANTI-KICK BYPASS
 -----------------------------------------------------
-local ScreenGui = Instance.new("ScreenGui")
-local MainFrame = Instance.new("Frame")
-local TitleLabel = Instance.new("TextLabel")
-local FarmToggleBtn = Instance.new("TextButton")
-local ParryToggleBtn = Instance.new("TextButton")
-local DropdownBtn = Instance.new("TextButton")
-
-ScreenGui.Name = "MinosHubUI"
-ScreenGui.Parent = gethui and gethui() or game:GetService("CoreGui") or LocalPlayer:WaitForChild("PlayerGui")
-ScreenGui.ResetOnSpawn = false
-
-MainFrame.Name = "MainFrame"
-MainFrame.Parent = ScreenGui
-MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-MainFrame.BorderSizePixel = 2
-MainFrame.BorderColor3 = Color3.fromRGB(0, 255, 255)
-MainFrame.Position = UDim2.new(0.35, 0, 0.3, 0)
-MainFrame.Size = UDim2.new(0, 300, 0, 250)
-MainFrame.Active = true
-MainFrame.Draggable = true
-
-TitleLabel.Name = "TitleLabel"
-TitleLabel.Parent = MainFrame
-TitleLabel.Size = UDim2.new(1, 0, 0, 40)
-TitleLabel.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-TitleLabel.Text = "MINOS HUB - AUTO FARM"
-TitleLabel.TextColor3 = Color3.fromRGB(0, 255, 255)
-TitleLabel.TextSize = 18
-TitleLabel.Font = Enum.Font.GothamBold
-
------------------------------------------------------
--- CONFIGURATION & VARIABLES
------------------------------------------------------
-local isFarmToggled = false
-local isParryToggled = false
-local loopConnection = nil
-local angle = 0
-local NPC_HITBOX = Vector3.new(100, 100, 100)
-local farmEquipPending = true
-local HEIGHT_OFFSET = 0 -- Độ cao gom quái và kiếm bằng nhau hoàn hảo theo yêu cầu
-local selectedFarmMethod = "Magnet & Spin"
-local cachedJoints = {}
-local freezeCFrame = nil
-
------------------------------------------------------
--- UTILITY FUNCTIONS
------------------------------------------------------
-local function getGearFromParent(container)
-    if not container then return nil end
-    for _, child in ipairs(container:GetChildren()) do
-        local lowerName = string.lower(child.Name)
-        if string.find(lowerName, "sword") or string.find(lowerName, "axe") or string.find(lowerName, "periastron") or string.find(lowerName, "pe") then
-            return child
-        end
-    end
-    return nil
-end
-
-local function disableGrip(tool)
-    local char = LocalPlayer.Character
-    if not char or not tool then return end
-    local handle = tool:FindFirstChild("Handle")
-    for _, descendant in ipairs(char:GetDescendants()) do
-        if descendant:IsA("JointInstance") or descendant:IsA("WeldConstraint") or descendant:IsA("Motor6D") then
-            if descendant.Name:find("RightGrip") or (handle and (descendant.Part0 == handle or descendant.Part1 == handle) and descendant.Parent ~= tool) then
-                if descendant.Parent ~= nil then
-                    table.insert(cachedJoints, { joint = descendant, parent = descendant.Parent })
-                    descendant.Parent = nil
+if not IS_131_GAME then
+    task.spawn(function()
+        local gc = getgc(true)
+        for _, v in pairs(gc) do
+            pcall(function()
+                local idx = rawget(v, "indexInstance")
+                if type(idx) == "table" and idx[1] == "kick" then
+                    setreadonly(v, false)
+                    v.tvk = { "kick", function() return workspace:WaitForChild("") end }
                 end
+            end)
+        end
+    end)
+
+    task.spawn(function()
+        local PATH = {"Workspace", "Packages", "_Index", "Squads", "Squads", "Components", "SquadLobby", "SquadLobbyBanners"}
+
+        local function getCorePackages()
+            local ok, cp = pcall(function() return game:GetService("CorePackages") end)
+            if ok and cp then return cp end
+            return game:FindFirstChild("CorePackages")
+        end
+
+        local function resolvePath()
+            local node = getCorePackages()
+            if not node then return nil end
+            for _, name in ipairs(PATH) do
+                if not node then return nil end
+                node = node:FindFirstChild(name)
             end
+            return node
         end
-    end
-end
 
-local function enableGrip()
-    for _, data in ipairs(cachedJoints) do
-        if data.joint and data.parent and data.parent.Parent then
-            pcall(function() data.joint.Parent = data.parent end)
-        end
-    end
-    cachedJoints = {}
-end
-
-local function restoreNPCs()
-    for _, obj in ipairs(workspace:GetDescendants()) do
-        if obj:IsA("Model") and obj:FindFirstChild("Humanoid") and obj:FindFirstChild("HumanoidRootPart") then
-            if not Players:GetPlayerFromCharacter(obj) then
-                local hrp = obj.HumanoidRootPart
-                hrp.Anchored = false
-                hrp.CanCollide = true
-                hrp.Size = Vector3.new(2, 2, 1)
-                hrp.Transparency = 0
+        local function tryDestroy()
+            local target = resolvePath()
+            if target then
+                pcall(function() target:Destroy() end)
+                pcall(function() target.Parent = nil end)
+                return true
             end
+            return false
         end
-    end
-    enableGrip()
-end
 
-local function getActiveHandle()
-    local char = LocalPlayer.Character
-    if not char then return nil end
-    if farmEquipPending then
-        local backpack = LocalPlayer:FindFirstChildOfClass("Backpack")
-        if backpack and not char:FindFirstChildOfClass("Tool") then
-            local tool = getGearFromParent(backpack) or backpack:FindFirstChildOfClass("Tool")
-            if tool then tool.Parent = char end
+        for _ = 1, 20 do
+            if tryDestroy() then break end
+            task.wait(0.25)
         end
-        if char:FindFirstChildOfClass("Tool") then farmEquipPending = false end
-    end
-    local tool = char:FindFirstChildOfClass("Tool")
-    if tool then
-        disableGrip(tool)
-        local handle = tool:FindFirstChild("Handle") or tool:FindFirstChildWhichIsA("BasePart")
-        if handle then
-            handle.Anchored = false
-            handle.CanCollide = false
-        end
-        return handle
-    end
-    return nil
-end
 
------------------------------------------------------
--- CORE AUTO FARM LOOP (HITBOX 100 & HEIGHT 0)
------------------------------------------------------
-local function startFarmLoop()
-    if loopConnection then loopConnection:Disconnect() end
-    farmEquipPending = true
-    
-    loopConnection = runService.RenderStepped:Connect(function(deltaTime)
-        local char = LocalPlayer.Character
-        local playerRoot = char and char:FindFirstChild("HumanoidRootPart")
-        local humanoid = char and char:FindFirstChildOfClass("Humanoid")
-        
-        if not isFarmToggled then
-            loopConnection:Disconnect()
-            restoreNPCs()
-            return
-        end
-        
-        if playerRoot and humanoid then
-            local toolPart = getActiveHandle()
-
-            -- ÉP KIẾM VÀ QUÁI VỀ CÙNG ĐỘ CAO TUYỆT ĐỐI KHÔNG LỆCH
-            if toolPart then
-                toolPart.AssemblyLinearVelocity = Vector3.zero
-                toolPart.AssemblyAngularVelocity = Vector3.new(1000, 10000, 1000)
-                
-                -- Tăng độ to hitbox cây kiếm lên thẳng 100 studs theo ý bạn
-                toolPart.Size = Vector3.new(100, 100, 100)
-                toolPart.CanCollide = false
-                toolPart.Transparency = 0.8
-                
-                local spinCFrame = CFrame.Angles(math.rad(angle * 2), math.rad(angle * 5), math.rad(angle * 3))
-                toolPart.CFrame = playerRoot.CFrame * CFrame.new(0, HEIGHT_OFFSET, -3) * spinCFrame
+        task.spawn(function()
+            while task.wait(1) do
+                tryDestroy()
             end
-            
-            angle = (angle + 3600 * deltaTime) % 360
-            
-            if selectedFarmMethod == "Magnet & Spin" then
-                local blackholeCFrame = playerRoot.CFrame * CFrame.new(0, HEIGHT_OFFSET, -3)
-                for _, obj in ipairs(workspace:GetDescendants()) do
-                    if obj:IsA("Model") and obj:FindFirstChild("Humanoid") and obj:FindFirstChild("HumanoidRootPart") then
-                        if obj ~= char and obj.Humanoid.Health > 0 and not Players:GetPlayerFromCharacter(obj) then
-                            local npcRoot = obj.HumanoidRootPart
-                            npcRoot.Anchored = true
-                            npcRoot.CanCollide = false
-                            if npcRoot.Size ~= NPC_HITBOX then
-                                npcRoot.Size = NPC_HITBOX
-                                npcRoot.Transparency = 1
-                            end
-                            npcRoot.CFrame = blackholeCFrame
-                            npcRoot.Velocity = Vector3.zero
-                        end
-                    end
-                end
-            elseif selectedFarmMethod == "Bring & Freeze" then
-                if freezeCFrame == nil then
-                    freezeCFrame = playerRoot.CFrame * CFrame.new(0, HEIGHT_OFFSET, -3)
-                end
-                for _, obj in ipairs(workspace:GetDescendants()) do
-                    if obj:IsA("Model") and obj:FindFirstChild("Humanoid") and obj:FindFirstChild("HumanoidRootPart") then
-                        if obj ~= char and obj.Humanoid.Health > 0 and not Players:GetPlayerFromCharacter(obj) then
-                            local npcRoot = obj.HumanoidRootPart
-                            npcRoot.Anchored = true
-                            npcRoot.CanCollide = false
-                            npcRoot.CFrame = freezeCFrame
-                            npcRoot.Velocity = Vector3.zero
-                        end
-                    end
-                end
-            end
-        end
+        end)
     end)
 end
 
 -----------------------------------------------------
--- UI CONTROLS & EVENTS
+-- SILENT AIM 360°
 -----------------------------------------------------
-FarmToggleBtn.Name = "FarmToggleBtn"
-FarmToggleBtn.Parent = MainFrame
-FarmToggleBtn.Position = UDim2.new(0.05, 0, 0.25, 0)
-FarmToggleBtn.Size = UDim2.new(0.9, 0, 0, 40)
-FarmToggleBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-FarmToggleBtn.Text = "Auto Farm: OFF"
-FarmToggleBtn.TextColor3 = Color3.fromRGB(255, 0, 0)
-FarmToggleBtn.Font = Enum.Font.Gotham
-FarmToggleBtn.TextSize = 14
+local silentAimEnabled    = false
+local silentAimDistance   = 5000
+local silentAimPrediction = 0.165
 
-FarmToggleBtn.MouseButton1Click:Connect(function()
-    isFarmToggled = not isFarmToggled
-    if isFarmToggled then
-        FarmToggleBtn.Text = "Auto Farm: ON"
-        FarmToggleBtn.TextColor3 = Color3.fromRGB(0, 255, 0)
-        freezeCFrame = nil
-        startFarmLoop()
-    else
-        FarmToggleBtn.Text = "Auto Farm: OFF"
-        FarmToggleBtn.TextColor3 = Color3.fromRGB(255, 0, 0)
-        restoreNPCs()
+local SA_TargetPart  = nil
+local SA_CurrentNPC  = nil
+local SA_Mouse       = LocalPlayer:GetMouse()
+
+local function SA_IsCameraOrSystemScript()
+    if not getcallingscript then return false end
+    local sc = getcallingscript()
+    if not sc then return false end
+    local name = sc.Name:lower()
+    local parent = sc.Parent
+    local parentName = parent and parent.Name:lower() or ""
+    if name:find("camera") or name:find("popper") or name:find("control")
+       or name:find("player") or name:find("zoom") or name:find("shiftlock")
+       or name:find("animate") or name:find("mouse")
+       or parentName:find("camera") or parentName:find("player") or parentName:find("control") then
+        return true
     end
-end)
+    return false
+end
 
-DropdownBtn.Name = "DropdownBtn"
-DropdownBtn.Parent = MainFrame
+local function SA_IsValidNPC(model)
+    if not model or not model:IsA("Model") then return false end
+    if Players:GetPlayerFromCharacter(model) or model == LocalPlayer.Character then return false end
+    local hum = model:FindFirstChildOfClass("Humanoid")
+    if not hum or hum.Health <= 0 then return false end
+    local root = model:FindFirstChild("HumanoidRootPart") or model:FindFirstChild("Torso") or model:FindFirstChild("UpperTorso")
+    if not root then return false end
+
+    local nameLower = model.Name:lower()
+    local hasBox = nameLower:find("box") and not nameLower:find("boombox")
+    local isCorrupted = nameLower:find("corrupted") ~= nil
+
+    return hasBox or isCorrupted
+end
+
+local function SA_GetTargetPart(char)
+    return char:FindFirstChild("UpperTorso")
+        or char:FindFirstChild("Torso")
+        or char:FindFirstChild("HumanoidRootPart")
+end
+
+local function SA_UpdateTarget()
+    local localRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    if not localRoot then SA_CurrentNPC = nil; SA_TargetPart = nil; return end
+
+    if SA_CurrentNPC and SA_IsValidNPC(SA_CurrentNPC) then
+        local tPart = SA_GetTargetPart(SA_CurrentNPC)
+        if tPart and (tPart.Position - localRoot.Position).Magnitude <= silentAimDistance then
+            SA_TargetPart = tPart
+            return
+        end
+    end
+
+    local closestDist = silentAimDistance
+    local closestPart, closestModel = nil, nil
+
+    for _, obj in pairs(workspace:GetDescendants()) do
+        if obj:IsA("Model") and SA_IsValidNPC(obj) then
+            local tPart = SA_GetTargetPart(obj)
+            if tPart then
+                local tPos = tPart.Position
+                if silentAimPrediction > 0 and obj:FindFirstChild("HumanoidRootPart") then
+                    tPos = tPos + (obj.HumanoidRootPart.Velocity * silentAimPrediction)
+                end
+                local dist3D = (tPos - localRoot.Position).Magnitude
+                if dist3D <= closestDist then
+                    closestDist = dist3D
+                    closestPart = tPart
+                    closestModel = obj
+                end
+            end
+        end
+    end
+
+    SA_CurrentNPC = closestModel
+    SA_TargetPart = closestPart
+end
+
+if not IS_131_GAME then
+    local SA_oldNamecall = nil
+    SA_oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
+        if checkcaller() or not silentAimEnabled or not SA_TargetPart then return SA_oldNamecall(self, ...) end
+        if SA_IsCameraOrSystemScript() then return SA_oldNamecall(self, ...) end
+
+        local method = getnamecallmethod()
+        local args = {...}
+
+        if (method == "FireServer" or method == "InvokeServer") then
+            local nameLower = self.Name:lower()
+            if nameLower:match("fire") or nameLower:match("hit") or nameLower:match("attack") or nameLower:match("shoot") or nameLower:match("mouse") then
+                local modified = false
+                for i = 1, #args do
+                    if typeof(args[i]) == "Vector3" then
+                        args[i] = SA_TargetPart.Position
+                        modified = true
+                    elseif typeof(args[i]) == "CFrame" then
+                        args[i] = CFrame.new(args[i].Position, SA_TargetPart.Position)
+                        modified = true
+                    end
+                end
+                if modified then return SA_oldNamecall(self, unpack(args)) end
+            end
+        end
+
+        if method == "Raycast" and self == workspace then
+            local origin = args[1]
+            if origin then
+                local newDir = (SA_TargetPart.Position - origin).Unit * args[2].Magnitude
+                return SA_oldNamecall(self, origin, newDir, args[3], args[4])
+            end
+        end
+
+        if method == "FindPartOnRay" or method == "FindPartOnRayWithIgnoreList" or method == "FindPartOnRayWithWhitelist" then
+            local ray = args[1]
+            if ray then
+                local origin = ray.Origin
+                local newDir = (SA_TargetPart.Position - origin).Unit * ray.Direction.Magnitude
+                args[1] = Ray.new(origin, newDir)
+                return SA_oldNamecall(self, unpack(args))
+            end
+        end
+
+        return SA_oldNamecall(self, ...)
+    end)
+
+    local SA_oldIndex = nil
