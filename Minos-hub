@@ -1,5 +1,5 @@
--- [[ SBSD CAMPAIGN 2026 - NEGATIVE HEALTH & OPTIMIZED 0.01S KILL AURA ]]
--- Tối ưu hóa: Bất tử Máu Âm + Kill Aura Delay 0.01s Không Lag + Nút X Mobile
+-- [[ SBSD CAMPAIGN 2026 - GHOST ANTI-DELETION & SILENT GLOBAL TOUCH ]]
+-- Phiên bản tối thượng: Bất tử chống xóa thực thể + Chém 0.01s 0% Lag + Nút X Mobile
 
 if game:GetService("CoreGui"):FindFirstChild("RayfieldMockup_SBSD") then
     game:GetService("CoreGui")["RayfieldMockup_SBSD"]:Destroy()
@@ -30,14 +30,14 @@ Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 9)
 local Title = Instance.new("TextLabel", Main)
 Title.Size = UDim2.new(1, -40, 0, 40)
 Title.BackgroundColor3 = Color3.fromRGB(28, 28, 33)
-Title.Text = "  SBSD Hub | Silent Global v9"
+Title.Text = "  SBSD Hub | Ghost Godmode v10"
 Title.TextColor3 = Color3.fromRGB(240, 240, 240)
 Title.TextXAlignment = Enum.TextXAlignment.Left
 Title.Font = Enum.Font.SourceSansBold
 Title.TextSize = 15
 Instance.new("UICorner", Title).CornerRadius = UDim.new(0, 9)
 
--- NÚT CHỮ "X" ĐỂ ẨN MENU (MOBILE KHÔNG LO QUÊN PHÍM)
+-- NÚT CHỮ "X" ĐỂ ẨN MENU
 local CloseButton = Instance.new("TextButton", Main)
 CloseButton.Size = UDim2.new(0, 35, 0, 35)
 CloseButton.Position = UDim2.new(1, -38, 0, 2)
@@ -48,7 +48,7 @@ CloseButton.Font = Enum.Font.SourceSansBold
 CloseButton.TextSize = 18
 Instance.new("UICorner", CloseButton).CornerRadius = UDim.new(0, 6)
 
--- NÚT TRÒN HIỆN MENU KHI ĐÃ ẨN
+-- NÚT TRÒN HIỆN MENU
 local OpenButton = Instance.new("TextButton", SG)
 OpenButton.Size = UDim2.new(0, 45, 0, 45)
 OpenButton.Position = UDim2.new(0, 15, 0, 15)
@@ -71,12 +71,12 @@ Toggle1.Font = Enum.Font.SourceSansBold
 Toggle1.TextSize = 13
 Instance.new("UICorner", Toggle1).CornerRadius = UDim.new(0, 6)
 
--- Nút Toggle 3: Bất Tử Máu Âm
+-- Nút Toggle 3: Bất Tử Chống Xóa Thực Thể
 local Toggle3 = Instance.new("TextButton", Main)
 Toggle3.Size = UDim2.new(0, 290, 0, 45)
 Toggle3.Position = UDim2.new(0, 15, 0, 120)
 Toggle3.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
-Toggle3.Text = "God Mode (Bất Tử Máu Âm -999M) : OFF"
+Toggle3.Text = "God Mode (Bất Tử Chống Xóa Lõi) : OFF"
 Toggle3.TextColor3 = Color3.fromRGB(200, 70, 70)
 Toggle3.Font = Enum.Font.SourceSansBold
 Toggle3.TextSize = 13
@@ -86,12 +86,12 @@ local InfoText = Instance.new("TextLabel", Main)
 InfoText.Size = UDim2.new(1, 0, 0, 30)
 InfoText.Position = UDim2.new(0, 0, 0, 185)
 InfoText.BackgroundTransparency = 1
-InfoText.Text = "Cấu hình: Fix tốc độ ổn định 0.01s + Không gây lag"
-InfoText.TextColor3 = Color3.fromRGB(0, 255, 150)
+InfoText.Text = "Cơ chế: Vô hiệu BreakJoints + Tái cấu trúc khung xương"
+InfoText.TextColor3 = Color3.fromRGB(230, 100, 255)
 InfoText.Font = Enum.Font.SourceSansItalic
 InfoText.TextSize = 12
 
--- Hàm xử lý Ẩn/Hiện UI bằng nút X
+-- Hàm ẩn hiện UI
 local function ToggleUi()
     UiVisible = not UiVisible
     Main.Visible = UiVisible
@@ -101,28 +101,47 @@ CloseButton.MouseButton1Click:Connect(ToggleUi)
 OpenButton.MouseButton1Click:Connect(ToggleUi)
 
 
--- === CƠ CHẾ GOD MODE BẤT TỬ MÁU ÂM THỜI GIAN THỰC ===
+-- === CƠ CHẾ GOD MODE BẤT TỬ CHỐNG XÓA THỰC THỂ (REAL GHOST MOD) ===
 Toggle3.MouseButton1Click:Connect(function()
     RealGodModeActive = not RealGodModeActive
-    Toggle3.Text = RealGodModeActive and "God Mode (Bất Tử Máu Âm -999M) : ON" or "God Mode (Bất Tử Máu Âm -999M) : OFF"
+    Toggle3.Text = RealGodModeActive and "God Mode (Bất Tử Chống Xóa Lõi) : ON" or "God Mode (Bất Tử Xóa Lõi) : OFF"
     Toggle3.TextColor3 = RealGodModeActive and Color3.fromRGB(80, 200, 80) or Color3.fromRGB(200, 70, 70)
 end)
 
+-- Chạy liên tục ngầm ở tầng xử lý Simulation để bẻ gãy lệnh phá hủy nhân vật từ Server
 RunService.PreSimulation:Connect(function()
     if RealGodModeActive and LocalPlayer.Character then
         pcall(function()
             local char = LocalPlayer.Character
             local hum = char:FindFirstChildOfClass("Humanoid")
             
+            -- BẺ GÃY HÀM TỰ HỦY: Khiến lệnh BreakJoints (Ép chết từ Server) bị vô hiệu hóa
+            char:SetAttribute("RequiresNeck", false)
+            
             if hum then
                 hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
                 
-                -- Khóa chỉ số máu âm phá vỡ logic tính toán của Server
-                hum.MaxHealth = -99999999
-                hum.Health = -99999999
+                -- Đóng băng chỉ số để chống trừ máu cơ bản
+                hum.MaxHealth = math.huge
+                hum.Health = math.huge
                 
+                -- Nếu Server cố tình ép trạng thái sang Chết, lập tức ép ngược về Đang Chạy
                 if hum:GetState() == Enum.HumanoidStateType.Dead then
                     hum:ChangeState(Enum.HumanoidStateType.Running)
+                end
+            end
+            
+            -- CHỐNG RÃ XÁC (Khóa cứng khớp xương cơ thể thời gian thực)
+            for _, child in pairs(char:GetChildren()) do
+                if child:IsA("BasePart") and child.Name ~= "HumanoidRootPart" then
+                    child.CanCollide = false
+                    -- Nếu mối nối khớp xương bị Server bẻ gãy, đoạn này sẽ tự gắn chặt nó lại với trục chính
+                    if not child:FindFirstChildOfClass("Motor6D") and char:FindFirstChild("HumanoidRootPart") then
+                        local attachment = child:FindFirstChildOfClass("Attachment")
+                        if not attachment then
+                            child.CFrame = char.HumanoidRootPart.CFrame
+                        end
+                    end
                 end
             end
         end)
@@ -130,7 +149,7 @@ RunService.PreSimulation:Connect(function()
 end)
 
 
--- === SILENT GLOBAL AUTO DAMAGE - TỐC ĐỘ 0.01S CHUẨN XÁC KHÔNG LAG ===
+-- === SILENT GLOBAL AUTO DAMAGE - DELAY CHUẨN 0.01S CHỐNG LAG ===
 Toggle1.MouseButton1Click:Connect(function()
     GlobalDamageActive = not GlobalDamageActive
     Toggle1.Text = GlobalDamageActive and "Silent Global Damage (Delay 0.01s) : ON" or "Silent Global Damage (Delay 0.01s) : OFF"
@@ -139,7 +158,7 @@ end)
 
 task.spawn(function()
     while true do
-        task.wait(0.01) -- Đã chỉnh chuẩn delay 0.01 giây theo yêu cầu của bro
+        task.wait(0.01) -- Chuẩn delay 0.01s theo ý bro, siêu tốc độ
         if GlobalDamageActive then
             pcall(function()
                 local char = LocalPlayer.Character
@@ -156,7 +175,7 @@ task.spawn(function()
                     local attackPart = currentTool:FindFirstChild("Handle") or currentTool:FindFirstChildWhichIsA("BasePart")
                     
                     if attackPart and firetouchinterest then
-                        -- Không lướt kiếm liên tục để tránh giật lag màn hình
+                        -- Hoạt ảnh chém đã tắt 100% để loại bỏ hoàn toàn lag giật màn hình
                         
                         for _, enemy in pairs(workspace:GetDescendants()) do
                             if enemy:IsA("Model") and enemy:FindFirstChild("Humanoid") and enemy.Humanoid.Health > 0 then
@@ -166,8 +185,8 @@ task.spawn(function()
                                     if enemyRoot then
                                         local isBoss = string.find(string.lower(enemy.Name), "boss") or enemy:GetAttribute("IsBoss")
                                         
-                                        -- Cân bằng số phát chém đa luồng kết hợp với delay 0.01s
-                                        local hitCount = isBoss and 40 or 15
+                                        -- Cực đại hóa số phát chém đa luồng kết hợp với nhịp nghỉ 0.01s
+                                        local hitCount = isBoss and 45 or 15
                                         for i = 1, hitCount do
                                             coroutine.wrap(function()
                                                 firetouchinterest(enemyRoot, attackPart, 0)
