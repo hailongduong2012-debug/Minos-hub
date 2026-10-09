@@ -1,221 +1,136 @@
--- [[ sbsd_mogged PREMIUM HUB V24 - TOTAL OBFUSCATED UI BYPASS ]]
--- KHÔNG BỊ GAME QUÉT XOÁ - 100% HIỆN BẢNG RAYFIELD ĐEN ĐỎ CÙNG HÌNH DOOM SLAYER
--- KHÔNG GOM QUÁI - KILL AURA TOÀN MAP - GOD MODE BẤT TỬ DEATH MODE
+-- [[ MINOS HUB PREMIUM ENGINE - THE CRUCIBLE RAYFIELD OVERLOAD ]]
+-- LOAD LẠI CODE CHUẨN: TÊN MINOS HUB - SỬA LỖI KHÔNG LÊN UI BẰNG SOURCE LIÊN KẾT GỐC KHÔNG QUA PROXY
+-- TÍNH NĂNG: KILL AURA MAX RANGE DELAY 0 & GOD MODE BẤT TỬ KHÔNG CHẾT
+
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local P = game:GetService("Players")
 local LP = P.LocalPlayer
 local RS = game:GetService("ReplicatedStorage")
 local RunS = game:GetService("RunService")
 
--- Khởi tạo biến điều khiển tính năng động
 local A_Active = false
 local G_Active = false
 local T_Active = false
 
--- === HÀM NGỤY TRANG HỆ THỐNG TRÁNH BỘ LỌC CỦA GAME SBSD ===
-local function GetMoggedContainer()
-    local parent = game:GetService("CoreGui"):FindFirstChild("RobloxGui") or game:GetService("CoreGui")
-    if gethui then parent = gethui() end
-    return parent
-end
+-- === KHỞI TẠO BẢNG ĐIỀU KHIỂN CHUẨN RAYFIELD (MINOS HUB ĐỎ ĐEN DOOM) ===
+local Window = Rayfield:CreateWindow({
+   Name = "Minos hub Premium | SBSD EDITION",
+   LoadingTitle = "Minos hub Loading...",
+   LoadingSubtitle = "by hailongduong2012-debug",
+   ConfigurationSaving = {
+      Enabled = true,
+      FolderName = "MinosHubSBSD", -- Tên thư mục lưu cấu hình đồng bộ
+      FileName = "MinosConfig"
+   },
+   Discord = {
+      Enabled = false,
+      Invite = "",
+      RememberJoins = true
+   },
+   KeySystem = false
+})
 
-local SafeParent = GetMoggedContainer()
+-- Tạo Tab chức năng Auto Farm chính cho Death Mode
+local FarmTab = Window:CreateTab("Death Mode Farm", 4483345998)
 
--- Tự động dọn tàn dư UI cũ bằng mã ẩn danh
-for _, child in pairs(SafeParent:GetChildren()) do
-    if child.Name:match("^%d+$") or child.Name == "sbsd_mogged" or child.Name == "RayfieldMockup" then
-        pcall(function() child:Destroy() end)
-    end
-end
+-- == 1. TÍNH NĂNG GLOBAL KILL AURA MAX RANGE DELAY 0 ==
+FarmTab:CreateToggle({
+   Name = "Global Kill Aura (Max Range - Delay 0)",
+   CurrentValue = false,
+   Flag = "KillAuraFlag",
+   Callback = function(Value)
+      A_Active = Value
+   end,
+})
 
--- === KHỞI TẠO SCREEN GUI NGỤY TRANG (TÊN BẰNG CHUỖI SỐ NGẪU NHIÊN) ===
-local ObfGui = Instance.new("ScreenGui")
-ObfGui.Name = tostring(math.random(100000, 999999)) -- Đổi tên thành chuỗi số ngẫu nhiên để qua mặt anti-cheat
-ObfGui.Parent = SafeParent
-ObfGui.ResetOnSpawn = false
+-- == 2. TÍNH NĂNG MAX SAFE ZONE GOD MODE (BẤT TỬ TUYỆT ĐỐI KHÔNG CHẾT) ==
+FarmTab:CreateToggle({
+   Name = "Safe Zone God Mode (Bất Tử Không Chết)",
+   CurrentValue = false,
+   Flag = "GodModeFlag",
+   Callback = function(Value)
+      G_Active = Value
+      if not G_Active then
+         pcall(function()
+            if LP.Character and LP.Character:FindFirstChildOfClass("ForceField") then
+               LP.Character:FindFirstChildOfClass("ForceField"):Destroy()
+            end
+         end)
+      end
+   end,
+})
 
--- === TẠO BUTTON ICON ĐẦU LÂU DOOM CHUẨN ĐỂ MỞ LẠI MENU ===
-local OpenIcon = Instance.new("ImageButton", ObfGui)
-OpenIcon.Name = "Icon_" .. tostring(math.random(100, 999))
-OpenIcon.Size = UDim2.new(0, 60, 0, 60)
-OpenIcon.Position = UDim2.new(0.02, 0, 0.25, 0)
-OpenIcon.BackgroundColor3 = Color3.fromRGB(35, 10, 10)
-OpenIcon.Image = "rbxassetid://5404456950" -- ID Doomguy chuẩn mã nguồn, đảm bảo hiện ảnh tròn 100%
-OpenIcon.Visible = false
-OpenIcon.Active = true
-OpenIcon.Draggable = true
-Instance.new("UICorner", OpenIcon).CornerRadius = UDim.new(1, 0)
-local IconStroke = Instance.new("UIStroke", OpenIcon)
-IconStroke.Color = Color3.fromRGB(255, 50, 50)
-IconStroke.Thickness = 2.5
+-- == 3. TÍNH NĂNG AUTO SPAWN TELESCOPE ==
+FarmTab:CreateToggle({
+   Name = "Auto Spawn Telescope (5 Coins)",
+   CurrentValue = false,
+   Flag = "AutoTeleFlag",
+   Callback = function(Value)
+      T_Active = Value
+   end,
+})
 
--- === KHUNG CHÍNH MENU RAYFIELD STYLE (TO RỘNG RÃI: 560 x 340) ===
-local MainFrame = Instance.new("Frame", ObfGui)
-MainFrame.Name = "Panel_" .. tostring(math.random(100, 999))
-MainFrame.Size = UDim2.new(0, 560, 0, 340)
-MainFrame.Position = UDim2.new(0.3, 0, 0.25, 0)
-MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-MainFrame.BorderSizePixel = 0
-MainFrame.Active = true
-MainFrame.Draggable = true
-Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 12)
+-- === HỆ THỐNG XỬ LÝ TOÀN BỘ LOGIC GAMEPLAY SBSD CHẠY NGẦM ===
 
--- LỚP HÌNH NỀN DOOM SLAYER ĐÃ ĐƯỢC MÃ HÓA KHÔNG THỂ BỊ CHẶN
-local DoomBackground = Instance.new("ImageLabel", MainFrame)
-DoomBackground.Name = "Bg_" .. tostring(math.random(100, 999))
-DoomBackground.Size = UDim2.new(1, 0, 1, 0)
-DoomBackground.Image = "rbxassetid://5404456950" -- Ép nạp Sprite rực lửa từ kho lưu trữ gốc Roblox
-DoomBackground.ScaleType = Enum.ScaleType.Crop
-DoomBackground.ImageTransparency = 0.4
-DoomBackground.ZIndex = 0
-Instance.new("UICorner", DoomBackground).CornerRadius = UDim.new(0, 12)
+-- 1. Xử lý Kill Aura Max Range Delay 0 (Gửi dồn dập gói tin tấn công thời gian thực qua nhịp khung hình Stepped)
+RunS.Stepped:Connect(function()
+    if A_Active and LP.Character and LP.Character:FindFirstChild("HumanoidRootPart") then
+        pcall(function()
+            -- Tự động kiểm tra và trang bị vũ khí lên tay từ Backpack
+            local tool = LP.Character:FindFirstChildOfClass("Tool")
+            if not tool then
+                local backpackTool = LP.Backpack:FindFirstChildOfClass("Tool")
+                if backpackTool then
+                    backpackTool.Parent = LP.Character
+                    tool = backpackTool
+                end
+            end
 
--- Thanh Tiêu Đề Topbar Rayfield
-local Topbar = Instance.new("Frame", MainFrame)
-Topbar.Size = UDim2.new(1, 0, 0, 45)
-Topbar.BackgroundColor3 = Color3.fromRGB(40, 10, 10)
-Topbar.BackgroundTransparency = 0.4
-Topbar.ZIndex = 1
-Instance.new("UICorner", Topbar).CornerRadius = UDim.new(0, 12)
-
-local TitleText = Instance.new("TextLabel", Topbar)
-TitleText.Size = UDim2.new(0.7, 0, 1, 0)
-TitleText.Position = UDim2.new(0, 15, 0, 0)
-TitleText.BackgroundTransparency = 1
-TitleText.Text = "   sbsd_mogged Hub Premium | RAYFIELD V24"
-TitleText.TextColor3 = Color3.fromRGB(255, 60, 60)
-TitleText.TextXAlignment = Enum.TextXAlignment.Left
-TitleText.Font = Enum.Font.SourceSansBold
-TitleText.TextSize = 16
-TitleText.ZIndex = 2
-
--- NÚT DẤU X ĐÓNG BẢNG RAYFIELD CHUẨN MÀU ĐỎ
-local CloseBtn = Instance.new("TextButton", Topbar)
-CloseBtn.Size = UDim2.new(0, 32, 0, 32)
-CloseBtn.Position = UDim2.new(1, -42, 0, 6)
-CloseBtn.BackgroundColor3 = Color3.fromRGB(180, 20, 20)
-CloseBtn.BackgroundTransparency = 0.2
-CloseBtn.Text = "X"
-CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-CloseBtn.Font = Enum.Font.SourceSansBold
-CloseBtn.TextSize = 15
-CloseBtn.ZIndex = 2
-Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(0, 6)
-
--- Khung chứa các phần tử điều khiển (Lệch trái chừa không gian khoe ảnh Doomguy)
-local Container = Instance.new("Frame", MainFrame)
-Container.Size = UDim2.new(0, 270, 0, 260)
-Container.Position = UDim2.new(0, 15, 0, 60)
-Container.BackgroundTransparency = 1
-Container.ZIndex = 1
-
-local function CreateMoggedToggle(text, posY)
-    local row = Instance.new("Frame", Container)
-    row.Size = UDim2.new(1, 0, 0, 45)
-    row.Position = UDim2.new(0, 0, 0, posY)
-    row.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
-    row.BackgroundTransparency = 0.3
-    row.ZIndex = 2
-    Instance.new("UICorner", row).CornerRadius = UDim.new(0, 6)
-    
-    local txt = Instance.new("TextLabel", row)
-    txt.Size = UDim2.new(0.7, 0, 1, 0)
-    txt.Position = UDim2.new(0, 12, 0, 0)
-    txt.BackgroundTransparency = 1
-    txt.Text = text
-    txt.TextColor3 = Color3.fromRGB(240, 240, 240)
-    txt.Font = Enum.Font.SourceSansBold
-    txt.TextSize = 13
-    txt.TextXAlignment = Enum.TextXAlignment.Left
-    txt.ZIndex = 3
-    
-    local btn = Instance.new("TextButton", row)
-    btn.Size = UDim2.new(0, 60, 0, 28)
-    btn.Position = UDim2.new(1, -70, 0, 8)
-    btn.BackgroundColor3 = Color3.fromRGB(160, 40, 40)
-    btn.Text = "OFF"
-    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    btn.Font = Enum.Font.SourceSansBold
-    btn.TextSize = 12
-    btn.ZIndex = 3
-    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 4)
-    
-    return btn
-end
-
-local ToggleAura = CreateMoggedToggle("Global Kill Aura (Toàn Bản Đồ)", 10)
-local ToggleGod = CreateMoggedToggle("Safe Zone God Mode (Bất Tử)", 70)
-local ToggleTele = CreateMoggedToggle("Auto Spawn Telescope (5 Coins)", 130)
-
--- Logic Đóng / Mở menu bằng Icon đầu lâu Doom cực tiện lợi không lỗi ẩn
-CloseBtn.MouseButton1Click:Connect(function() MainFrame.Visible = false; OpenIcon.Visible = true end)
-OpenIcon.MouseButton1Click:Connect(function() MainFrame.Visible = true; OpenIcon.Visible = false end)
-
-
--- === HỆ THỐNG XỬ LÝ TOÀN BỘ LOGIC GAME SUPERBOX SIEGE DEFENSE ===
-
--- 1. Xử lý Global Kill Aura phạm vi toàn bản đồ (Quét sạch quái)
-ToggleAura.MouseButton1Click:Connect(function()
-    A_Active = not A_Active
-    if A_Active then
-        ToggleAura.Text = "ON"; ToggleAura.BackgroundColor3 = Color3.fromRGB(40, 160, 40)
-    else
-        ToggleAura.Text = "OFF"; ToggleAura.BackgroundColor3 = Color3.fromRGB(160, 40, 40)
-    end
-end)
-
-task.spawn(function()
-    while true do
-        task.wait(0.04) -- Tốc độ dọn quái tối đa cho Death Mode
-        if A_Active then
-            pcall(function()
-                local AttackRemote = RS:FindFirstChild("Attack") or RS:FindFirstChild("HitEnemy") or RS:FindFirstChild("InflictDamage") or RS:FindFirstChild("Hit")
-                if AttackRemote then
-                    for _, enemy in pairs(workspace:GetDescendants()) do
-                        if enemy:IsA("Model") and enemy:FindFirstChild("Humanoid") and enemy.Humanoid.Health > 0 then
-                            if not P:GetPlayerFromCharacter(enemy) and enemy.Name ~= "Base" then
-                                if AttackRemote:IsA("RemoteEvent") then
-                                    AttackRemote:FireServer(enemy)
-                                elseif AttackRemote:IsA("RemoteFunction") then
-                                    AttackRemote:InvokeServer(enemy)
-                                end
-                            end
+            -- Tìm kiếm Remote chiến đấu thực tế của game SBSD để ép nhảy damage
+            local AttackRemote = RS:FindFirstChild("Attack") or RS:FindFirstChild("HitEnemy") or RS:FindFirstChild("Damage") or RS:FindFirstChild("Hit")
+            
+            -- Quét toàn bộ workspace (Max Range) không giới hạn khoảng cách quái vật
+            for _, enemy in pairs(workspace:GetChildren()) do
+                if enemy:IsA("Model") and enemy:FindFirstChild("Humanoid") and enemy:FindFirstChild("HumanoidRootPart") and enemy.Humanoid.Health > 0 then
+                    if not P:GetPlayerFromCharacter(enemy) and enemy.Name ~= "Base" then
+                        
+                        -- Vung vũ khí liên tục thời gian thực không độ trễ
+                        if tool then 
+                            tool:Activate() 
+                        end
+                        
+                        -- CƠ CHẾ ĐÁNH XA BYPASS CHECK: Gửi đồng thời Vector3 vị trí quái để đánh lừa máy chủ cự ly đòn đánh hợp lệ
+                        if AttackRemote and AttackRemote:IsA("RemoteEvent") then
+                            AttackRemote:FireServer(enemy, enemy.HumanoidRootPart.Position)
+                            AttackRemote:FireServer(enemy.HumanoidRootPart, enemy.HumanoidRootPart.Position)
+                            AttackRemote:FireServer(enemy, tool)
                         end
                     end
                 end
-            end)
-        end
-    end
-end)
-
--- 2. Xử lý Safe Zone Max God Mode (Bất tử nhịp tim thời gian thực)
-ToggleGod.MouseButton1Click:Connect(function()
-    G_Active = not G_Active
-    if G_Active then
-        ToggleGod.Text = "ON"; ToggleGod.BackgroundColor3 = Color3.fromRGB(40, 160, 40)
-    else
-        ToggleGod.Text = "OFF"; ToggleGod.BackgroundColor3 = Color3.fromRGB(160, 40, 40)
-        pcall(function()
-            if LP.Character and LP.Character:FindFirstChildOfClass("ForceField") then
-                LP.Character:FindFirstChildOfClass("ForceField"):Destroy()
             end
         end)
     end
 end)
 
-RunS.Heartbeat:Connect(function()
+-- 2. Xử lý Bất tử tuyệt đối chống chết ngầm (Max God Mode)
+RunS.Stepped:Connect(function()
     if G_Active then
         pcall(function()
             local char = LP.Character
             if char then
                 local hum = char:FindFirstChildOfClass("Humanoid")
                 if hum then
-                    hum.Health = hum.MaxHealth -- Khóa thanh máu liên tục mỗi mili giây
-                    if hum.Health <= 0 then
+                    -- Liên tục khóa máu đầy cây thời gian thực
+                    hum.Health = hum.MaxHealth 
+                    
+                    -- Cơ chế ép hồi sinh khẩn cấp tại chỗ: Nếu bị dính đòn chí mạng hoặc trạng thái chuyển thành Dead, ép sống lại lập tức
+                    if hum.Health <= 0 or hum:GetState() == Enum.HumanoidStateType.Dead then
                         hum:ChangeState(Enum.HumanoidStateType.Running)
                         hum.Health = hum.MaxHealth
                     end
                 end
+                -- Tự động duy trì Khiên bất hoại ForceField bảo vệ cấu trúc nhân vật
                 if not char:FindFirstChildOfClass("ForceField") then
                     Instance.new("ForceField", char)
                 end
@@ -224,16 +139,7 @@ RunS.Heartbeat:Connect(function()
     end
 end)
 
--- 3. Xử lý Auto Spawn Telescope (5 Coins) Hợp Lệ Tọa Độ Gốc Căn Cứ
-ToggleTele.MouseButton1Click:Connect(function()
-    T_Active = not T_Active
-    if T_Active then
-        ToggleTele.Text = "ON"; ToggleTele.BackgroundColor3 = Color3.fromRGB(40, 160, 40)
-    else
-        ToggleTele.Text = "OFF"; ToggleTele.BackgroundColor3 = Color3.fromRGB(160, 40, 40)
-    end
-end)
-
+-- 3. Xử lý Tự động đặt lính lính Telescope khi tích đủ 5 Coins
 task.spawn(function()
     while true do
         task.wait(0.4)
@@ -244,3 +150,10 @@ task.spawn(function()
                 local cash = stats and (stats:FindFirstChild("Cash") or stats:FindFirstChild("Coins") or stats:FindFirstChild("Points"))
                 
                 if cash and cash.Value >= 5 and SummonRemote then
+                    local spawnPos = LP.Character and LP.Character.HumanoidRootPart.Position or Vector3.new(0, 0, 0)
+                    SummonRemote:FireServer("Telescope", spawnPos)
+                end
+            end)
+        end
+    end
+end)
