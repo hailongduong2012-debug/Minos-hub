@@ -1,24 +1,24 @@
--- MINOS HUB | SBSD REMOTE PASSIVE AURA (AN TOÀN TẦM XA - KHÔNG CLICK)
+-- MINOS HUB | SBSD REMOTE TOUCH AURA (CHÉM TẦM XA KHÔNG GOM QUÁI)
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
-   Name = "MINOS HUB | SBSD REMOTE",
-   LoadingTitle = "Đang đồng bộ Hitbox Tầm Xa...",
+   Name = "MINOS HUB | SBSD",
+   LoadingTitle = "Đang đồng bộ Touch Aura Tầm Xa...",
    LoadingSubtitle = "BY MINOS",
    ConfigurationSaving = { Enabled = false },
    KeySystem = false 
 })
 
-local MainTab = Window:CreateTab("Remote Aura", 4483362458)
+local MainTab = Window:CreateTab("Remote Touch", 4483362458)
 
-_G.RemoteAura = false
-_G.ScanRange = 300 -- Phạm vi quét quái tầm xa toàn map (300 Studs)
+_G.RemoteTouchAura = false
+_G.AttackSpeed = 0.01 -- Tốc độ kích hoạt nhịp nhảy damage cực nhanh (0.01 giây)
 
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 
--- Hàm xử lý truyền sát thương từ xa bằng va chạm ảo
-local function applyRemotePassiveAura()
+-- Hàm giả lập chạm kiếm vào quái toàn bản đồ từ xa
+local function applyRemoteTouchAura()
     local character = LocalPlayer.Character
     if not character then return end
     
@@ -26,10 +26,11 @@ local function applyRemotePassiveAura()
     local tool = character:FindFirstChildOfClass("Tool")
     if not tool then return end
     
-    -- Tìm phần nhận diện chạm của vũ khí (Handle/Blade)
-    local toolHandle = tool:FindFirstChild("Handle") or tool:FindFirstChildOfClass("Part")
+    -- Tìm phần gây sát thương của vũ khí (Handle hoặc Blade)
+    local toolHandle = tool:FindFirstChild("Handle") or tool:FindFirstChild("Blade") or tool:FindFirstChildOfClass("Part")
     if not toolHandle then return end
 
+    -- Xác định thư mục chứa quái vật trong trận đấu SBSD
     local enemyContainer = workspace:FindFirstChild("Enemies") or workspace
 
     for _, child in pairs(enemyContainer:GetChildren()) do
@@ -38,43 +39,36 @@ local function applyRemotePassiveAura()
             local enemyRoot = child:FindFirstChild("HumanoidRootPart") or child:FindFirstChild("PrimaryPart")
             
             if humanoid and enemyRoot and humanoid.Health > 0 then
-                -- Tính khoảng cách đến quái từ xa
-                local distance = (character.HumanoidRootPart.Position - enemyRoot.Position).Magnitude
-                
-                if distance <= _G.ScanRange then
-                    -- METHOD MINOS REMOTE: Đồng bộ hóa sự kiện chạm vật lý (Touch Interest) 
-                    -- Kích hoạt trực tiếp hàm nhận diện va chạm giữa Lưỡi kiếm và Quái từ xa mà không cần dịch chuyển nhân vật
-                    if toolHandle:FindFirstChildOfClass("TouchTransmitter") then
-                        firetouchinterest(enemyRoot, toolHandle, 0) -- Giả lập chạm vào quái
-                        firetouchinterest(enemyRoot, toolHandle, 1) -- Giải phóng chạm ngay lập tức để tạo nhịp nhảy dmg liên tục
-                    end
-                end
+                -- Ép sự kiện va chạm (Touch) vật lý giữa lưỡi kiếm và quái từ xa
+                -- Số 0 là bắt đầu chạm (nhận sát thương), số 1 là bỏ chạm (để hồi lại nhịp chém tiếp theo)
+                firetouchinterest(enemyRoot, toolHandle, 0)
+                firetouchinterest(enemyRoot, toolHandle, 1)
             end
         end
     end
 end
 
--- Vòng lặp kích hoạt liên tục tốc độ cao (0.05s một nhịp chém tầm xa)
+-- Vòng lặp quét quái và kích hoạt sát thương liên tục
 task.spawn(function()
     while true do
-        if _G.RemoteAura then
-            pcall(applyRemotePassiveAura)
+        if _G.RemoteTouchAura then
+            pcall(applyRemoteTouchAura)
         end
-        task.wait(0.05) -- Tốc độ nhảy sát thương liên tục cực nhanh và mượt mà
+        task.wait(_G.AttackSpeed)
     end
 end)
 
--- Tạo nút bật tắt giao diện Rayfield
+-- Tạo nút công tắc Bật/Tắt trên giao diện Rayfield bản quyền MINOS
 local Toggle = MainTab:CreateToggle({
-   Name = "Bật Remote Kill Aura Tầm Xa (Chỉ cần cầm vũ khí)",
+   Name = "Kích hoạt Remote Touch Aura (Chỉ cần cầm vũ khí)",
    CurrentValue = false,
-   Flag = "MINOSRemoteAura",
+   Flag = "MINOSRemoteTouch",
    Callback = function(Value)
-      _G.RemoteAura = Value
+      _G.RemoteTouchAura = Value
       if Value then
-          Rayfield:Notify({Title = "MINOS HUB", Content = "Đã kích hoạt chém tầm xa an toàn!", Duration = 2.5})
+          Rayfield:Notify({Title = "MINOS HUB", Content = "Đã kích hoạt chém từ xa không gom quái!", Duration = 2.5})
       else
-          Rayfield:Notify({Title = "MINOS HUB", Content = "Đã tắt Remote Aura.", Duration = 2.5})
+          Rayfield:Notify({Title = "MINOS HUB", Content = "Đã tắt Touch Aura.", Duration = 2.5})
       end
    end,
 })
