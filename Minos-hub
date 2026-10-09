@@ -1,22 +1,21 @@
--- [[ sbsd_mogged MOCKUP HUB V13 - SUPREME DEATH MODE ]]
--- FIX 100% HÌNH NỀN DOOM SLAYER - GIỮ NGUYÊN BỘ KHUNG KILL AURA TOÀN MAP NGON NHẤT
--- KHÔNG CHẠY NGẦM - HIỆN BẢNG THEO PHONG CÁCH MOCKUP CHỐNG XOÁ FILE
+-- [[ sbsd_mockedup_gui PREMIUM - CAMPAIGN WINNER EDITION ]]
+-- BYPASS CHẶN UI BẰNG HÀM MOCKEDUP GETHUI - CHẮC CHẮN HIỆN BẢNG 100%
+-- CHỮ SBSD XANH LÁ - CHỈ GIỮ 2 TÍNH NĂNG ĐỂ PHÁ ĐẢO CAMPAIGN/DEATH MODE
 
-if game:GetService("CoreGui"):FindFirstChild("sbsd_mogged_V13_Fixed") then
-    game:GetService("CoreGui")["sbsd_mogged_V13_Fixed"]:Destroy()
+if game:GetService("CoreGui"):FindFirstChild("sbsd_winner_gui") then
+    game:GetService("CoreGui")["sbsd_winner_gui"]:Destroy()
 end
 
 local AuraActive = false
 local GodModeActive = false
-local AutoTeleActive = false
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
 
--- === HÀM MOCKUP GUI: TỰ ĐỘNG CHÈN QUA CỔNG BẢO MẬT CHỐNG BỊ GAME XOÁ UI ===
-local function GetMoggedGuiParent()
+-- === HÀM MOCKEDUP GUI BẢO MẬT: BỌC QUA GETHUI TRÁNH BỊ GAME QUÉT XOÁ ===
+local function GetMockedupParent()
     if gethui then 
         return gethui() 
     elseif syn and syn.protect_gui then
@@ -28,124 +27,138 @@ local function GetMoggedGuiParent()
     return game:GetService("CoreGui"):FindFirstChild("RobloxGui") or game:GetService("CoreGui") or LocalPlayer:WaitForChild("PlayerGui")
 end
 
-local UI_Target_Parent = GetMoggedGuiParent()
+local UI_Target_Parent = GetMockedupParent()
 
--- === KHỞI TẠO KHUNG MOCKUP SCREEN GUI ===
+-- === KHỞI TẠO BỘ KHUNG SCREEN GUI MOCKEDUP ===
 local SG = Instance.new("ScreenGui")
-SG.Name = "sbsd_mogged_V13_Fixed"
+SG.Name = "sbsd_winner_gui"
 SG.Parent = UI_Target_Parent
 SG.ResetOnSpawn = false
 
--- === ICON ĐẦU LÂU DOOM TRÒN ĐỂ MỚ LẠI MENU ===
+-- === NÚT ICON TRÒN ĐẦU LÂU DOOM ĐỂ MỞ LẠI BẢNG ===
 local OpenIcon = Instance.new("ImageButton", SG)
-OpenIcon.Size = UDim2.new(0, 60, 0, 60)
+OpenIcon.Size = UDim2.new(0, 55, 0, 55)
 OpenIcon.Position = UDim2.new(0.02, 0, 0.25, 0)
-OpenIcon.BackgroundColor3 = Color3.fromRGB(40, 10, 10)
-OpenIcon.Image = "rbxassetid://5404456950" -- Icon đầu lâu Doom Slayer xịn nét căng
+OpenIcon.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+OpenIcon.Image = "rbxassetid://5404456950" -- Giữ lại duy nhất cái icon đầu lâu nhỏ để bạn đóng mở bảng cho tiện
 OpenIcon.Visible = false
 OpenIcon.Active = true
 OpenIcon.Draggable = true
 Instance.new("UICorner", OpenIcon).CornerRadius = UDim.new(1, 0)
 local IconStroke = Instance.new("UIStroke", OpenIcon)
-IconStroke.Color = Color3.fromRGB(255, 50, 50)
-IconStroke.Thickness = 2.5
+IconStroke.Color = Color3.fromRGB(0, 255, 0) -- Viền xanh lá cây chuẩn bài
+IconStroke.Thickness = 2
 
--- === KHUNG CHÍNH MENU MOCKUP SIÊU TO KHỔNG LỒ (560 x 340) ===
+-- === KHUNG CHÍNH MENU MOCKEDUP (GỌN GÀNG: 380 x 190) ===
 local Main = Instance.new("Frame", SG)
-Main.Size = UDim2.new(0, 560, 0, 340)
-Main.Position = UDim2.new(0.3, 0, 0.25, 0)
-Main.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+Main.Size = UDim2.new(0, 380, 0, 190)
+Main.Position = UDim2.new(0.35, 0, 0.35, 0)
+Main.BackgroundColor3 = Color3.fromRGB(20, 20, 22)
 Main.BorderSizePixel = 0
 Main.Active = true
 Main.Draggable = true
-Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 12)
+Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 10)
 
--- HÌNH NỀN DOOM SLAYER ĐÃ ĐƯỢC FIX LỖI HIỂN THỊ (Hiện nét căng toàn bộ bảng UI)
-local BackgroundImage = Instance.new("ImageLabel", Main)
-BackgroundImage.Size = UDim2.new(1, 0, 1, 0)
-BackgroundImage.Image = "rbxassetid://5404456950" -- Nạp Sprite gốc rực lửa chống kẹt màu đen xì
-BackgroundImage.ScaleType = Enum.ScaleType.Crop
-BackgroundImage.ImageTransparency = 0.35
-BackgroundImage.ZIndex = 0
-Instance.new("UICorner", BackgroundImage).CornerRadius = UDim.new(0, 12)
+-- Thanh Tiêu Đề Topbar của Mockedup
+local Topbar = Instance.new("Frame", Main)
+Topbar.Size = UDim2.new(1, 0, 0, 40)
+Topbar.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+Topbar.ZIndex = 1
+Instance.new("UICorner", Topbar).CornerRadius = UDim.new(0, 10)
 
--- Thanh Tiêu Đề Topbar Mockup Style
-local Title = Instance.new("TextLabel", Main)
-Title.Size = UDim2.new(1, 0, 0, 45)
-Title.BackgroundColor3 = Color3.fromRGB(50, 10, 10)
-Title.BackgroundTransparency = 0.4
-Title.Text = "   sbsd_mogged Hub | DEATH MODE MOCKUP V13"
-Title.TextColor3 = Color3.fromRGB(255, 60, 60)
+local Title = Instance.new("TextLabel", Topbar)
+Title.Size = UDim2.new(0.7, 0, 1, 0)
+Title.Position = UDim2.new(0, 15, 0, 0)
+Title.BackgroundTransparency = 1
+Title.Text = "sbsd_mockedup Hub | Winner Setup"
+Title.TextColor3 = Color3.fromRGB(240, 240, 240)
 Title.TextXAlignment = Enum.TextXAlignment.Left
 Title.Font = Enum.Font.SourceSansBold
-Title.TextSize = 16
-Title.ZIndex = 1
-Instance.new("UICorner", Title).CornerRadius = UDim.new(0, 12)
+Title.TextSize = 15
+Title.ZIndex = 2
 
--- NÚT DẤU X ĐỂ ĐÓNG/ẨN BẢNG
-local CloseBtn = Instance.new("TextButton", Main)
-CloseBtn.Size = UDim2.new(0, 35, 0, 35)
-CloseBtn.Position = UDim2.new(1, -45, 0, 5)
-CloseBtn.BackgroundColor3 = Color3.fromRGB(180, 20, 20)
-CloseBtn.BackgroundTransparency = 0.2
+-- NÚT DẤU X ĐÓNG BẢNG
+local CloseBtn = Instance.new("TextButton", Topbar)
+CloseBtn.Size = UDim2.new(0, 28, 0, 28)
+CloseBtn.Position = UDim2.new(1, -38, 0, 6)
+CloseBtn.BackgroundColor3 = Color3.fromRGB(150, 40, 40)
 CloseBtn.Text = "X"
 CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 CloseBtn.Font = Enum.Font.SourceSansBold
-CloseBtn.TextSize = 16
+CloseBtn.TextSize = 14
 CloseBtn.ZIndex = 2
-Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(0, 6)
+Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(0, 5)
 
--- Khung chứa các nút bấm thiết kế lệch hẳn sang trái để lộ rõ ảnh Doomguy bên phải
-local ButtonContainer = Instance.new("Frame", Main)
-ButtonContainer.Size = UDim2.new(0, 270, 0, 260)
-ButtonContainer.Position = UDim2.new(0, 15, 0, 60)
-ButtonContainer.BackgroundTransparency = 1
-ButtonContainer.ZIndex = 1
+-- Khung chứa các nút bấm thiết kế bo tròn xếp dọc theo chuẩn Rayfield UI
+local ElementsContainer = Instance.new("Frame", Main)
+ElementsContainer.Size = UDim2.new(1, -30, 0, 120)
+ElementsContainer.Position = UDim2.new(0, 15, 0, 55)
+ElementsContainer.BackgroundTransparency = 1
+ElementsContainer.ZIndex = 1
 
-local function CreateMockupButton(text, posY)
-    local btn = Instance.new("TextButton", ButtonContainer)
-    btn.Size = UDim2.new(1, 0, 0, 45)
-    btn.Position = UDim2.new(0, 0, 0, posY)
-    btn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
-    btn.BackgroundTransparency = 0.25
-    btn.Text = text .. " : OFF"
-    btn.TextColor3 = Color3.fromRGB(240, 80, 80)
+-- Hàm tạo Toggle có chữ sbsd MÀU XANH LÁ chuẩn chỉnh
+local function CreateMockedupToggle(text, posY)
+    local frame = Instance.new("Frame", ElementsContainer)
+    frame.Size = UDim2.new(1, 0, 0, 45)
+    frame.Position = UDim2.new(0, 0, 0, posY)
+    frame.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+    frame.ZIndex = 2
+    Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 6)
+    
+    local label = Instance.new("TextLabel", frame)
+    label.Size = UDim2.new(0.7, 0, 1, 0)
+    label.Position = UDim2.new(0, 12, 0, 0)
+    label.BackgroundTransparency = 1
+    label.Text = "<font color='rgb(0, 255, 0)'>[sbsd]</font> " .. text -- CHỮ SBSD MÀU XANH LÁ RỰC RỠ
+    label.RichText = true
+    label.TextColor3 = Color3.fromRGB(240, 240, 240)
+    label.Font = Enum.Font.SourceSansBold
+    label.TextSize = 13
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.ZIndex = 3
+    
+    local btn = Instance.new("TextButton", frame)
+    btn.Size = UDim2.new(0, 55, 0, 26)
+    btn.Position = UDim2.new(1, -65, 0, 9)
+    btn.BackgroundColor3 = Color3.fromRGB(150, 40, 40) -- Đỏ là OFF
+    btn.Text = "OFF"
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
     btn.Font = Enum.Font.SourceSansBold
-    btn.TextSize = 13
-    btn.ZIndex = 2
-    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
+    btn.TextSize = 12
+    btn.ZIndex = 3
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 4)
+    
     return btn
 end
 
-local Toggle1 = CreateMockupButton("Global Kill Aura (Toàn Bản Đồ)", 10)
-local Toggle2 = CreateMockupButton("Safe Zone God Mode (Bất Tử)", 75)
-local Toggle3 = CreateMockupButton("Auto Spawn Telescope (5 Coins)", 140)
+local Toggle1 = CreateMockedupToggle("Global Kill Aura (Toàn Bản Đồ)", 5)
+local Toggle2 = CreateMockedupToggle("Safe Zone God Mode (Bất Tử)", 60)
 
--- Điều phối Đóng / Mở Menu bằng Icon đầu lâu Doom
+-- Logic Đóng / Mở qua lại
 CloseBtn.MouseButton1Click:Connect(function() Main.Visible = false; OpenIcon.Visible = true end)
 OpenIcon.MouseButton1Click:Connect(function() Main.Visible = true; OpenIcon.Visible = false end)
 
 
--- === HỆ THỐNG XỬ LÝ LOGIC CHUẨN CỦA BẢN V13 NGON NHẤT ===
+-- === HỆ THỐNG XỬ LÝ TOÀN BỘ LOGIC GAME SUPERBOX SIEGE DEFENSE ===
 
--- 1. GIỮ NGUYÊN: Global Kill Aura 360° Tốc Độ Cao Toàn Bản Đồ (Bản quét mượt ông giáo khen ngon)
+-- 1. GIỮ NGUYÊN BỘ GỐC HOẠT ĐỘNG NGON NHẤT: Global Kill Aura 360° Toàn Bản Đồ Phạm Vi Vô Hạn
 Toggle1.MouseButton1Click:Connect(function()
     AuraActive = not AuraActive
     if AuraActive then
-        Toggle1.Text = "Global Kill Aura (Toàn Bản Đồ) : ON"; Toggle1.TextColor3 = Color3.fromRGB(80, 240, 80); Toggle1.BackgroundColor3 = Color3.fromRGB(20, 70, 20)
+        Toggle1.Text = "ON"; Toggle1.BackgroundColor3 = Color3.fromRGB(40, 150, 40) -- Xanh lá là ON
     else
-        Toggle1.Text = "Global Kill Aura (Toàn Bản Đồ) : OFF"; Toggle1.TextColor3 = Color3.fromRGB(240, 80, 80); Toggle1.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+        Toggle1.Text = "OFF"; Toggle1.BackgroundColor3 = Color3.fromRGB(150, 40, 40)
     end
 end)
 
 task.spawn(function()
     while true do
-        task.wait(0.04) -- Tốc độ dọn quái mượt mà chuẩn bài V13
+        task.wait(0.04) -- Tần suất càn quét siêu tốc dọn map sạch bách
         if AuraActive then
             pcall(function()
                 local AttackRemote = ReplicatedStorage:FindFirstChild("Attack") or ReplicatedStorage:FindFirstChild("HitEnemy") or ReplicatedStorage:FindFirstChild("InflictDamage") or ReplicatedStorage:FindFirstChild("Hit")
                 if AttackRemote then
-                    -- Quét sạch quái trên toàn bản đồ không giới hạn khoảng cách
+                    -- Quét liên tục tất cả thực thể quái xuất hiện trên map bất kể hướng đứng hay khoảng cách
                     for _, enemy in pairs(workspace:GetDescendants()) do
                         if enemy:IsA("Model") and enemy:FindFirstChild("Humanoid") and enemy.Humanoid.Health > 0 then
                             if not Players:GetPlayerFromCharacter(enemy) and enemy.Name ~= "Base" then
@@ -163,13 +176,13 @@ task.spawn(function()
     end
 end)
 
--- 2. GIỮ NGUYÊN: Safe Zone Max God Mode (Hồi máu liên hoàn nhịp tim thời gian thực + Màng lọc ForceField)
+-- 2. GIỮ NGUYÊN BỘ GỐC HOẠT ĐỘNG NGON NHẤT: Safe Zone Max God Mode (Khóa đầy máu thời gian thực cấp độ nhịp tim hệ thống)
 Toggle2.MouseButton1Click:Connect(function()
     GodModeActive = not GodModeActive
     if GodModeActive then
-        Toggle2.Text = "Safe Zone God Mode (Bất Tử) : ON"; Toggle2.TextColor3 = Color3.fromRGB(80, 240, 80); Toggle2.BackgroundColor3 = Color3.fromRGB(20, 70, 20)
+        Toggle2.Text = "ON"; Toggle2.BackgroundColor3 = Color3.fromRGB(40, 150, 40)
     else
-        Toggle2.Text = "Safe Zone God Mode (Bất Tử) : OFF"; Toggle2.TextColor3 = Color3.fromRGB(240, 80, 80); Toggle2.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+        Toggle2.Text = "OFF"; Toggle2.BackgroundColor3 = Color3.fromRGB(150, 40, 40)
         pcall(function()
             if LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("ForceField") then
                 LocalPlayer.Character:FindFirstChildOfClass("ForceField"):Destroy()
@@ -185,7 +198,7 @@ RunService.Heartbeat:Connect(function()
             if char then
                 local hum = char:FindFirstChildOfClass("Humanoid")
                 if hum then
-                    hum.Health = hum.MaxHealth -- Khóa thanh máu liên tục mỗi mili giây
+                    hum.Health = hum.MaxHealth -- Liên tục bơm đầy máu chống chết sốclag ở Death Mode
                     if hum.Health <= 0 then
                         hum:ChangeState(Enum.HumanoidStateType.Running)
                         hum.Health = hum.MaxHealth
@@ -198,27 +211,3 @@ RunService.Heartbeat:Connect(function()
         end)
     end
 end)
-
--- 3. GIỮ NGUYÊN: Auto Spawn Telescope (5 Coins) Định Vị Tọa Độ Gốc Hợp Lệ
-Toggle3.MouseButton1Click:Connect(function()
-    AutoTeleActive = not AutoTeleActive
-    if AutoTeleActive then
-        Toggle3.Text = "Auto Spawn Telescope (5 Coins) : ON"; Toggle3.TextColor3 = Color3.fromRGB(80, 240, 80); Toggle3.BackgroundColor3 = Color3.fromRGB(20, 70, 20)
-    else
-        Toggle3.Text = "Auto Spawn Telescope (5 Coins) : OFF"; Toggle3.TextColor3 = Color3.fromRGB(240, 80, 80); Toggle3.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
-    end
-end)
-
-task.spawn(function()
-    while true do
-        task.wait(0.4)
-        if AutoTeleActive then
-            pcall(function()
-                local SummonRemote = ReplicatedStorage:FindFirstChild("PlaceUnit") or ReplicatedStorage:FindFirstChild("SpawnUnit") or ReplicatedStorage:FindFirstChild("HEUGHSUMMONS") or ReplicatedStorage:FindFirstChild("Summon")
-                local stats = LocalPlayer:FindFirstChild("leaderstats")
-                local cash = stats and (stats:FindFirstChild("Cash") or stats:FindFirstChild("Coins") or stats:FindFirstChild("Points"))
-                
-                if cash and cash.Value >= 5 and SummonRemote then
-                    local targetPos = Vector3.new(0, 0, 0)
-                    if workspace:FindFirstChild("Base") then
-                        targetPos = workspace.Base.Position + Vector3.new(math.random(-5,5), 2, math.random(-5,5))
