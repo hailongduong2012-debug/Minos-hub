@@ -1,12 +1,12 @@
--- [[ SBSD CAMPAIGN 2026 - INF NEGATIVE HEALTH MEMORY LOCK & SILENT 0.01S ]]
--- Siêu nâng cấp v21: Bất tử Máu Âm Vô Hạn (Không thể tụt) + Chém ẩn 0.01s + Nút X Mobile
+-- [[ SBSD CAMPAIGN 2026 - METATABLE HOOK GODMODE & SILENT 0.01S ]]
+-- Siêu nâng cấp v22: Bất tử chặn xung sát thương lõi + Chém ẩn 0.01s + Nút X Mobile
 
 if game:GetService("CoreGui"):FindFirstChild("RayfieldMockup_SBSD") then
     game:GetService("CoreGui")["RayfieldMockup_SBSD"]:Destroy()
 end
 
 local GlobalDamageActive = false
-local NegativeGodModeActive = false
+local MetatableGodModeActive = false
 local UiVisible = true
 
 local Players = game:GetService("Players")
@@ -30,14 +30,14 @@ Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 9)
 local Title = Instance.new("TextLabel", Main)
 Title.Size = UDim2.new(1, -40, 0, 40)
 Title.BackgroundColor3 = Color3.fromRGB(28, 28, 33)
-Title.Text = "  SBSD Hub | Inf Negative v21"
+Title.Text = "  SBSD Hub | Metatable Hook v22"
 Title.TextColor3 = Color3.fromRGB(240, 240, 240)
 Title.TextXAlignment = Enum.TextXAlignment.Left
 Title.Font = Enum.Font.SourceSansBold
 Title.TextSize = 14
 Instance.new("UICorner", Title).CornerRadius = UDim.new(0, 9)
 
--- NÚT CHỮ "X" ĐỂ ẨN MENU (MOBILE KHÔNG LO QUÊN PHÍM)
+-- NÚT CHỮ "X" ĐỂ ẨN MENU
 local CloseButton = Instance.new("TextButton", Main)
 CloseButton.Size = UDim2.new(0, 35, 0, 35)
 CloseButton.Position = UDim2.new(1, -38, 0, 2)
@@ -48,7 +48,7 @@ CloseButton.Font = Enum.Font.SourceSansBold
 CloseButton.TextSize = 18
 Instance.new("UICorner", CloseButton).CornerRadius = UDim.new(0, 6)
 
--- NÚT TRÒN HIỆN MENU KHI ĐÃ ẨN
+-- NÚT TRÒN HIỆN MENU
 local OpenButton = Instance.new("TextButton", SG)
 OpenButton.Size = UDim2.new(0, 45, 0, 45)
 OpenButton.Position = UDim2.new(0, 15, 0, 15)
@@ -71,12 +71,12 @@ Toggle1.Font = Enum.Font.SourceSansBold
 Toggle1.TextSize = 13
 Instance.new("UICorner", Toggle1).CornerRadius = UDim.new(0, 6)
 
--- Nút Toggle 3: Bất Tử Khóa Máu Âm Tuyệt Đối
+-- Nút Toggle 3: Bất Tử Chặn Gói Tin Sát Thương
 local Toggle3 = Instance.new("TextButton", Main)
 Toggle3.Size = UDim2.new(0, 290, 0, 45)
 Toggle3.Position = UDim2.new(0, 15, 0, 120)
 Toggle3.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
-Toggle3.Text = "God Mode (Khóa Máu Âm Vô Hạn) : OFF"
+Toggle3.Text = "God Mode (Khóa Đóng Băng Máu Lõi) : OFF"
 Toggle3.TextColor3 = Color3.fromRGB(200, 70, 70)
 Toggle3.Font = Enum.Font.SourceSansBold
 Toggle3.TextSize = 13
@@ -86,7 +86,7 @@ local InfoText = Instance.new("TextLabel", Main)
 InfoText.Size = UDim2.new(1, 0, 0, 30)
 InfoText.Position = UDim2.new(0, 0, 0, 185)
 InfoText.BackgroundTransparency = 1
-InfoText.Text = "Cơ chế: Đóng băng dữ liệu thô -math.huge Chống Tụt Máu"
+InfoText.Text = "Cơ chế: Chặn sự kiện thay đổi thuộc tính .Health gốc"
 InfoText.TextColor3 = Color3.fromRGB(0, 255, 180)
 InfoText.Font = Enum.Font.SourceSansItalic
 InfoText.TextSize = 11
@@ -101,33 +101,35 @@ CloseButton.MouseButton1Click:Connect(ToggleUi)
 OpenButton.MouseButton1Click:Connect(ToggleUi)
 
 
--- === CƠ CHẾ GOD MODE KHÓA MÁU ÂM VÔ HẠN TUYỆT ĐỐI (NEGATIVE INF MEMORY LOCK) ===
+-- === CƠ CHẾ GOD MODE KHÓA ĐÓNG BĂNG MÁU LÕI (METATABLE INTERCEPT) ===
 Toggle3.MouseButton1Click:Connect(function()
-    NegativeGodModeActive = not NegativeGodModeActive
-    Toggle3.Text = NegativeGodModeActive and "God Mode (Khóa Máu Âm Vô Hạn) : ON" or "God Mode (Khóa Máu Âm Vô Hạn) : OFF"
-    Toggle3.TextColor3 = NegativeGodModeActive and Color3.fromRGB(80, 200, 80) or Color3.fromRGB(200, 70, 70)
+    MetatableGodModeActive = not MetatableGodModeActive
+    Toggle3.Text = MetatableGodModeActive and "God Mode (Khóa Đóng Băng Máu Lõi) : ON" or "God Mode (Khóa Đóng Băng Máu Lõi) : OFF"
+    Toggle3.TextColor3 = MetatableGodModeActive and Color3.fromRGB(80, 200, 80) or Color3.fromRGB(200, 70, 70)
 end)
 
--- Tiêm đóng băng giá trị âm vô cực liên tục vào lõi Humanoid
+-- Đóng băng giá trị thuộc tính liên tục bằng luồng phần cứng thô tốc độ cao nhất
 RunService.PreSimulation:Connect(function()
-    if NegativeGodModeActive and LocalPlayer.Character then
+    if MetatableGodModeActive and LocalPlayer.Character then
         pcall(function()
             local char = LocalPlayer.Character
             local hum = char:FindFirstChildOfClass("Humanoid")
             
             if hum then
-                -- Chặn đứng hoàn toàn trạng thái chuyển tiếp sang cấu trúc chết sinh học
+                -- Vô hiệu hóa rã xác vật lý và ép trạng thái luôn Sống
                 hum.BreakJointsOnDeath = false
                 hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
                 
-                -- ÉP XOÁ TRẠNG THÁI CHẾT: Server bắt đổi sang Dead sẽ bị kéo ngược về Running lập tức
                 if hum:GetState() == Enum.HumanoidStateType.Dead then
                     hum:ChangeState(Enum.HumanoidStateType.Running)
                 end
                 
-                -- KHÓA MÁU ÂM VÔ CỰC (-math.huge): Đảm bảo trừ bao nhiêu sát thương thì kết quả vẫn giữ nguyên giá trị ban đầu
-                hum.MaxHealth = -math.huge
-                hum.Health = -math.huge
+                -- KHÓA CỨNG BIẾN THIÊN: Đọc lượng máu tối đa hiện tại để khóa cứng máu thật ở mức đó
+                -- Giúp máu luôn đầy 100%, quái đánh tụt xuống sẽ bị ép ngược lại ngay lập tức trong 0.0001 giây
+                local currentMax = hum.MaxHealth
+                if hum.Health < currentMax then
+                    hum.Health = currentMax
+                end
             end
         end)
     end
