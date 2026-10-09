@@ -1,6 +1,6 @@
--- [[ sbsd_mockedup_gui PREMIUM - CAMPAIGN WINNER EDITION ]]
+-- [[ sbsd_mockedup_gui PREMIUM - GLOBAL MAP ATTACK EDITION ]]
 -- BYPASS CHẶN UI BẰNG HÀM MOCKEDUP GETHUI - CHẮC CHẮN HIỆN BẢNG 100%
--- CHỮ SBSD XANH LÁ - CHỈ GIỮ 2 TÍNH NĂNG ĐỂ PHÁ ĐẢO CAMPAIGN/DEATH MODE
+-- KILL AURA TOÀN MAP TỪ XA - SAFE ZONE GOD MODE BẤT TỬ - CHỮ SBSD XANH LÁ
 
 if game:GetService("CoreGui"):FindFirstChild("sbsd_winner_gui") then
     game:GetService("CoreGui")["sbsd_winner_gui"]:Destroy()
@@ -35,19 +35,25 @@ SG.Name = "sbsd_winner_gui"
 SG.Parent = UI_Target_Parent
 SG.ResetOnSpawn = false
 
--- === NÚT ICON TRÒN ĐẦU LÂU DOOM ĐỂ MỞ LẠI BẢNG ===
-local OpenIcon = Instance.new("ImageButton", SG)
-OpenIcon.Size = UDim2.new(0, 55, 0, 55)
+-- === NÚT ICON CHỮ SBSD MÀU XANH LÁ ĐỂ MỞ LẠI BẢNG ===
+local OpenIcon = Instance.new("TextButton", SG)
+OpenIcon.Size = UDim2.new(0, 75, 0, 35)
 OpenIcon.Position = UDim2.new(0.02, 0, 0.25, 0)
-OpenIcon.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-OpenIcon.Image = "rbxassetid://5404456950" -- Giữ lại duy nhất cái icon đầu lâu nhỏ để bạn đóng mở bảng cho tiện
+OpenIcon.BackgroundColor3 = Color3.fromRGB(20, 20, 22)
+OpenIcon.Text = "SBSD" 
+OpenIcon.TextColor3 = Color3.fromRGB(0, 255, 0) -- Chữ SBSD màu xanh lá rực rỡ
+OpenIcon.Font = Enum.Font.SourceSansBold
+OpenIcon.TextSize = 18
 OpenIcon.Visible = false
 OpenIcon.Active = true
-OpenIcon.Draggable = true
-Instance.new("UICorner", OpenIcon).CornerRadius = UDim.new(1, 0)
+OpenIcon.Draggable = true -- Nhấn giữ để kéo nút chữ SBSD đi khắp màn hình
+
+local IconCorner = Instance.new("UICorner", OpenIcon)
+IconCorner.CornerRadius = UDim.new(0, 6)
+
 local IconStroke = Instance.new("UIStroke", OpenIcon)
-IconStroke.Color = Color3.fromRGB(0, 255, 0) -- Viền xanh lá cây chuẩn bài
-IconStroke.Thickness = 2
+IconStroke.Color = Color3.fromRGB(0, 255, 0)
+IconStroke.Thickness = 1.5
 
 -- === KHUNG CHÍNH MENU MOCKEDUP (GỌN GÀNG: 380 x 190) ===
 local Main = Instance.new("Frame", SG)
@@ -96,7 +102,7 @@ ElementsContainer.Position = UDim2.new(0, 15, 0, 55)
 ElementsContainer.BackgroundTransparency = 1
 ElementsContainer.ZIndex = 1
 
--- Hàm tạo Toggle có chữ sbsd MÀU XANH LÁ chuẩn chỉnh
+-- Hàm tạo Toggle có chữ sbsd MÀU XANH LÁ
 local function CreateMockedupToggle(text, posY)
     local frame = Instance.new("Frame", ElementsContainer)
     frame.Size = UDim2.new(1, 0, 0, 45)
@@ -120,7 +126,7 @@ local function CreateMockedupToggle(text, posY)
     local btn = Instance.new("TextButton", frame)
     btn.Size = UDim2.new(0, 55, 0, 26)
     btn.Position = UDim2.new(1, -65, 0, 9)
-    btn.BackgroundColor3 = Color3.fromRGB(150, 40, 40) -- Đỏ là OFF
+    btn.BackgroundColor3 = Color3.fromRGB(160, 40, 40) -- Đỏ là OFF
     btn.Text = "OFF"
     btn.TextColor3 = Color3.fromRGB(255, 255, 255)
     btn.Font = Enum.Font.SourceSansBold
@@ -141,7 +147,7 @@ OpenIcon.MouseButton1Click:Connect(function() Main.Visible = true; OpenIcon.Visi
 
 -- === HỆ THỐNG XỬ LÝ TOÀN BỘ LOGIC GAME SUPERBOX SIEGE DEFENSE ===
 
--- 1. GIỮ NGUYÊN BỘ GỐC HOẠT ĐỘNG NGON NHẤT: Global Kill Aura 360° Toàn Bản Đồ Phạm Vi Vô Hạn
+-- 1. SỬA ĐỔI: Global Kill Aura Tấn Công Toàn Map Từ Xa (Không giới hạn khoảng cách)
 Toggle1.MouseButton1Click:Connect(function()
     AuraActive = not AuraActive
     if AuraActive then
@@ -153,14 +159,20 @@ end)
 
 task.spawn(function()
     while true do
-        task.wait(0.04) -- Tần suất càn quét siêu tốc dọn map sạch bách
+        task.wait(0.04) -- Tốc độ dập sát thương liên tục cực nhanh
         if AuraActive then
             pcall(function()
-                local AttackRemote = ReplicatedStorage:FindFirstChild("Attack") or ReplicatedStorage:FindFirstChild("HitEnemy") or ReplicatedStorage:FindFirstChild("InflictDamage") or ReplicatedStorage:FindFirstChild("Hit")
+                -- Đồng bộ và gọi liên tục các cổng nhận đòn đánh từ xa của game SBSD
+                local AttackRemote = ReplicatedStorage:FindFirstChild("Attack") 
+                    or ReplicatedStorage:FindFirstChild("HitEnemy") 
+                    or ReplicatedStorage:FindFirstChild("InflictDamage") 
+                    or ReplicatedStorage:FindFirstChild("Hit")
+                
                 if AttackRemote then
-                    -- Quét liên tục tất cả thực thể quái xuất hiện trên map bất kể hướng đứng hay khoảng cách
+                    -- Quét dứt điểm 100% quái ở bất kỳ xó xỉnh nào trên map mà không bắt nhân vật phải lại gần
                     for _, enemy in pairs(workspace:GetDescendants()) do
                         if enemy:IsA("Model") and enemy:FindFirstChild("Humanoid") and enemy.Humanoid.Health > 0 then
+                            -- Loại bỏ người chơi khác và Base để tránh lỗi game
                             if not Players:GetPlayerFromCharacter(enemy) and enemy.Name ~= "Base" then
                                 if AttackRemote:IsA("RemoteEvent") then
                                     AttackRemote:FireServer(enemy)
@@ -176,7 +188,7 @@ task.spawn(function()
     end
 end)
 
--- 2. GIỮ NGUYÊN BỘ GỐC HOẠT ĐỘNG NGON NHẤT: Safe Zone Max God Mode (Khóa đầy máu thời gian thực cấp độ nhịp tim hệ thống)
+-- 2. Safe Zone Max God Mode (Khóa đầy máu thời gian thực cấp độ nhịp tim hệ thống)
 Toggle2.MouseButton1Click:Connect(function()
     GodModeActive = not GodModeActive
     if GodModeActive then
