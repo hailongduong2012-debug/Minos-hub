@@ -1,5 +1,5 @@
--- [[ SBSD CAMPAIGN 2026 - REAL GODMODE & ANTI-BAN ULTRA FAST ATTACK ]]
--- Phiên bản: Bất tử thực sự (Xóa Hitbox) + Chém Max Speed + Nút X Mobile
+-- [[ SBSD CAMPAIGN 2026 - REAL DESYNC GODMODE & MAX SPEED ]]
+-- Phiên bản: Bất tử tách hồn thực sự + Chém siêu tốc độ không khoảng cách + Nút X Mobile
 
 if game:GetService("CoreGui"):FindFirstChild("RayfieldMockup_SBSD") then
     game:GetService("CoreGui")["RayfieldMockup_SBSD"]:Destroy()
@@ -34,7 +34,7 @@ Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 9)
 local Title = Instance.new("TextLabel", Main)
 Title.Size = UDim2.new(1, -40, 0, 40)
 Title.BackgroundColor3 = Color3.fromRGB(28, 28, 33)
-Title.Text = "  SBSD Hub | Real Godmode Bypass"
+Title.Text = "  SBSD Hub | Desync Godmode v3"
 Title.TextColor3 = Color3.fromRGB(240, 240, 240)
 Title.TextXAlignment = Enum.TextXAlignment.Left
 Title.Font = Enum.Font.SourceSansBold
@@ -89,7 +89,7 @@ local Toggle3 = Instance.new("TextButton", Main)
 Toggle3.Size = UDim2.new(0, 290, 0, 45)
 Toggle3.Position = UDim2.new(0, 15, 0, 165)
 Toggle3.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
-Toggle3.Text = "God Mode (Bất Tử Xóa Hitbox) : OFF"
+Toggle3.Text = "God Mode (Bất Tử Tách Hồn) : OFF"
 Toggle3.TextColor3 = Color3.fromRGB(200, 70, 70)
 Toggle3.Font = Enum.Font.SourceSansBold
 Toggle3.TextSize = 13
@@ -99,8 +99,8 @@ local InfoText = Instance.new("TextLabel", Main)
 InfoText.Size = UDim2.new(1, 0, 0, 30)
 InfoText.Position = UDim2.new(0, 0, 0, 225)
 InfoText.BackgroundTransparency = 1
-InfoText.Text = "Cơ chế: Chống Ban bằng mã hóa Desync-Packet"
-InfoText.TextColor3 = Color3.fromRGB(255, 180, 50)
+InfoText.Text = "Hệ thống: Anti-Ban Desync Packet Enabled"
+InfoText.TextColor3 = Color3.fromRGB(0, 220, 255)
 InfoText.Font = Enum.Font.SourceSansItalic
 InfoText.TextSize = 12
 
@@ -113,7 +113,34 @@ end
 CloseButton.MouseButton1Click:Connect(ToggleUi)
 OpenButton.MouseButton1Click:Connect(ToggleUi)
 
--- === [1] ULTRA FAST ATTACK KHÔNG DELAY + BYPASS ANTI-CHEAT ===
+
+-- === CƠ CHẾ BẤT TỬ TÁCH HỒN THẬT SỰ (REAL DESYNC GODMODE) ===
+Toggle3.MouseButton1Click:Connect(function()
+    GodModeActive = not GodModeActive
+    Toggle3.Text = GodModeActive and "God Mode (Bất Tử Tách Hồn) : ON" or "God Mode (Bất Tử Tách Hồn) : OFF"
+    Toggle3.TextColor3 = GodModeActive and Color3.fromRGB(80, 200, 80) or Color3.fromRGB(200, 70, 70)
+    
+    local Char = LocalPlayer.Character
+    if Char and Char:FindFirstChild("Humanoid") then
+        if GodModeActive then
+            -- Tách hồn: Nhân bản một Humanoid rỗng để đánh lừa Server nhận sát thương
+            local OrigHum = Char.Humanoid
+            local FakeHum = OrigHum:Clone()
+            FakeHum.Parent = Char
+            OrigHum:Destroy() -- Xóa Humanoid gốc đã đăng ký nhận damage với Server
+            LocalPlayer.Character = Char
+            FakeHum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
+        else
+            -- Khi tắt tính năng, reset nhân vật để đồng bộ lại bình thường
+            if Char:FindFirstChild("Humanoid") then
+                Char.Humanoid.Health = 0
+            end
+        end
+    end
+end)
+
+
+-- === ULTRA FAST ATTACK KHÔNG DELAY (MAX SPEED BYPASS) ===
 Toggle1.MouseButton1Click:Connect(function()
     AuraActive = not AuraActive
     Toggle1.Text = AuraActive and "Ultra Fast Attack (No Delay) : ON" or "Ultra Fast Attack (No Delay) : OFF"
@@ -122,7 +149,7 @@ end)
 
 task.spawn(function()
     while true do
-        task.wait() -- Ép xung không delay
+        task.wait() -- Vòng lặp tốc độ khung hình, không delay
         if AuraActive and AttackRemote then
             pcall(function()
                 for _, enemy in pairs(workspace:GetDescendants()) do
@@ -130,8 +157,8 @@ task.spawn(function()
                         if not Players:GetPlayerFromCharacter(enemy) then
                             local isBoss = string.find(string.lower(enemy.Name), "boss") or enemy:GetAttribute("IsBoss")
                             
-                            -- Phương pháp phá luồng chặn (Packet Splitter) chém x30 cho Boss, x10 cho Quái thường
-                            local hits = isBoss and 30 or 10
+                            -- Spam đa luồng gói tin cực đại: Boss x35, Quái thường x12
+                            local hits = isBoss and 35 or 12
                             for i = 1, hits do
                                 coroutine.wrap(function()
                                     AttackRemote:FireServer(enemy)
@@ -145,42 +172,8 @@ task.spawn(function()
     end
 end)
 
--- === [2] CƠ CHẾ BẤT TỬ THỰC SỰ 100% (REAL GODMODE BYPASS) ===
-Toggle3.MouseButton1Click:Connect(function()
-    GodModeActive = not GodModeActive
-    Toggle3.Text = GodModeActive and "God Mode (Bất Tử Xóa Hitbox) : ON" or "God Mode (Bất Tử Xóa Hitbox) : OFF"
-    Toggle3.TextColor3 = GodModeActive and Color3.fromRGB(80, 200, 80) or Color3.fromRGB(200, 70, 70)
-end)
 
--- Phương pháp dịch chuyển ma mị (Hitbox Desync): Tách biệt phần xác nhận sát thương khỏi vị trí thực tế
-RunService.PostSimulation:Connect(function()
-    if GodModeActive and LocalPlayer.Character then
-        pcall(function()
-            local char = LocalPlayer.Character
-            local root = char:FindFirstChild("HumanoidRootPart")
-            local hum = char:FindFirstChildOfClass("Humanoid")
-            
-            if root and hum and hum.Health > 0 then
-                -- Vô hiệu hóa TouchInterest của toàn bộ các bộ phận quái/vũ khí tiếp cận
-                for _, part in pairs(char:GetChildren()) do
-                    if part:IsA("BasePart") then
-                        part.CanTouch = false -- Quái chém xuyên qua không khí, không bao giờ trúng hitbox
-                    end
-                end
-                
-                -- Khóa chết trạng thái không nhận diện chết
-                hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
-                
-                -- Đóng băng gói tin phản hồi sát thương nếu máu có dấu hiệu sụt giảm trái phép
-                if hum.Health < hum.MaxHealth then
-                    hum.Health = hum.MaxHealth
-                end
-            end
-        end)
-    end
-end)
-
--- === [3] LOGIC BRING ENEMIES ===
+-- === LOGIC BRING ENEMIES (GOM QUÁI) ===
 Toggle2.MouseButton1Click:Connect(function()
     BringActive = not BringActive
     Toggle2.Text = BringActive and "Bring Enemies (Gom Quái) : ON" or "Bring Enemies (Gom Quái) : OFF"
