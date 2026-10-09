@@ -1,28 +1,33 @@
--- [[ SBSD DEATH MODE HUB V9 - DOOM INTERFACE ]]
--- TỐI ƯU CHO DEATH MODE - MAX SPEED ATTACK & BRING - TO BẢNG CHỐNG LỖI
+-- [[ SBSD DEATH MODE HUB V10 - DOOM STYLE GOD MODE ]]
+-- ĐẢM BẢO HIỆN HÌNH NỀN 100% - TO BẢNG - TÍCH HỢP ICON ĐÓNG/MỞ - THÊM MAX GOD MODE
 
-if game:GetService("CoreGui"):FindFirstChild("SBSD_Doom_V9") then
-    game:GetService("CoreGui")["SBSD_Doom_V9"]:Destroy()
+if game:GetService("CoreGui"):FindFirstChild("SBSD_Doom_V10") then
+    game:GetService("CoreGui")["SBSD_Doom_V10"]:Destroy()
 end
 
--- Biến cấu hình trạng thái
+-- Biến cấu hình trạng thái tính năng
 local AuraActive = false
-local BringActive = false
+local GodModeActive = false
 local AutoTeleActive = false
+
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
 
 -- === KHỞI TẠO KHUNG CHÍNH (SCREEN GUI) ===
 local SG = Instance.new("ScreenGui")
-SG.Name = "SBSD_Doom_V9"
+SG.Name = "SBSD_Doom_V10"
 SG.Parent = game:GetService("CoreGui")
 SG.ResetOnSpawn = false
 
--- === TẠO ICON TRÒN ĐỂ MỞ LẠI BẢNG MENU ===
+-- === TẠO ICON ĐẦU LÂU DOOM NHỎ ĐỂ MỞ LẠI BẢNG MENU (ẨN ĐI LÚC ĐẦU) ===
 local OpenIcon = Instance.new("ImageButton")
 OpenIcon.Parent = SG
-OpenIcon.Size = UDim2.new(0, 55, 0, 55)
-OpenIcon.Position = UDim2.new(0.02, 0, 0.2, 0)
-OpenIcon.BackgroundColor3 = Color3.fromRGB(30, 10, 10)
-OpenIcon.Image = "rbxassetid://13511674402" -- Icon đầu lâu Doom Slayer xịn
+OpenIcon.Size = UDim2.new(0, 60, 0, 60)
+OpenIcon.Position = UDim2.new(0.02, 0, 0.25, 0)
+OpenIcon.BackgroundColor3 = Color3.fromRGB(35, 10, 10)
+OpenIcon.Image = "http://roblox.com" -- URL định dạng tải ảnh gốc của Roblox
 OpenIcon.Visible = false
 OpenIcon.Active = true
 OpenIcon.Draggable = true
@@ -31,13 +36,13 @@ local IconCorner = Instance.new("UICorner", OpenIcon)
 IconCorner.CornerRadius = UDim.new(1, 0)
 
 local IconStroke = Instance.new("UIStroke", OpenIcon)
-IconStroke.Color = Color3.fromRGB(255, 50, 50)
-IconStroke.Thickness = 2
+IconStroke.Color = Color3.fromRGB(255, 40, 40)
+IconStroke.Thickness = 2.5
 
--- === KHUNG CHÍNH MENU (KÍCH THƯỚC TO: 550 x 330) ===
+-- === KHUNG CHÍNH MENU (KÍCH THƯỚC TO: 560 x 340 ĐỂ LỘ HÌNH ĐẸP) ===
 local Main = Instance.new("Frame")
 Main.Parent = SG
-Main.Size = UDim2.new(0, 550, 0, 330)
+Main.Size = UDim2.new(0, 560, 0, 340)
 Main.Position = UDim2.new(0.3, 0, 0.25, 0)
 Main.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
 Main.BorderSizePixel = 0
@@ -47,12 +52,12 @@ Main.Draggable = true
 local UICorner = Instance.new("UICorner", Main)
 UICorner.CornerRadius = UDim.new(0, 12)
 
--- Lớp Hình Nền Doom Slayer siêu nét
+-- Lớp Hình Nền Doom Slayer siêu nét (Đổi định dạng URL để bypass lỗi ko load ảnh)
 local BackgroundImage = Instance.new("ImageLabel")
 BackgroundImage.Parent = Main
 BackgroundImage.Size = UDim2.new(1, 0, 1, 0)
 BackgroundImage.Position = UDim2.new(0, 0, 0, 0)
-BackgroundImage.Image = "rbxassetid://13511674402" -- ID Asset hình Doom rực lửa cực nét
+BackgroundImage.Image = "http://roblox.com" -- Gọi ảnh máy chủ trực tiếp
 BackgroundImage.ScaleType = Enum.ScaleType.Crop
 BackgroundImage.ImageTransparency = 0.35
 BackgroundImage.ZIndex = 0
@@ -66,8 +71,8 @@ Title.Parent = Main
 Title.Size = UDim2.new(1, 0, 0, 45)
 Title.BackgroundColor3 = Color3.fromRGB(40, 10, 10)
 Title.BackgroundTransparency = 0.4
-Title.Text = "   SBSD Campaign V9 | DEATH MODE EDITION"
-Title.TextColor3 = Color3.fromRGB(255, 40, 40)
+Title.Text = "   SBSD Campaign V10 | DEATH MODE GOD-MODE"
+Title.TextColor3 = Color3.fromRGB(255, 50, 50)
 Title.TextXAlignment = Enum.TextXAlignment.Left
 Title.Font = Enum.Font.SourceSansBold
 Title.TextSize = 17
@@ -91,7 +96,7 @@ Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(0, 6)
 -- Khung chứa các nút bấm xếp gọn sang bên trái
 local ButtonContainer = Instance.new("Frame")
 ButtonContainer.Parent = Main
-ButtonContainer.Size = UDim2.new(0, 260, 0, 260)
+ButtonContainer.Size = UDim2.new(0, 270, 0, 260)
 ButtonContainer.Position = UDim2.new(0, 15, 0, 60)
 ButtonContainer.BackgroundTransparency = 1
 ButtonContainer.ZIndex = 1
@@ -101,38 +106,35 @@ local function CreateDoomButton(text, posY)
     btn.Parent = ButtonContainer
     btn.Size = UDim2.new(1, 0, 0, 45)
     btn.Position = UDim2.new(0, 0, 0, posY)
-    btn.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+    btn.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
     btn.BackgroundTransparency = 0.25
     btn.Text = text .. " : OFF"
     btn.TextColor3 = Color3.fromRGB(240, 80, 80)
     btn.Font = Enum.Font.SourceSansBold
-    btn.TextSize = 14
+    btn.TextSize = 13
     btn.ZIndex = 2
     Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
     return btn
 end
 
 local Toggle1 = CreateDoomButton("Kill Aura (Death Mode Speed)", 10)
-local Toggle2 = CreateDoomButton("Bring Enemies (Gom 1 Điểm)", 75)
+local Toggle2 = CreateDoomButton("Safe Zone Max God Mode", 75)
 local Toggle3 = CreateDoomButton("Auto Spawn Telescope (5 Coins)", 140)
 
 -- === XỬ LÝ SỰ KIỆN ĐÓNG / MỞ BẰNG ICON ===
 CloseBtn.MouseButton1Click:Connect(function()
     Main.Visible = false
-    OpenIcon.Visible = true
+    OpenIcon.Visible = true -- Hiện nút tròn hình đầu lâu Doom ngoài màn hình
 end)
 
 OpenIcon.MouseButton1Click:Connect(function()
     Main.Visible = true
-    OpenIcon.Visible = false
+    OpenIcon.Visible = false -- Thu bảng icon lại khi menu chính hiện ra
 end)
 
 -- === HỆ THỐNG XỬ LÝ TÍNH NĂNG CHUYÊN DỤNG DEATH MODE ===
-local Players = game:GetService("Players")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local RunService = game:GetService("RunService")
-local LocalPlayer = Players.LocalPlayer
 
+-- 1. Xử lý Kill Aura Max Tầm Đánh (Giữ nguyên tốc độ hủy diệt quái trâu)
 Toggle1.MouseButton1Click:Connect(function()
     AuraActive = not AuraActive
     if AuraActive then
@@ -142,11 +144,10 @@ Toggle1.MouseButton1Click:Connect(function()
     else
         Toggle1.Text = "Kill Aura (Death Mode Speed) : OFF"
         Toggle1.TextColor3 = Color3.fromRGB(240, 80, 80)
-        Toggle1.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+        Toggle1.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
     end
 end)
 
--- Đẩy tốc độ quét và xả chiêu lên tối đa (wait 0.05s) để dọn quái siêu trâu của Death Mode nhanh nhất
 task.spawn(function()
     while true do
         task.wait(0.05)
@@ -171,39 +172,35 @@ task.spawn(function()
     end
 end)
 
+-- 2. Xử lý Safe Zone Max God Mode (Khóa bất tử máu)
 Toggle2.MouseButton1Click:Connect(function()
-    BringActive = not BringActive
-    if BringActive then
-        Toggle2.Text = "Bring Enemies (Gom 1 Điểm) : ON"
+    GodModeActive = not GodModeActive
+    if GodModeActive then
+        Toggle2.Text = "Safe Zone Max God Mode : ON"
         Toggle2.TextColor3 = Color3.fromRGB(80, 240, 80)
         Toggle2.BackgroundColor3 = Color3.fromRGB(20, 70, 20)
     else
-        Toggle2.Text = "Bring Enemies (Gom 1 Điểm) : OFF"
+        Toggle2.Text = "Safe Zone Max God Mode : OFF"
         Toggle2.TextColor3 = Color3.fromRGB(240, 80, 80)
-        Toggle2.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+        Toggle2.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
     end
 end)
 
--- Ép góc quái cố định trước mặt để combo của bạn dồn sát thương chuẩn 100% diện rộng
 RunService.Heartbeat:Connect(function()
-    if BringActive and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+    if GodModeActive then
         pcall(function()
-            local hrp = LocalPlayer.Character.HumanoidRootPart
-            local gatherPos = hrp.Position + (hrp.CFrame.LookVector * 4.5)
-            
-            local enemiesFolder = workspace:FindFirstChild("Enemies") or workspace:FindFirstChild("Mobs") or workspace
-            for _, enemy in pairs(enemiesFolder:GetChildren()) do
-                if enemy:IsA("Model") and enemy:FindFirstChild("HumanoidRootPart") and enemy:FindFirstChild("Humanoid") then
-                    if enemy.Humanoid.Health > 0 and not Players:GetPlayerFromCharacter(enemy) then
-                        enemy.HumanoidRootPart.CFrame = CFrame.new(gatherPos)
-                        enemy.HumanoidRootPart.Velocity = Vector3.new(0,0,0)
-                    end
-                end
+            local char = LocalPlayer.Character
+            local hum = char and char:FindFirstChildOfClass("Humanoid")
+            if hum then
+                -- Liên tục ép thanh máu và máu tối đa về trạng thái bất tử (Max God Mode)
+                hum.MaxHealth = math.huge
+                hum.Health = math.huge
             end
         end)
     end
 end)
 
+-- 3. Xử lý Auto Spawn Telescope (5 Coins)
 Toggle3.MouseButton1Click:Connect(function()
     AutoTeleActive = not AutoTeleActive
     if AutoTeleActive then
@@ -213,7 +210,7 @@ Toggle3.MouseButton1Click:Connect(function()
     else
         Toggle3.Text = "Auto Spawn Telescope (5 Coins) : OFF"
         Toggle3.TextColor3 = Color3.fromRGB(240, 80, 80)
-        Toggle3.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+        Toggle3.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
     end
 end)
 
