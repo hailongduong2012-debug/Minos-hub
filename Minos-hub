@@ -1,17 +1,40 @@
--- SBSD Specialized Auto Farm (Kill Aura Only)
-_G.AutoFarm = true
-_G.AttackSpeed = 0.001 -- Tốc độ chém 0.001 giây
+-- Tải thư viện giao diện Rayfield UI
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
+-- Tạo Menu chính
+local Window = Rayfield:CreateWindow({
+   Name = "SBSD Hub | Death Mode",
+   LoadingTitle = "LOADING",
+   LoadingSubtitle = "by MINOS",
+   ConfigurationSaving = {
+      Enabled = false,
+      FolderName = nil,
+      FileName = "SBSDHub"
+   },
+   Discord = {
+      Enabled = false,
+      Invite = "",
+      RememberJoins = true
+   },
+   KeySystem = false -- Tắt hệ thống nhập Key để vào thẳng giao diện
+})
+
+-- Tạo Tab chức năng Auto Farm
+local MainTab = Window:CreateTab("Main Farm", 4483362458) -- Icon ID mặc định
+
+-- Biến điều khiển trạng thái Farm
+_G.AutoFarm = false
+_G.AttackSpeed = 0.001
 
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
--- Hàm tìm mục tiêu (Quái/NPC/Player địch) gần nhất còn sống
+-- Hàm quét mục tiêu gần nhất trong Death Mode
 local function getClosestTarget()
     local closestTarget = nil
     local shortestDistance = math.huge
     
-    -- Duyệt qua tất cả các mô hình trong Workspace (Nơi chứa quái của game)
     for _, obj in pairs(workspace:GetChildren()) do
         if obj:IsA("Model") and obj ~= LocalPlayer.Character then
             local humanoid = obj:FindFirstChildOfClass("Humanoid")
@@ -31,26 +54,52 @@ local function getClosestTarget()
     return closestTarget
 end
 
--- Vòng lặp Auto Farm / Kill Aura siêu tốc
+-- Vòng lặp Kill Aura chạy ngầm
 task.spawn(function()
-    while _G.AutoFarm do
-        local target = getClosestTarget()
-        if target and target:FindFirstChild("HumanoidRootPart") then
-            -- Tự động hướng nhân vật về phía mục tiêu để tránh hụt đòn
-            if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-                LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(
-                    LocalPlayer.Character.HumanoidRootPart.Position, 
-                    Vector3.new(target.HumanoidRootPart.Position.X, LocalPlayer.Character.HumanoidRootPart.Position.Y, target.HumanoidRootPart.Position.Z)
-                )
-            end
-            
-            -- Kích hoạt Remote sự kiện tấn công của hệ thống SBSD
-            -- Lưu ý: Tên RemoteEvent dưới đây là cấu trúc chuẩn, nếu game cập nhật mã hóa bạn cần dùng công cụ chặn Remote (Remote Spy) để đổi tên cho đúng
-            local punchRemote = ReplicatedStorage:FindFirstChild("Punch") or ReplicatedStorage:FindFirstChild("Hit") or ReplicatedStorage:FindFirstChild("Attack")
-            if punchRemote and punchRemote:IsA("RemoteEvent") then
-                punchRemote:FireServer(target.HumanoidRootPart.Position)
+    while true do
+        if _G.AutoFarm then
+            local target = getClosestTarget()
+            if target and target:FindFirstChild("HumanoidRootPart") then
+                -- Ép góc nhìn nhân vật xoay về phía đối thủ để tăng độ chính xác
+                if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                    LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(
+                        LocalPlayer.Character.HumanoidRootPart.Position, 
+                        Vector3.new(target.HumanoidRootPart.Position.X, LocalPlayer.Character.HumanoidRootPart.Position.Y, target.HumanoidRootPart.Position.Z)
+                    )
+                end
+                
+                -- Bắn tín hiệu chém liên tục
+                local punchRemote = ReplicatedStorage:FindFirstChild("Punch") or ReplicatedStorage:FindFirstChild("Hit") or ReplicatedStorage:FindFirstChild("Attack")
+                if punchRemote and punchRemote:IsA("RemoteEvent") then
+                    punchRemote:FireServer(target.HumanoidRootPart.Position)
+                end
             end
         end
         task.wait(_G.AttackSpeed)
     end
 end)
+
+-- Tạo nút công tắc (Toggle) trên giao diện Rayfield
+local Toggle = MainTab:CreateToggle({
+   Name = "Kích hoạt Kill Aura (0.001s)",
+   CurrentValue = false,
+   Flag = "KillAuraToggle",
+   Callback = function(Value)
+      _G.AutoFarm = Value
+      if Value then
+          Rayfield:Notify({
+             Title = "Thông báo",
+             Content = "Đã BẬT Kill Aura siêu tốc!",
+             Duration = 2.5,
+             Image = 4483362458,
+          })
+      else
+          Rayfield:Notify({
+             Title = "Thông báo",
+             Content = "Đã TẮT Kill Aura.",
+             Duration = 2.5,
+             Image = 4483362458,
+          })
+      end
+   end,
+})
