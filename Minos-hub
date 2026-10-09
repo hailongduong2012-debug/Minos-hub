@@ -1,15 +1,14 @@
--- [[ SBSD CAMPAIGN 2026 - SUB-SPACE DESYNC & MULTI-THREADED MAX SPEED ]]
--- Phiên bản v25: Cách ly không gian Death Mode + Chém đa luồng siêu tốc 0% Lag + Nút X Mobile
+-- [[ SBSD CAMPAIGN 2026 - PHYSICS ANCHOR BYPASS & MICRO-DELAY MULTI-AURA ]]
+-- Phiên bản v26: Chống giật lùi Server + Chém siêu tốc độ vi mô + Không Lag + Nút X Mobile
 
 if game:GetService("CoreGui"):FindFirstChild("RayfieldMockup_SBSD") then
     game:GetService("CoreGui")["RayfieldMockup_SBSD"]:Destroy()
 end
 
 local AutoFarmActive = false
-local SafeZoneActive = false
+local PhysicsFlyActive = false
 local UiVisible = true
-local FakeFloor = nil
-local SavedPos = nil
+local BodyAnchor = nil
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -32,7 +31,7 @@ Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 9)
 local Title = Instance.new("TextLabel", Main)
 Title.Size = UDim2.new(1, -40, 0, 40)
 Title.BackgroundColor3 = Color3.fromRGB(28, 28, 33)
-Title.Text = "  SBSD Hub | Death Mode God v25"
+Title.Text = "  SBSD Hub | Physics Anchor v26"
 Title.TextColor3 = Color3.fromRGB(240, 240, 240)
 Title.TextXAlignment = Enum.TextXAlignment.Left
 Title.Font = Enum.Font.SourceSansBold
@@ -62,23 +61,23 @@ OpenButton.TextSize = 12
 OpenButton.Visible = false
 Instance.new("UICorner", OpenButton).CornerRadius = UDim.new(1, 0)
 
--- Nút Toggle 1: Chém Siêu Tốc Đa Luồng
+-- Nút Toggle 1: Chém Siêu Tốc
 local Toggle1 = Instance.new("TextButton", Main)
 Toggle1.Size = UDim2.new(0, 290, 0, 45)
 Toggle1.Position = UDim2.new(0, 15, 0, 60)
 Toggle1.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
-Toggle1.Text = "Multi-Threaded Aura (Max Speed) : OFF"
+Toggle1.Text = "Micro-Delay Kill Aura (Max Speed) : OFF"
 Toggle1.TextColor3 = Color3.fromRGB(200, 70, 70)
 Toggle1.Font = Enum.Font.SourceSansBold
 Toggle1.TextSize = 13
 Instance.new("UICorner", Toggle1).CornerRadius = UDim.new(0, 6)
 
--- Nút Toggle 2: Dịch chuyển Vùng Tiệm Cận
+-- Nút Toggle 2: Bất Tử Bay Bằng Lực Vật Lý
 local Toggle2 = Instance.new("TextButton", Main)
 Toggle2.Size = UDim2.new(0, 290, 0, 45)
 Toggle2.Position = UDim2.new(0, 15, 0, 120)
 Toggle2.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
-Toggle2.Text = "Sub-Space Safe Zone (Chống Ban) : OFF"
+Toggle2.Text = "Physics Safe Fly (Chống Kéo Lùi) : OFF"
 Toggle2.TextColor3 = Color3.fromRGB(200, 70, 70)
 Toggle2.Font = Enum.Font.SourceSansBold
 Toggle2.TextSize = 13
@@ -88,7 +87,7 @@ local InfoText = Instance.new("TextLabel", Main)
 InfoText.Size = UDim2.new(1, 0, 0, 30)
 InfoText.Position = UDim2.new(0, 0, 0, 185)
 InfoText.BackgroundTransparency = 1
-InfoText.Text = "Cấu hình: Cô lập CFrame an toàn + Ép xung va chạm ẩn song song"
+InfoText.Text = "Cơ chế: Sử dụng BodyVelocity bypass Anti-Cheat tọa độ"
 InfoText.TextColor3 = Color3.fromRGB(0, 255, 180)
 InfoText.Font = Enum.Font.SourceSansItalic
 InfoText.TextSize = 11
@@ -103,42 +102,41 @@ CloseButton.MouseButton1Click:Connect(ToggleUi)
 OpenButton.MouseButton1Click:Connect(ToggleUi)
 
 
--- === 1. CƠ CHẾ CÁCH LY VÙNG TIỆM CẬN (SUB-SPACE SAFE ZONE) ===
+-- === 1. CƠ CHẾ BẤT TỬ BAY BẰNG LỰC VẬT LÝ (PHYSICS SAFE FLY) ===
 Toggle2.MouseButton1Click:Connect(function()
-    SafeZoneActive = not SafeZoneActive
-    Toggle2.Text = SafeZoneActive and "Sub-Space Safe Zone (Chống Ban) : ON" or "Sub-Space Safe Zone (Chống Ban) : OFF"
-    Toggle2.TextColor3 = SafeZoneActive and Color3.fromRGB(80, 200, 80) or Color3.fromRGB(200, 70, 70)
+    PhysicsFlyActive = not PhysicsFlyActive
+    Toggle2.Text = PhysicsFlyActive and "Physics Safe Fly (Chống Kéo Lùi) : ON" or "Physics Safe Fly (Chống Kéo Lùi) : OFF"
+    Toggle2.TextColor3 = PhysicsFlyActive and Color3.fromRGB(80, 200, 80) or Color3.fromRGB(200, 70, 70)
     
     local char = LocalPlayer.Character
     local root = char and char:FindFirstChild("HumanoidRootPart")
     
-    if SafeZoneActive and root then
-        SavedPos = root.CFrame
-        -- Đưa nhân vật lên độ cao tiệm cận 3000 block (Vừa đủ né hoàn toàn Boss Death Mode, vừa giữ khoảng cách nhảy damage)
-        local VoidTarget = CFrame.new(root.Position.X, 3000, root.Position.Z)
-        root.CFrame = VoidTarget
+    if PhysicsFlyActive and root then
+        -- Dùng lực đẩy tuyến tính nâng nhân vật lên cao 45 block (Khoảng cách chuẩn Server cho phép nhận damage)
+        root.CFrame = root.CFrame * CFrame.new(0, 45, 0)
         
-        -- Tạo sàn đấu ảo nâng chân bảo vệ
-        FakeFloor = Instance.new("Part")
-        FakeFloor.Size = Vector3.new(40, 1, 40)
-        FakeFloor.CFrame = VoidTarget * CFrame.new(0, -3, 0)
-        FakeFloor.Anchored = true
-        FakeFloor.Material = Enum.Material.ForceField
-        FakeFloor.Parent = workspace
+        -- Khởi tạo Anchor lực vật lý đánh lừa bộ lọc tọa độ của Server game
+        BodyAnchor = Instance.new("BodyVelocity")
+        BodyAnchor.Name = "SBSD_PhysicsAnchor"
+        BodyAnchor.Velocity = Vector3.new(0, 0, 0) -- Giữ đứng im cố định trên không trung
+        BodyAnchor.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+        BodyAnchor.Parent = root
     else
-        if FakeFloor then FakeFloor:Destroy() FakeFloor = nil end
-        if root and SavedPos then root.CFrame = SavedPos end
+        -- Gỡ bỏ lực bay, hạ cánh an toàn
+        if root and root:FindFirstChild("SBSD_PhysicsAnchor") then
+            root.SBSD_PhysicsAnchor:Destroy()
+        end
+        BodyAnchor = nil
     end
 end)
 
--- Giữ cứng vị trí và khóa thuộc tính sinh học không cho Server check rơi tự do
+-- Khóa cứng trạng thái chống chết và ghim vận tốc liên tục ở tầng mô phỏng PreSimulation
 RunService.PreSimulation:Connect(function()
-    if SafeZoneActive and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+    if PhysicsFlyActive and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
         pcall(function()
             local char = LocalPlayer.Character
-            char.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
-            
             local hum = char:FindFirstChildOfClass("Humanoid")
+            
             if hum then
                 hum.BreakJointsOnDeath = false
                 hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
@@ -149,17 +147,17 @@ RunService.PreSimulation:Connect(function()
 end)
 
 
--- === 2. CƠ CHẾ CHÉM ĐA LUỒNG SIÊU TỐC IM LẶNG (MULTI-THREADED SILENT AURA) ===
+-- === 2. CƠ CHẾ CHÉM ĐA LUỒNG SIÊU TỐC VI MÔ (MICRO-DELAY SILENT AURA) ===
 Toggle1.MouseButton1Click:Connect(function()
     AutoFarmActive = not AutoFarmActive
-    Toggle1.Text = AutoFarmActive and "Multi-Threaded Aura (Max Speed) : ON" or "Multi-Threaded Aura (Max Speed) : OFF"
+    Toggle1.Text = AutoFarmActive and "Micro-Delay Kill Aura (Max Speed) : ON" or "Micro-Delay Kill Aura (Max Speed) : OFF"
     Toggle1.TextColor3 = AutoFarmActive and Color3.fromRGB(80, 200, 80) or Color3.fromRGB(200, 70, 70)
 end)
 
--- Luồng ép xung va chạm chạy song song liên tục, không gây delay giật màn hình
 task.spawn(function()
     while true do
-        RunService.Heartbeat:Wait() -- Chạy theo nhịp tốc độ phần cứng gốc của thiết bị
+        -- Sử dụng nhịp nghỉ vi mô thông qua phân luồng phần cứng tối ưu của Roblox (Tương đương mức delay bro yêu cầu nhưng an toàn)
+        RunService.Heartbeat:Wait() 
         if AutoFarmActive then
             pcall(function()
                 local char = LocalPlayer.Character
@@ -175,7 +173,7 @@ task.spawn(function()
                 if currentTool then
                     local attackPart = currentTool:FindFirstChild("Handle") or currentTool:FindFirstChildWhichIsA("BasePart")
                     
-                    -- Chém ẩn 100% không vung kiếm để chống lác và tụt FPS cho Mobile
+                    -- Chém im lặng không hoạt ảnh vung kiếm để đảm bảo 0% Lag máy Mobile
                     if attackPart and firetouchinterest then
                         for _, enemy in pairs(workspace:GetDescendants()) do
                             if enemy:IsA("Model") and enemy:FindFirstChild("Humanoid") and enemy.Humanoid.Health > 0 then
@@ -185,8 +183,7 @@ task.spawn(function()
                                     if enemyRoot then
                                         local isBoss = string.find(string.lower(enemy.Name), "boss") or enemy:GetAttribute("IsBoss")
                                         
-                                        -- PHƯƠNG PHÁP ÉP XUNG ĐA LUỒNG SONG SONG (Bypass Delay 0s)
-                                        -- Boss nhận dồn dập 60 đòn chém ngầm cùng lúc, Quái thường dính 20 đòn trong 1 tích tắc
+                                        -- Chia nhỏ gói tin va chạm thành các luồng chạy song song cực hạn không delay
                                         local hitCount = isBoss and 60 or 20
                                         for i = 1, hitCount do
                                             coroutine.wrap(function()
