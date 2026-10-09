@@ -1,29 +1,18 @@
--- [[ SBSD CAMPAIGN 2026 - ANCHORED SAFE PATROL & SILENT MULTI-AURA v28 ]]
--- Tối ưu hóa: Kế thừa cơ chế Safe Zone Anchored + Chém vi mô không delay + Nút X Mobile
+-- [[ SBSD CAMPAIGN 2026 - SKY ANCHORED SAFE ZONE & SILENT MULTI-AURA v29 ]]
+-- Tối ưu hóa: Khóa cứng Anchored trên mây + Chém vi mô không delay + Nút X Mobile
 
 if game:GetService("CoreGui"):FindFirstChild("RayfieldMockup_SBSD") then
     game:GetService("CoreGui")["RayfieldMockup_SBSD"]:Destroy()
 end
 
 local AutoFarmActive = false
-local AnchoredSafeZoneActive = false
+local SkyAnchoredActive = false
 local UiVisible = true
+local SavedLocation = nil
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
-local PlaceId = game.PlaceId
-
--- Khởi tạo mảng tuần tra Safe Zone dựa trên cấu trúc map (Trích xuất từ dữ liệu lõi bypass)
-local SAFE_PATROL = {
-    Vector3.new(-495.3, -22.3, 518.4),
-    Vector3.new(481.9, -24.1, 513.1),
-    Vector3.new(496.6, -26.1, -478.6),
-    Vector3.new(-485.5, -21.9, -473.7),
-}
-local SAFE_PATROL_SPEED = 50
-local safePatrolPos = nil
-local safePatrolTarget = 1
 
 -- === VẼ UI STYLE RAYFIELD CHUYÊN DỤNG CHO MOBILE ===
 local SG = Instance.new("ScreenGui", game:GetService("CoreGui"))
@@ -42,7 +31,7 @@ Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 9)
 local Title = Instance.new("TextLabel", Main)
 Title.Size = UDim2.new(1, -40, 0, 40)
 Title.BackgroundColor3 = Color3.fromRGB(28, 28, 33)
-Title.Text = "  SBSD Hub | Anchored Patrol v28"
+Title.Text = "  SBSD Hub | Sky Anchored v29"
 Title.TextColor3 = Color3.fromRGB(240, 240, 240)
 Title.TextXAlignment = Enum.TextXAlignment.Left
 Title.Font = Enum.Font.SourceSansBold
@@ -83,12 +72,12 @@ Toggle1.Font = Enum.Font.SourceSansBold
 Toggle1.TextSize = 13
 Instance.new("UICorner", Toggle1).CornerRadius = UDim.new(0, 6)
 
--- Nút Toggle 2: Bất Tử Neo Cứng Khóa Vị Trí Tuần Tra
+-- Nút Toggle 2: Bất Tử Khóa Cứng Trên Trời
 local Toggle2 = Instance.new("TextButton", Main)
 Toggle2.Size = UDim2.new(0, 290, 0, 45)
 Toggle2.Position = UDim2.new(0, 15, 0, 120)
 Toggle2.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
-Toggle2.Text = "Anchored Safe Zone (Chống Kéo Lùi) : OFF"
+Toggle2.Text = "Sky Safe Zone (Chống Kéo Lùi) : OFF"
 Toggle2.TextColor3 = Color3.fromRGB(200, 70, 70)
 Toggle2.Font = Enum.Font.SourceSansBold
 Toggle2.TextSize = 13
@@ -98,7 +87,7 @@ local InfoText = Instance.new("TextLabel", Main)
 InfoText.Size = UDim2.new(1, 0, 0, 30)
 InfoText.Position = UDim2.new(0, 0, 0, 185)
 InfoText.BackgroundTransparency = 1
-InfoText.Text = "Cơ chế: Khóa Anchored CFrame bypass bộ lọc cao cấp Server"
+InfoText.Text = "Cơ chế: Khóa cứng Anchored cách ly CFrame 550 Block"
 InfoText.TextColor3 = Color3.fromRGB(0, 255, 180)
 InfoText.Font = Enum.Font.SourceSansItalic
 InfoText.TextSize = 11
@@ -113,57 +102,39 @@ CloseButton.MouseButton1Click:Connect(ToggleUi)
 OpenButton.MouseButton1Click:Connect(ToggleUi)
 
 
--- === 1. THUẬT TOÁN ANCHORED SAFE ZONE CHỐNG KÉO LÙI TUYỆT ĐỐI ===
+-- === 1. CƠ CHẾ SKY ANCHORED SAFE ZONE CHỐNG GIẬT LÙI TUYỆT ĐỐI ===
 Toggle2.MouseButton1Click:Connect(function()
-    AnchoredSafeZoneActive = not AnchoredSafeZoneActive
-    Toggle2.Text = AnchoredSafeZoneActive and "Anchored Safe Zone (Chống Kéo Lùi) : ON" or "Anchored Safe Zone (Chống Kéo Lùi) : OFF"
-    Toggle2.TextColor3 = AnchoredSafeZoneActive and Color3.fromRGB(80, 200, 80) or Color3.fromRGB(200, 70, 70)
+    SkyAnchoredActive = not SkyAnchoredActive
+    Toggle2.Text = SkyAnchoredActive and "Sky Safe Zone (Chống Kéo Lùi) : ON" or "Sky Safe Zone (Chống Kéo Lùi) : OFF"
+    Toggle2.TextColor3 = SkyAnchoredActive and Color3.fromRGB(80, 200, 80) or Color3.fromRGB(200, 70, 70)
     
     local char = LocalPlayer.Character
     local root = char and char:FindFirstChild("HumanoidRootPart")
     
-    if not AnchoredSafeZoneActive and root then
-        root.Anchored = false -- Trả lại tự do vật lý khi tắt
-        safePatrolPos = nil
+    if SkyAnchoredActive and root then
+        -- Lưu vị trí gốc trên mặt đất
+        SavedLocation = root.CFrame
+        -- Đưa thẳng nhân vật lên độ cao an toàn tuyệt đối
+        root.CFrame = root.CFrame * CFrame.new(0, 550, 0)
+    else
+        -- Trả tự do vật lý và đưa về vị trí cũ khi tắt
+        if root then
+            root.Anchored = false
+            if SavedLocation then root.CFrame = SavedLocation end
+        end
     end
 end)
 
--- Định vị điểm tuần tra gần nhất an toàn chống đạn
-local function stepSafePatrol(deltaTime)
-    if not safePatrolPos then
-        local nearest, nearestDist = 1, math.huge
-        local root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-        for i, pos in ipairs(SAFE_PATROL) do
-            local dist = root and (root.Position - pos).Magnitude or i
-            if dist < nearestDist then nearest, nearestDist = i, dist end
-        end
-        safePatrolPos = SAFE_PATROL[nearest]
-        safePatrolTarget = nearest % #SAFE_PATROL + 1
-    end
-    local step = SAFE_PATROL_SPEED * math.min(deltaTime, 0.1)
-    local target = SAFE_PATROL[safePatrolTarget]
-    local diff = target - safePatrolPos
-    local dist = diff.Magnitude
-    if dist <= step then
-        safePatrolPos = target
-        safePatrolTarget = safePatrolTarget % #SAFE_PATROL + 1
-    else
-        safePatrolPos = safePatrolPos + diff.Unit * step
-    end
-    return safePatrolPos
-end
-
--- Vòng lặp khóa cứng vật lý ở chu kỳ kết xuất RenderStepped giống hệt file mẫu
-RunService.RenderStepped:Connect(function(deltaTime)
-    if AnchoredSafeZoneActive and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+-- Thực thi vòng lặp khóa cứng tọa độ ở chu kỳ kết xuất để triệt tiêu bộ kéo lùi của Server
+RunService.RenderStepped:Connect(function()
+    if SkyAnchoredActive and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
         pcall(function()
             local char = LocalPlayer.Character
             local playerRoot = char.HumanoidRootPart
             local humanoid = char:FindFirstChildOfClass("Humanoid")
             
-            -- Kích hoạt đóng băng vật lý lõi: Chặn đứng lệnh giật lùi (Rubberband) từ Server 100%
+            -- ÉP CHẶT NEO VẬT LÝ: Đóng băng dữ liệu vận tốc, vô hiệu hóa lệnh kéo lùi từ Server
             playerRoot.Anchored = true
-            playerRoot.CFrame = CFrame.new(stepSafePatrol(deltaTime))
             
             if humanoid then
                 humanoid.BreakJointsOnDeath = false
@@ -175,7 +146,7 @@ RunService.RenderStepped:Connect(function(deltaTime)
 end)
 
 
--- === 2. CƠ CHẾ CHÉM ĐA LUỒNG KHÔNG DELAY THỜI GIAN THỰC (MICRO-DELAY AURA) ===
+-- === 2. CƠ CHẾ CHÉM ĐA LUỒNG VI MÔ KHÔNG DELAY (MICRO-DELAY AURA) ===
 Toggle1.MouseButton1Click:Connect(function()
     AutoFarmActive = not AutoFarmActive
     Toggle1.Text = AutoFarmActive and "Micro-Delay Kill Aura (Max Speed) : ON" or "Micro-Delay Kill Aura (Max Speed) : OFF"
@@ -184,13 +155,13 @@ end)
 
 task.spawn(function()
     while true do
-        RunService.Heartbeat:Wait() -- Nhịp nghỉ phần cứng chống crash/văng game trên Mobile
+        RunService.Heartbeat:Wait() -- Nhịp nghỉ phần cứng chống crash game trên thiết bị Mobile
         if AutoFarmActive then
             pcall(function()
                 local char = LocalPlayer.Character
                 local backpack = LocalPlayer:FindFirstChild("Backpack")
                 
-                -- Tự động trang bị vũ khí lên tay
+                -- Tự động cầm vũ khí lên tay
                 if char and backpack and not char:FindFirstChildOfClass("Tool") then
                     local tool = backpack:FindFirstChildOfClass("Tool")
                     if tool then tool.Parent = char end
@@ -200,7 +171,7 @@ task.spawn(function()
                 if currentTool then
                     local attackPart = currentTool:FindFirstChild("Handle") or currentTool:FindFirstChildWhichIsA("BasePart")
                     
-                    -- Chém im lặng không hoạt ảnh vung kiếm, loại bỏ lag giật màn hình tối đa
+                    -- Chém ẩn im lặng không hoạt ảnh vung kiếm để loại bỏ 100% lag giật màn hình
                     if attackPart and firetouchinterest then
                         for _, enemy in pairs(workspace:GetDescendants()) do
                             if enemy:IsA("Model") and enemy:FindFirstChild("Humanoid") and enemy.Humanoid.Health > 0 then
@@ -210,7 +181,7 @@ task.spawn(function()
                                     if enemyRoot then
                                         local isBoss = string.find(string.lower(enemy.Name), "boss") or enemy:GetAttribute("IsBoss")
                                         
-                                        -- Phân luồng cực hạn (Bypass Micro-Delay): Đưa quái thường dính x20 và Boss dính x60 phát chém/khung hình
+                                        -- Phân luồng cực hạn (Micro-Delay): Đốt sát thương Boss x60 phát, Quái x20 phát/khung hình ngầm
                                         local hitCount = isBoss and 60 or 20
                                         for i = 1, hitCount do
                                             coroutine.wrap(function()
