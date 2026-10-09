@@ -1,145 +1,56 @@
--- [[ sbsd_mogged SUPREME HUB V40 - CHUẨN KILL AURA MƯỢT LÚC SÁNG ]]
--- NẠP QUA SIRIUS.MENU - FIX TRIỆT ĐỂ LỖI KÈT ĐAM - QUÁI SPAWN CHẾT NGAY LẬP TỨC
--- KHÔNG DASH, KHÔNG LƯỚT - AN TOÀN TUYỆT ĐỐI CHO CAMPAIGN / DEATH MODE
-
-getgenv().SecureMode = true
-local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
-
-local Window = Rayfield:CreateWindow({
-   Name = "sbsd_mogged Hub | Winner Setup",
-   LoadingTitle = "Loading System...",
-   LoadingSubtitle = "by Assistant",
-   Theme = "Default",
-   DisableRayfieldPrompts = true,
-   ConfigurationSaving = { Enabled = false }
-})
-
-local MainTab = Window:CreateTab("SBSD Campaign", 4483345998)
-
-local AuraActive = false
-local GodModeActive = false
+-- SBSD Specialized Auto Farm (Kill Aura Only)
+_G.AutoFarm = true
+_G.AttackSpeed = 0.001 -- Tốc độ chém 0.001 giây
 
 local Players = game:GetService("Players")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
--- Fix nút thu nhỏ thành chữ SBSD màu xanh lá kéo thả được
+-- Hàm tìm mục tiêu (Quái/NPC/Player địch) gần nhất còn sống
+local function getClosestTarget()
+    local closestTarget = nil
+    local shortestDistance = math.huge
+    
+    -- Duyệt qua tất cả các mô hình trong Workspace (Nơi chứa quái của game)
+    for _, obj in pairs(workspace:GetChildren()) do
+        if obj:IsA("Model") and obj ~= LocalPlayer.Character then
+            local humanoid = obj:FindFirstChildOfClass("Humanoid")
+            local rootPart = obj:FindFirstChild("HumanoidRootPart")
+            
+            if humanoid and rootPart and humanoid.Health > 0 then
+                if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                    local distance = (LocalPlayer.Character.HumanoidRootPart.Position - rootPart.Position).Magnitude
+                    if distance < shortestDistance then
+                        closestTarget = obj
+                        shortestDistance = distance
+                    end
+                end
+            end
+        end
+    end
+    return closestTarget
+end
+
+-- Vòng lặp Auto Farm / Kill Aura siêu tốc
 task.spawn(function()
-    task.wait(1.2)
-    pcall(function()
-        local RayfieldGui = game:GetService("CoreGui"):FindFirstChild("Rayfield") or LocalPlayer.PlayerGui:FindFirstChild("Rayfield")
-        if RayfieldGui and RayfieldGui:FindFirstChild("OpenButton") then
-            local openBtn = RayfieldGui.OpenButton:FindFirstChildOfClass("ImageButton") or RayfieldGui.OpenButton
-            if openBtn then
-                openBtn.Image = ""
-                openBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 22)
-                openBtn.Size = UDim2.new(0, 75, 0, 35)
-                
-                local txt = Instance.new("TextLabel", openBtn)
-                txt.Size = UDim2.new(1, 0, 1, 0)
-                txt.BackgroundTransparency = 1
-                txt.Text = "SBSD"
-                txt.TextColor3 = Color3.fromRGB(0, 255, 0)
-                txt.Font = Enum.Font.SourceSansBold
-                txt.TextSize = 18
-                
-                Instance.new("UICorner", openBtn).CornerRadius = UDim.new(0, 6)
-                local stroke = Instance.new("UIStroke", openBtn)
-                stroke.Color = Color3.fromRGB(0, 255, 0)
-                stroke.Thickness = 1.5
+    while _G.AutoFarm do
+        local target = getClosestTarget()
+        if target and target:FindFirstChild("HumanoidRootPart") then
+            -- Tự động hướng nhân vật về phía mục tiêu để tránh hụt đòn
+            if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(
+                    LocalPlayer.Character.HumanoidRootPart.Position, 
+                    Vector3.new(target.HumanoidRootPart.Position.X, LocalPlayer.Character.HumanoidRootPart.Position.Y, target.HumanoidRootPart.Position.Z)
+                )
+            end
+            
+            -- Kích hoạt Remote sự kiện tấn công của hệ thống SBSD
+            -- Lưu ý: Tên RemoteEvent dưới đây là cấu trúc chuẩn, nếu game cập nhật mã hóa bạn cần dùng công cụ chặn Remote (Remote Spy) để đổi tên cho đúng
+            local punchRemote = ReplicatedStorage:FindFirstChild("Punch") or ReplicatedStorage:FindFirstChild("Hit") or ReplicatedStorage:FindFirstChild("Attack")
+            if punchRemote and punchRemote:IsA("RemoteEvent") then
+                punchRemote:FireServer(target.HumanoidRootPart.Position)
             end
         end
-    end)
-end)
-
--- =======================================================
--- BẢN FIX: BỘ GỐC KILL AURA TOÀN MAP SIÊU MƯỢT LÚC SÁNG
--- =======================================================
-RunService.Stepped:Connect(function()
-    if AuraActive then
-        pcall(function()
-            local char = LocalPlayer.Character
-            if char and char:FindFirstChild("HumanoidRootPart") then
-                local tool = char:FindFirstChildOfClass("Tool")
-                if tool then
-                    -- Quét thẳng cổng đòn đánh từ xa của Gear và hệ thống
-                    local weaponRemote = tool:FindFirstChild("Remote") or tool:FindFirstChild("Action") or tool:FindFirstChild("Attack") or tool:FindFirstChild("Hit")
-                    local globalRemote = ReplicatedStorage:FindFirstChild("Attack") or ReplicatedStorage:FindFirstChild("HitEnemy") or ReplicatedStorage:FindFirstChild("InflictDamage") or ReplicatedStorage:FindFirstChild("Hit")
-
-                    -- Chạy vòng lặp quét nhịp tim hệ thống cực nhanh, quái vừa spawn ra dính đam chết ngay
-                    for _, enemy in pairs(workspace:GetDescendants()) do
-                        if enemy:IsA("Model") and enemy:FindFirstChild("Humanoid") and enemy.Humanoid.Health > 0 then
-                            if not Players:GetPlayerFromCharacter(enemy) and enemy.Name ~= "Base" then
-                                local enemyHrp = enemy:FindFirstChild("HumanoidRootPart")
-                                if enemyHrp then
-                                    
-                                    -- Ép nổ sát thương từ xa bằng gói tin gốc, KHÔNG DÙNG lệnh vung đòn gây lướt nhân vật
-                                    if weaponRemote and weaponRemote:IsA("RemoteEvent") then
-                                        weaponRemote:FireServer(enemy, enemyHrp.Position)
-                                    end
-                                    
-                                    if globalRemote and globalRemote:IsA("RemoteEvent") then
-                                        globalRemote:FireServer(enemy, tool)
-                                    end
-                                    
-                                end
-                            end
-                        end
-                    end
-                end
-            end
-        end)
-    end
-end)
-
--- Safe Zone God Mode bất tử khóa máu nhịp tim
-RunService.Heartbeat:Connect(function()
-    if GodModeActive then
-        pcall(function()
-            local char = LocalPlayer.Character
-            if char then
-                local hum = char:FindFirstChildOfClass("Humanoid")
-                if hum then
-                    hum.Health = hum.MaxHealth
-                    if hum.Health <= 0 then
-                        hum:ChangeState(Enum.HumanoidStateType.Running)
-                        hum.Health = hum.MaxHealth
-                    end
-                end
-                if not char:FindFirstChildOfClass("ForceField") then
-                    Instance.new("ForceField", char)
-                end
-            end
-        end)
-    end
-end)
-
--- Nút gạt Toggle trên Rayfield UI
-MainTab:CreateToggle({
-   Name = "Global Gear Attack (Toàn Bản Đồ)",
-   CurrentValue = false,
-   Flag = "GlobalGearAttackFlag",
-   Callback = function(Value) AuraActive = Value end,
-})
-
-MainTab:CreateToggle({
-   Name = "Safe Zone God Mode (Bất Tử)",
-   CurrentValue = false,
-   Flag = "SafeZoneGodModeFlag",
-   Callback = function(Value) GodModeActive = Value end,
-})
-
--- Đổi nhãn chữ thành màu xanh lá cây [sbsd] cổ điển
-pcall(function()
-    task.wait(1.5)
-    local RayfieldGui = game:GetService("CoreGui"):FindFirstChild("Rayfield") or LocalPlayer.PlayerGui:FindFirstChild("Rayfield")
-    if RayfieldGui and RayfieldGui:FindFirstChild("Main") then
-        for _, desc in pairs(RayfieldGui.Main:GetDescendants()) do
-            if desc:IsA("TextLabel") and (desc.Text:match("Global Gear") or desc.Text:match("Safe Zone")) then
-                desc.Text = "<font color='rgb(0, 255, 0)'>[sbsd]</font> " .. desc.Text
-                desc.RichText = true
-            end
-        end
+        task.wait(_G.AttackSpeed)
     end
 end)
