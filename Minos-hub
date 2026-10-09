@@ -1,5 +1,5 @@
--- [[ MINOS HUB OVERLOAD ENGINE ]]
--- CHỨC NĂNG: SỬA INTERFACE CHUẨN MINOS, KILL AURA KHÔNG DELAY, RANGE TOÀN BẢN ĐỒ KHI CẦM GEAR
+-- [[ MINOS HUB SBSD MAXIMUM EDITION - FULL MAP & ANTI-LAG ENGINE ]]
+-- CHỨC NĂNG: SỬA SUBTITLE THÀNH "BY MINOS" + KILL AURA FULL MAP + ANTI-LAG
 
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
@@ -7,14 +7,16 @@ local P = game:GetService("Players")
 local LP = P.LocalPlayer
 local RS = game:GetService("ReplicatedStorage")
 local RunS = game:GetService("RunService")
+local Lighting = game:GetService("Lighting")
 
 local A_Active = false
+local AntiLag_Active = false
 
 -- === KHỞI TẠO BẢNG ĐIỀU KHIỂN CHUẨN MINOS HUB ===
 local Window = Rayfield:CreateWindow({
-   Name = "Minos hub Premium | SBSD GLOBAL",
+   Name = "Minos hub Premium | SBSD MAX-MAP",
    LoadingTitle = "Minos hub Loading...",
-   LoadingSubtitle = "by minos",
+   LoadingSubtitle = "by minos", -- Đã cập nhật subtitle khi đang tải script
    ConfigurationSaving = {
       Enabled = true,
       FolderName = "MinosHubSBSD",
@@ -24,12 +26,13 @@ local Window = Rayfield:CreateWindow({
    KeySystem = false
 })
 
--- Tạo đúng cấu trúc Tab Farm của Minos Hub
+-- Tạo Tab chức năng Auto Farm của Minos Hub
 local FarmTab = Window:CreateTab("Death Mode Farm", 4483345998)
+local SettingsTab = Window:CreateTab("Tối Ưu & Hệ Thống", 4483345998)
 
--- Đổi tên tính năng theo yêu cầu: Loại bỏ chữ "Global", cấu trúc lại thông số
+-- == 1. TÍNH NĂNG CHÍNH: KILL AURA TOÀN MAP DIỆN RỘNG ==
 FarmTab:CreateToggle({
-   Name = "Kill Aura (No Delay - Map Range)",
+   Name = "Kill Aura (No Delay - Full Map Target)",
    CurrentValue = false,
    Flag = "KillAuraFlag",
    Callback = function(Value)
@@ -37,26 +40,55 @@ FarmTab:CreateToggle({
    end,
 })
 
--- === HÀM THỰC THI SÁT THƯƠNG DIỆN RỘNG (MAP RANGE) ===
-local function FireAbsoluteDamage(enemy, currentGear)
+-- == 2. TÍNH NĂNG BỔ SUNG: ANTI-LAG SIÊU CẤP ==
+SettingsTab:CreateToggle({
+   Name = "Bật Anti-Lag (Tăng FPS & Xóa Hiệu Ứng Rác)",
+   CurrentValue = false,
+   Flag = "AntiLagFlag",
+   Callback = function(Value)
+      AntiLag_Active = Value
+      if AntiLag_Active then
+         pcall(function()
+            -- Tối ưu hóa Lighting để loại bỏ đổ bóng và hiệu ứng ánh sáng nặng
+            Lighting.GlobalShadows = false
+            Lighting.FogEnd = 9e9
+            settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
+            
+            -- Xóa các vật thể rác sinh ra trong quá trình quái chết / nổ hiệu ứng
+            for _, v in pairs(workspace:GetDescendants()) do
+                if v:IsA("ParticleEmitter") or v:IsA("Trail") or v:IsA("Smoke") or v:IsA("Sparkles") then
+                    v.Enabled = false
+                elseif v:IsA("Decal") or v:IsA("Texture") then
+                    v:Destroy()
+                end
+            end
+         end)
+      else
+         Lighting.GlobalShadows = true
+         settings().Rendering.QualityLevel = Enum.QualityLevel.Automatic
+      end
+   end,
+})
+
+-- === HÀM XỬ LÝ SÁT THƯƠNG DIỆN RỘNG TOÀN SÂN ===
+local function AttackAllMonsters(enemy, currentGear)
+    -- KHÔNG CHECK KHOẢNG CÁCH: Chỉ cần là Model, có Humanoid và đang sống là tấn công
     if enemy:IsA("Model") and enemy:FindFirstChild("Humanoid") and enemy.Humanoid.Health > 0 then
-        -- Loại trừ chính bạn, người chơi cùng phòng và Base để tránh lỗi game
         if not P:GetPlayerFromCharacter(enemy) and enemy.Name ~= "Base" and enemy ~= LP.Character then
             
-            -- Ép kích hoạt Gear trên tay vung đòn liên tục không khoảng cách
+            -- Ép vung đòn vũ khí liên tục
             pcall(function() currentGear:Activate() end)
 
-            -- Quét sạch mọi Remote Event nhận sát thương trong ReplicatedStorage của SBSD
+            -- Truy tìm các cổng Remote Event xử lý sát thương của SBSD
             for _, remote in pairs(RS:GetDescendants()) do
                 if remote:IsA("RemoteEvent") and (remote.Name:lower():match("attack") or remote.Name:lower():match("hit") or remote.Name:lower():match("damage") or remote.Name:lower():match("punch")) then
                     pcall(function()
                         local hrp = enemy:FindFirstChild("HumanoidRootPart") or enemy:FindFirstChildOfClass("Part")
                         if hrp then
-                            -- Ép nổ sát thương bằng cách gửi dồn dập các cấu trúc dữ liệu bypass kiểm tra từ Server
+                            -- Gửi dữ liệu tấn công trực tiếp lên Server bất kể quái đang ở đâu trên bản đồ
                             remote:FireServer(enemy, hrp.Position)
                             remote:FireServer(hrp, hrp.Position)
                             remote:FireServer(enemy, currentGear)
-                            remote:FireServer(enemy)
                         end
                     end)
                 end
@@ -65,17 +97,28 @@ local function FireAbsoluteDamage(enemy, currentGear)
     end
 end
 
--- === VÒNG LẶP LIÊN TỤC KHÔNG ĐỘ TRỄ (NO DELAY - RENDERSTEPPED) ===
+-- === VÒNG LẶP ĐỒ HỌA SIÊU TỐC ĐỘ (KHÔNG DELAY) ===
 RunS.RenderStepped:Connect(function()
     if A_Active and LP.Character then
-        -- Điều kiện tiên quyết: Chỉ hoạt động khi người chơi lôi một Gear (Tool) bất kỳ ra sử dụng
+        -- Kích hoạt khi và chỉ khi trên tay nhân vật đang cầm Gear (Tool)
         local currentGear = LP.Character:FindFirstChildOfClass("Tool")
         
         if currentGear then
-            -- Mở rộng tối đa bộ quét: Duyệt qua tất cả các thư mục con ẩn sâu nhất (GetDescendants)
+            -- Duyệt sâu qua toàn bộ cấu trúc map để dồn sát thương lên mọi quái vật đang xuất hiện
             for _, object in pairs(workspace:GetDescendants()) do
-                FireAbsoluteDamage(object, currentGear)
+                AttackAllMonsters(object, currentGear)
             end
         end
+    end
+    
+    -- Vòng lặp dọn rác Anti-Lag thời gian thực khi đang farm
+    if AntiLag_Active then
+        pcall(function()
+            for _, object in pairs(workspace:GetDescendants()) do
+                if object:IsA("ParticleEmitter") or object:IsA("Trail") then
+                    object.Enabled = false
+                end
+            end
+        end)
     end
 end)
