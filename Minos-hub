@@ -1,8 +1,14 @@
--- [[ SBSD CAMPAIGN 2026 - SKY ANCHORED SAFE ZONE, MAX-RANGE AURA & AUTO TELESCOPE v30 ]]
--- Tối ưu hóa: Khóa cứng Anchored + Chém toàn bản đồ (Vô hạn diện tích) + Tự động gọi Kính viễn vọng 5 Coin + Nút X Mobile
+-- [[ SBSD CAMPAIGN 2026 - FIX KHÔNG HIỆN UI FOR MOBILE & PC ]]
+-- Tối ưu: Chuyển sang PlayerGui chống lỗi hiển thị + Max-Range Aura + Auto Telescope 5 Coin
 
-if game:GetService("CoreGui"):FindFirstChild("RayfieldMockup_SBSD") then
-    game:GetService("CoreGui")["RayfieldMockup_SBSD"]:Destroy()
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+-- Tìm vị trí lưu trữ UI an toàn nhất
+local TargetGui = LocalPlayer:FindFirstChildOfClass("PlayerGui") or game:GetService("CoreGui")
+
+if TargetGui:FindFirstChild("RayfieldMockup_SBSD_Fixed") then
+    TargetGui["RayfieldMockup_SBSD_Fixed"]:Destroy()
 end
 
 local AutoFarmActive = false
@@ -11,17 +17,15 @@ local AutoTelescopeActive = false
 local UiVisible = true
 local SavedLocation = nil
 
-local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
-local LocalPlayer = Players.LocalPlayer
 
--- === VẼ UI STYLE RAYFIELD CHUYÊN DỤNG CHO MOBILE ===
-local SG = Instance.new("ScreenGui", game:GetService("CoreGui"))
-SG.Name = "RayfieldMockup_SBSD"
+-- === VẼ UI STYLE RAYFIELD CHUYÊN DỤNG (CHẠY QUA PLAYERGUI) ===
+local SG = Instance.new("ScreenGui", TargetGui)
+SG.Name = "RayfieldMockup_SBSD_Fixed"
 SG.ResetOnSpawn = false
 
 local Main = Instance.new("Frame", SG)
-Main.Size = UDim2.new(0, 320, 0, 290) -- Tăng chiều cao để vừa nút mới
+Main.Size = UDim2.new(0, 320, 0, 290)
 Main.Position = UDim2.new(0.35, 0, 0.25, 0)
 Main.BackgroundColor3 = Color3.fromRGB(21, 21, 24)
 Main.BorderSizePixel = 0
@@ -32,7 +36,7 @@ Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 9)
 local Title = Instance.new("TextLabel", Main)
 Title.Size = UDim2.new(1, -40, 0, 40)
 Title.BackgroundColor3 = Color3.fromRGB(28, 28, 33)
-Title.Text = "  SBSD Hub | Max-Range Aura & Telescope"
+Title.Text = "  SBSD Hub | UI Fixed Version"
 Title.TextColor3 = Color3.fromRGB(240, 240, 240)
 Title.TextXAlignment = Enum.TextXAlignment.Left
 Title.Font = Enum.Font.SourceSansBold
@@ -62,7 +66,7 @@ OpenButton.TextSize = 12
 OpenButton.Visible = false
 Instance.new("UICorner", OpenButton).CornerRadius = UDim.new(1, 0)
 
--- Nút Toggle 1: Chém Siêu Tốc Vi Mô - Diện Tích Vô Hạn
+-- Nút Toggle 1: Max Aura toàn bản đồ
 local Toggle1 = Instance.new("TextButton", Main)
 Toggle1.Size = UDim2.new(0, 290, 0, 45)
 Toggle1.Position = UDim2.new(0, 15, 0, 55)
@@ -73,7 +77,7 @@ Toggle1.Font = Enum.Font.SourceSansBold
 Toggle1.TextSize = 13
 Instance.new("UICorner", Toggle1).CornerRadius = UDim.new(0, 6)
 
--- Nút Toggle 2: Bất Tử Khóa Cứng Trên Trời
+-- Nút Toggle 2: Bất Tử Trên Trời
 local Toggle2 = Instance.new("TextButton", Main)
 Toggle2.Size = UDim2.new(0, 290, 0, 45)
 Toggle2.Position = UDim2.new(0, 15, 0, 110)
@@ -84,7 +88,7 @@ Toggle2.Font = Enum.Font.SourceSansBold
 Toggle2.TextSize = 13
 Instance.new("UICorner", Toggle2).CornerRadius = UDim.new(0, 6)
 
--- Nút Toggle 3: Tự Động Spawn Telescope (Kính Viễn Vọng)
+-- Nút Toggle 3: Auto Spawn Telescope
 local Toggle3 = Instance.new("TextButton", Main)
 Toggle3.Size = UDim2.new(0, 290, 0, 45)
 Toggle3.Position = UDim2.new(0, 15, 0, 165)
@@ -99,12 +103,11 @@ local InfoText = Instance.new("TextLabel", Main)
 InfoText.Size = UDim2.new(1, 0, 0, 30)
 InfoText.Position = UDim2.new(0, 0, 0, 250)
 InfoText.BackgroundTransparency = 1
-InfoText.Text = "Cơ chế: Vô hạn diện tích Aura + Auto Shop 5 Coin"
+InfoText.Text = "UI đã chuyển sang PlayerGui an toàn cho Mobile"
 InfoText.TextColor3 = Color3.fromRGB(0, 255, 180)
 InfoText.Font = Enum.Font.SourceSansItalic
 InfoText.TextSize = 11
 
--- Hàm ẩn hiện UI bằng nút X
 local function ToggleUi()
     UiVisible = not UiVisible
     Main.Visible = UiVisible
@@ -113,8 +116,7 @@ end
 CloseButton.MouseButton1Click:Connect(ToggleUi)
 OpenButton.MouseButton1Click:Connect(ToggleUi)
 
-
--- === 1. CƠ CHẾ SKY ANCHORED SAFE ZONE CHỐNG GIẬT LÙI TUYỆT ĐỐI ===
+-- === 1. CHỐNG KÉO LÙI / KHÓA TRÊN TRỜI ===
 Toggle2.MouseButton1Click:Connect(function()
     SkyAnchoredActive = not SkyAnchoredActive
     Toggle2.Text = SkyAnchoredActive and "Sky Safe Zone (Chống Kéo Lùi) : ON" or "Sky Safe Zone (Chống Kéo Lùi) : OFF"
@@ -138,11 +140,8 @@ RunService.RenderStepped:Connect(function()
     if SkyAnchoredActive and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
         pcall(function()
             local char = LocalPlayer.Character
-            local playerRoot = char.HumanoidRootPart
+            char.HumanoidRootPart.Anchored = true
             local humanoid = char:FindFirstChildOfClass("Humanoid")
-            
-            playerRoot.Anchored = true
-            
             if humanoid then
                 humanoid.BreakJointsOnDeath = false
                 humanoid:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
@@ -152,8 +151,7 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
-
--- === 2. CƠ CHẾ CHÉM TOÀN BẢN ĐỒ (DIỆN TÍCH TỐI ĐA - KHÔNG GIỚI HẠN KHOẢNG CÁCH) ===
+-- === 2. KILL AURA TỐI ĐA DIỆN TÍCH (TOÀN BẢN ĐỒ) ===
 Toggle1.MouseButton1Click:Connect(function()
     AutoFarmActive = not AutoFarmActive
     Toggle1.Text = AutoFarmActive and "Max-Range Kill Aura (Toàn Bản Đồ) : ON" or "Max-Range Kill Aura (Toàn Bản Đồ) : OFF"
@@ -174,20 +172,16 @@ task.spawn(function()
                 end
                 
                 local currentTool = char:FindFirstChildOfClass("Tool")
-                if currentTool then
+                if currentTool and firetouchinterest then
                     local attackPart = currentTool:FindFirstChild("Handle") or currentTool:FindFirstChildWhichIsA("BasePart")
-                    
-                    if attackPart and firetouchinterest then
+                    if attackPart then
                         for _, enemy in pairs(workspace:GetDescendants()) do
                             if enemy:IsA("Model") and enemy:FindFirstChild("Humanoid") and enemy.Humanoid.Health > 0 then
                                 if not Players:GetPlayerFromCharacter(enemy) then
                                     local enemyRoot = enemy:FindFirstChild("HumanoidRootPart") or enemy:FindFirstChildWhichIsA("BasePart")
-                                    
-                                    -- Bỏ hoàn toàn kiểm tra khoảng cách (Magnitude) -> Tự động chém trúng quái ở bất kỳ đâu trên Map
                                     if enemyRoot then
                                         local isBoss = string.find(string.lower(enemy.Name), "boss") or enemy:GetAttribute("IsBoss")
-                                        local hitCount = isBoss and 60 or 20
-                                        
+                                        local hitCount = isBoss and 40 or 15
                                         for i = 1, hitCount do
                                             coroutine.wrap(function()
                                                 firetouchinterest(enemyRoot, attackPart, 0)
@@ -205,8 +199,7 @@ task.spawn(function()
     end
 end)
 
-
--- === 3. TÍNH NĂNG TỰ ĐỘNG MUA/SPAWN TELESCOPE GIÁ 5 COIN ===
+-- === 3. AUTO SPAWN TELESCOPE (5 COINS) ===
 Toggle3.MouseButton1Click:Connect(function()
     AutoTelescopeActive = not AutoTelescopeActive
     Toggle3.Text = AutoTelescopeActive and "Auto Spawn Telescope (5 Coins) : ON" or "Auto Spawn Telescope (5 Coins) : OFF"
@@ -215,13 +208,18 @@ end)
 
 task.spawn(function()
     while true do
-        task.wait(1) -- Chu kỳ quét mua vật phẩm mỗi 1 giây để tránh nghẽn lệnh mạng
+        task.wait(1)
         if AutoTelescopeActive then
             pcall(function()
-                -- Gửi tín hiệu RemoteEvent mua đạo cụ Telescope tới Server game của bạn
                 local shopRemote = game:GetService("ReplicatedStorage"):FindFirstChild("BuyItem", true) 
                     or game:GetService("ReplicatedStorage"):FindFirstChild("PurchaseItem", true)
                     or game:GetService("ReplicatedStorage"):FindFirstChild("RemoteEvent", true)
 
                 if shopRemote and shopRemote:IsA("RemoteEvent") then
-                    -- Các cấu trúc tham số giả lập thông dụng trên hệ thống cửa hàng Roblox
+                    shopRemote:FireServer("Telescope", 5)
+                    shopRemote:FireServer("SpawnTelescope")
+                end
+            end)
+        end
+    end
+end)
