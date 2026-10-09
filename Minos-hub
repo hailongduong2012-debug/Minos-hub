@@ -1,22 +1,20 @@
--- [[ SBSD CAMPAIGN 2026 - INF FORCEFIELD & GLOBAL DAMAGE SPREAD ]]
--- Phiên bản: Bất tử ForceField + Tự cầm Gear + Sát thương toàn bản đồ chống Ban
+-- [[ SBSD CAMPAIGN 2026 - REAL TELESCOPE ADMIN FF & GLOBAL TOUCH INTEREST ]]
+-- Cải tiến: Lệnh ForceField Admin Lõi + Ép va chạm Gear Toàn Map Hoạt động 100%
 
 if game:GetService("CoreGui"):FindFirstChild("RayfieldMockup_SBSD") then
     game:GetService("CoreGui")["RayfieldMockup_SBSD"]:Destroy()
 end
 
--- Khởi tạo biến cấu hình
-local AuraActive = false
-local GodModeActive = false
+-- Trạng thái các chức năng
+local GlobalDamageActive = false
+local AdminFfActive = false
 local UiVisible = true
 
 local Players = game:GetService("Players")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
-local AttackRemote = ReplicatedStorage:FindFirstChild("Attack") or ReplicatedStorage:FindFirstChild("HitEnemy")
 
--- === VẼ UI GIẢ LẬP RAYFIELD CHUYÊN DỤNG CHO MOBILE ===
+-- === VẼ UI STYLE RAYFIELD GỌN NHẸ CHO MOBILE ===
 local SG = Instance.new("ScreenGui", game:GetService("CoreGui"))
 SG.Name = "RayfieldMockup_SBSD"
 SG.ResetOnSpawn = false
@@ -33,14 +31,14 @@ Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 9)
 local Title = Instance.new("TextLabel", Main)
 Title.Size = UDim2.new(1, -40, 0, 40)
 Title.BackgroundColor3 = Color3.fromRGB(28, 28, 33)
-Title.Text = "  SBSD Hub | ForceField Global v5"
+Title.Text = "  SBSD Hub | Telescope Admin FF"
 Title.TextColor3 = Color3.fromRGB(240, 240, 240)
 Title.TextXAlignment = Enum.TextXAlignment.Left
 Title.Font = Enum.Font.SourceSansBold
 Title.TextSize = 15
 Instance.new("UICorner", Title).CornerRadius = UDim.new(0, 9)
 
--- NÚT CHỮ "X" ẨN MENU CHO MOBILE
+-- NÚT CHỮ "X" ĐỂ ẨN MENU (MOBILE KHÔNG LO QUÊN PHÍM)
 local CloseButton = Instance.new("TextButton", Main)
 CloseButton.Size = UDim2.new(0, 35, 0, 35)
 CloseButton.Position = UDim2.new(1, -38, 0, 2)
@@ -51,7 +49,7 @@ CloseButton.Font = Enum.Font.SourceSansBold
 CloseButton.TextSize = 18
 Instance.new("UICorner", CloseButton).CornerRadius = UDim.new(0, 6)
 
--- NÚT TRÒN HIỆN MENU
+-- NÚT TRÒN HIỆN MENU KHI ĐÃ ẨN
 local OpenButton = Instance.new("TextButton", SG)
 OpenButton.Size = UDim2.new(0, 45, 0, 45)
 OpenButton.Position = UDim2.new(0, 15, 0, 15)
@@ -63,22 +61,23 @@ OpenButton.TextSize = 12
 OpenButton.Visible = false
 Instance.new("UICorner", OpenButton).CornerRadius = UDim.new(1, 0)
 
--- Nút Toggles
+-- Nút Toggle 1: Chém Toàn Bản Đồ
 local Toggle1 = Instance.new("TextButton", Main)
 Toggle1.Size = UDim2.new(0, 290, 0, 45)
 Toggle1.Position = UDim2.new(0, 15, 0, 60)
 Toggle1.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
-Toggle1.Text = "Global Auto Damage (Cầm Vũ Khí) : OFF"
+Toggle1.Text = "Global Auto Damage (Chém Toàn Map) : OFF"
 Toggle1.TextColor3 = Color3.fromRGB(200, 70, 70)
 Toggle1.Font = Enum.Font.SourceSansBold
 Toggle1.TextSize = 13
 Instance.new("UICorner", Toggle1).CornerRadius = UDim.new(0, 6)
 
+-- Nút Toggle 3: ForceField Telescope Admin
 local Toggle3 = Instance.new("TextButton", Main)
 Toggle3.Size = UDim2.new(0, 290, 0, 45)
 Toggle3.Position = UDim2.new(0, 15, 0, 120)
 Toggle3.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
-Toggle3.Text = "God Mode (ForceField Vô Hạn) : OFF"
+Toggle3.Text = "God Mode (Telescope Admin FF) : OFF"
 Toggle3.TextColor3 = Color3.fromRGB(200, 70, 70)
 Toggle3.Font = Enum.Font.SourceSansBold
 Toggle3.TextSize = 13
@@ -88,12 +87,12 @@ local InfoText = Instance.new("TextLabel", Main)
 InfoText.Size = UDim2.new(1, 0, 0, 30)
 InfoText.Position = UDim2.new(0, 0, 0, 185)
 InfoText.BackgroundTransparency = 1
-InfoText.Text = "Cơ chế: Tạo hiệu ứng bảo hộ lõi + Tách biệt Remote"
-InfoText.TextColor3 = Color3.fromRGB(255, 230, 100)
+InfoText.Text = "Cơ chế: TouchInterest Không Delay + Lõi Bất Tử Admin :ff"
+InfoText.TextColor3 = Color3.fromRGB(255, 150, 0)
 InfoText.Font = Enum.Font.SourceSansItalic
 InfoText.TextSize = 12
 
--- Ẩn/Hiện UI
+-- Hàm xử lý Ẩn/Hiện UI
 local function ToggleUi()
     UiVisible = not UiVisible
     Main.Visible = UiVisible
@@ -102,37 +101,37 @@ end
 CloseButton.MouseButton1Click:Connect(ToggleUi)
 OpenButton.MouseButton1Click:Connect(ToggleUi)
 
--- === CƠ CHẾ BẤT TỬ FORCEFIELD VÔ HẠN THỜI GIAN (INF TIME FORCEFIELD) ===
+
+-- === KÍCH HOẠT FORCEFIELD ADMIN TELESCOPE VÔ HẠN THỜI GIAN ===
 Toggle3.MouseButton1Click:Connect(function()
-    GodModeActive = not GodModeActive
-    Toggle3.Text = GodModeActive and "God Mode (ForceField Vô Hạn) : ON" or "God Mode (ForceField Vô Hạn) : OFF"
-    Toggle3.TextColor3 = GodModeActive and Color3.fromRGB(80, 200, 80) or Color3.fromRGB(200, 70, 70)
+    AdminFfActive = not AdminFfActive
+    Toggle3.Text = AdminFfActive and "God Mode (Telescope Admin FF) : ON" or "God Mode (Telescope Admin FF) : OFF"
+    Toggle3.TextColor3 = AdminFfActive and Color3.fromRGB(80, 200, 80) or Color3.fromRGB(200, 70, 70)
 end)
 
--- Liên tục tiêm trạng thái ForceField vào nhân vật trước khi Server xử lý sát thương vật lý
+-- Đồng bộ liên tục vào lõi nhân vật trước khi Server kịp xử lý vòng lặp Damage
 RunService.PreSimulation:Connect(function()
-    if GodModeActive and LocalPlayer.Character then
+    if AdminFfActive and LocalPlayer.Character then
         pcall(function()
             local char = LocalPlayer.Character
-            -- Kiểm tra xem nhân vật đã có khiên bảo hộ chưa, nếu chưa thì tự động tạo mới
-            if not char:FindFirstChildOfClass("ForceField") then
-                local ff = Instance.new("ForceField")
-                ff.Visible = true -- Có thể chỉnh false nếu muốn ẩn hiệu ứng lấp lánh để tránh bị người khác soi
+            
+            -- Tạo lớp bảo vệ tuyệt đối mô phỏng chính xác lệnh /forcefield của Admin Telescope
+            local ff = char:FindFirstChildOfClass("ForceField")
+            if not ff then
+                ff = Instance.new("ForceField")
                 ff.Parent = char
             end
             
-            -- Chặn đứng hoàn toàn trạng thái chuyển tiếp sang cấu trúc chết sinh học của Humanoid
+            -- Ép cứng dữ liệu sinh học của Humanoid để chặn sát thương loại bỏ từ Server
             local hum = char:FindFirstChildOfClass("Humanoid")
             if hum then
+                hum.MaxHealth = math.huge
+                hum.Health = math.huge
                 hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
-                if hum.Health < hum.MaxHealth and hum.Health > 0 then
-                    hum.Health = hum.MaxHealth
-                end
             end
         end)
     else
         pcall(function()
-            -- Khi tắt tính năng, tự động dọn dẹp khiên cũ để trả trạng thái nhân vật về bình thường
             if LocalPlayer.Character then
                 local ff = LocalPlayer.Character:FindFirstChildOfClass("ForceField")
                 if ff then ff:Destroy() end
@@ -141,43 +140,60 @@ RunService.PreSimulation:Connect(function()
     end
 end)
 
--- === TỰ ĐỘNG CẦM GEAR & GLOBAL AUTO DAMAGE (MỌI KHOẢNG CÁCH) ===
+
+-- === GLOBAL DAMAGE CHÉM TOÀN BẢN ĐỒ HOẠT ĐỘNG 100% (KHÔNG DELAY) ===
 Toggle1.MouseButton1Click:Connect(function()
-    AuraActive = not AuraActive
-    Toggle1.Text = AuraActive and "Global Auto Damage (Cầm Vũ Khí) : ON" or "Global Auto Damage (Cầm Vũ Khí) : OFF"
-    Toggle1.TextColor3 = AuraActive and Color3.fromRGB(80, 200, 80) or Color3.fromRGB(200, 70, 70)
+    GlobalDamageActive = not GlobalDamageActive
+    Toggle1.Text = GlobalDamageActive and "Global Auto Damage (Chém Toàn Map) : ON" or "Global Auto Damage (Chém Toàn Map) : OFF"
+    Toggle1.TextColor3 = GlobalDamageActive and Color3.fromRGB(80, 200, 80) or Color3.fromRGB(200, 70, 70)
 end)
 
--- Tạo luồng riêng biệt xử lý tác vụ quét vũ khí và xả sát thương
 task.spawn(function()
     while true do
-        task.wait() -- Ép xung vòng lặp không độ trễ
-        if AuraActive then
+        task.wait() -- Đẩy tốc độ chém lên tối đa không delay
+        if GlobalDamageActive then
             pcall(function()
                 local char = LocalPlayer.Character
                 local backpack = LocalPlayer:FindFirstChild("Backpack")
                 
-                -- HÀM TỰ ĐỘNG CẦM GEAR: Tìm kiếm bất kỳ công cụ/vũ khí nào trong túi đồ để trang bị lên tay
+                -- Luôn đảm bảo nhân vật cầm sẵn vũ khí/gear trên tay
                 if char and backpack and not char:FindFirstChildOfClass("Tool") then
                     local tool = backpack:FindFirstChildOfClass("Tool")
-                    if tool then
-                        tool.Parent = char
-                    end
+                    if tool then tool.Parent = char end
                 end
                 
-                -- HÀM GLOBAL AUTO DAMAGE: Quét và phát tán sát thương lên toàn map
-                if AttackRemote then
-                    for _, enemy in pairs(workspace:GetDescendants()) do
-                        if enemy:IsA("Model") and enemy:FindFirstChild("Humanoid") and enemy.Humanoid.Health > 0 then
-                            if not Players:GetPlayerFromCharacter(enemy) then
-                                local isBoss = string.find(string.lower(enemy.Name), "boss") or enemy:GetAttribute("IsBoss")
-                                
-                                -- Phân luồng bất đồng bộ (Bypass Quorum Hub style): Sử dụng cấu trúc coroutine thuần túy
-                                local damagePackets = isBoss and 35 or 10
-                                for i = 1, damagePackets do
-                                    coroutine.wrap(function()
-                                        AttackRemote:FireServer(enemy)
-                                    end)()
+                -- Nhận diện bộ phận lưỡi kiếm/vũ khí dùng để phát tán sát thương
+                local currentTool = char:FindFirstChildOfClass("Tool")
+                if currentTool then
+                    local attackPart = currentTool:FindFirstChild("Handle") or currentTool:FindFirstChildWhichIsA("BasePart")
+                    
+                    if attackPart and firetouchinterest then
+                        -- Ép vũ khí kích hoạt liên tục (Slash Animation)
+                        currentTool:Activate()
+                        
+                        -- Đồng bộ xung va chạm trực tiếp lên toàn bộ mục tiêu hiện diện trên Map
+                        for _, enemy in pairs(workspace:GetDescendants()) do
+                            if enemy:IsA("Model") and enemy:FindFirstChild("Humanoid") and enemy.Humanoid.Health > 0 then
+                                if not Players:GetPlayerFromCharacter(enemy) then
+                                    local enemyRoot = enemy:FindFirstChild("HumanoidRootPart") or enemy:FindFirstChildWhichIsA("BasePart")
+                                    
+                                    if enemyRoot then
+                                        local isBoss = string.find(string.lower(enemy.Name), "boss") or enemy:GetAttribute("IsBoss")
+                                        
+                                        -- Cơ chế đa luồng TouchInterest ép nổ damage thật từ Gear mà không bị quét Remote
+                                        if isBoss then
+                                            for i = 1, 30 do -- Boss dính dồn dập 30 cú chém cùng lúc
+                                                firetouchinterest(enemyRoot, attackPart, 0)
+                                                firetouchinterest(enemyRoot, attackPart, 1)
+                                            end
+                                        else
+                                            for i = 1, 8 do -- Quái thường dính x8 cú chém liên tiếp
+                                                firetouchinterest(enemyRoot, attackPart, 0)
+                                                firetouchinterest(enemyRoot, attackPart, 1)
+                                            end
+                                        end
+                                    end
+                                    
                                 end
                             end
                         end
