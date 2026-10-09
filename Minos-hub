@@ -1,6 +1,6 @@
--- [[ sbsd_mockedup_gui PREMIUM - GLOBAL MAP ATTACK EDITION ]]
+-- [[ sbsd_mockedup_gui PREMIUM - GEAR DAMAGE INSTANT EDITION ]]
 -- BYPASS CHẶN UI BẰNG HÀM MOCKEDUP GETHUI - CHẮC CHẮN HIỆN BẢNG 100%
--- KILL AURA TOÀN MAP TỪ XA - SAFE ZONE GOD MODE BẤT TỬ - CHỮ SBSD XANH LÁ
+-- ÉP GEAR KÍCH HOẠT ĐÒN ĐÁNH TỪ XA TOÀN MAP - SAFE ZONE GOD MODE - CHỮ SBSD XANH LÁ
 
 if game:GetService("CoreGui"):FindFirstChild("sbsd_winner_gui") then
     game:GetService("CoreGui")["sbsd_winner_gui"]:Destroy()
@@ -46,7 +46,7 @@ OpenIcon.Font = Enum.Font.SourceSansBold
 OpenIcon.TextSize = 18
 OpenIcon.Visible = false
 OpenIcon.Active = true
-OpenIcon.Draggable = true -- Nhấn giữ để kéo nút chữ SBSD đi khắp màn hình
+OpenIcon.Draggable = true
 
 local IconCorner = Instance.new("UICorner", OpenIcon)
 IconCorner.CornerRadius = UDim.new(0, 6)
@@ -65,7 +65,7 @@ Main.Active = true
 Main.Draggable = true
 Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 10)
 
--- Thanh Tiêu Đề Topbar của Mockedup
+-- Thanh Tiêu Đề Topbar
 local Topbar = Instance.new("Frame", Main)
 Topbar.Size = UDim2.new(1, 0, 0, 40)
 Topbar.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
@@ -102,7 +102,6 @@ ElementsContainer.Position = UDim2.new(0, 15, 0, 55)
 ElementsContainer.BackgroundTransparency = 1
 ElementsContainer.ZIndex = 1
 
--- Hàm tạo Toggle có chữ sbsd MÀU XANH LÁ
 local function CreateMockedupToggle(text, posY)
     local frame = Instance.new("Frame", ElementsContainer)
     frame.Size = UDim2.new(1, 0, 0, 45)
@@ -115,7 +114,7 @@ local function CreateMockedupToggle(text, posY)
     label.Size = UDim2.new(0.7, 0, 1, 0)
     label.Position = UDim2.new(0, 12, 0, 0)
     label.BackgroundTransparency = 1
-    label.Text = "<font color='rgb(0, 255, 0)'>[sbsd]</font> " .. text -- CHỮ SBSD MÀU XANH LÁ RỰC RỠ
+    label.Text = "<font color='rgb(0, 255, 0)'>[sbsd]</font> " .. text 
     label.RichText = true
     label.TextColor3 = Color3.fromRGB(240, 240, 240)
     label.Font = Enum.Font.SourceSansBold
@@ -126,7 +125,7 @@ local function CreateMockedupToggle(text, posY)
     local btn = Instance.new("TextButton", frame)
     btn.Size = UDim2.new(0, 55, 0, 26)
     btn.Position = UDim2.new(1, -65, 0, 9)
-    btn.BackgroundColor3 = Color3.fromRGB(160, 40, 40) -- Đỏ là OFF
+    btn.BackgroundColor3 = Color3.fromRGB(160, 40, 40) 
     btn.Text = "OFF"
     btn.TextColor3 = Color3.fromRGB(255, 255, 255)
     btn.Font = Enum.Font.SourceSansBold
@@ -137,21 +136,20 @@ local function CreateMockedupToggle(text, posY)
     return btn
 end
 
-local Toggle1 = CreateMockedupToggle("Global Kill Aura (Toàn Bản Đồ)", 5)
+local Toggle1 = CreateMockedupToggle("Global Gear Attack (Toàn Bản Đồ)", 5)
 local Toggle2 = CreateMockedupToggle("Safe Zone God Mode (Bất Tử)", 60)
 
--- Logic Đóng / Mở qua lại
 CloseBtn.MouseButton1Click:Connect(function() Main.Visible = false; OpenIcon.Visible = true end)
 OpenIcon.MouseButton1Click:Connect(function() Main.Visible = true; OpenIcon.Visible = false end)
 
 
 -- === HỆ THỐNG XỬ LÝ TOÀN BỘ LOGIC GAME SUPERBOX SIEGE DEFENSE ===
 
--- 1. SỬA ĐỔI: Global Kill Aura Tấn Công Toàn Map Từ Xa (Không giới hạn khoảng cách)
+-- 1. SỬA ĐỔI TOÀN DIỆN: Ép Gear vung đòn đánh từ xa 100% quái vừa hồi sinh trên map
 Toggle1.MouseButton1Click:Connect(function()
     AuraActive = not AuraActive
     if AuraActive then
-        Toggle1.Text = "ON"; Toggle1.BackgroundColor3 = Color3.fromRGB(40, 150, 40) -- Xanh lá là ON
+        Toggle1.Text = "ON"; Toggle1.BackgroundColor3 = Color3.fromRGB(40, 150, 40)
     else
         Toggle1.Text = "OFF"; Toggle1.BackgroundColor3 = Color3.fromRGB(150, 40, 40)
     end
@@ -159,25 +157,31 @@ end)
 
 task.spawn(function()
     while true do
-        task.wait(0.04) -- Tốc độ dập sát thương liên tục cực nhanh
+        task.wait(0.05) -- Tốc độ kích hoạt Gear cực nhanh
         if AuraActive then
             pcall(function()
-                -- Đồng bộ và gọi liên tục các cổng nhận đòn đánh từ xa của game SBSD
-                local AttackRemote = ReplicatedStorage:FindFirstChild("Attack") 
-                    or ReplicatedStorage:FindFirstChild("HitEnemy") 
-                    or ReplicatedStorage:FindFirstChild("InflictDamage") 
-                    or ReplicatedStorage:FindFirstChild("Hit")
-                
-                if AttackRemote then
-                    -- Quét dứt điểm 100% quái ở bất kỳ xó xỉnh nào trên map mà không bắt nhân vật phải lại gần
-                    for _, enemy in pairs(workspace:GetDescendants()) do
-                        if enemy:IsA("Model") and enemy:FindFirstChild("Humanoid") and enemy.Humanoid.Health > 0 then
-                            -- Loại bỏ người chơi khác và Base để tránh lỗi game
-                            if not Players:GetPlayerFromCharacter(enemy) and enemy.Name ~= "Base" then
-                                if AttackRemote:IsA("RemoteEvent") then
-                                    AttackRemote:FireServer(enemy)
-                                elseif AttackRemote:IsA("RemoteFunction") then
-                                    AttackRemote:InvokeServer(enemy)
+                local char = LocalPlayer.Character
+                if char then
+                    -- Tự động tìm và ép trang bị/vũ khí ông giáo đang cầm (Sawblade, Ultra...) hoạt động
+                    local tool = char:FindFirstChildOfClass("Tool")
+                    if tool then
+                        -- Quét sạch mọi ngóc ngách bản đồ
+                        for _, enemy in pairs(workspace:GetDescendants()) do
+                            if enemy:IsA("Model") and enemy:FindFirstChild("Humanoid") and enemy.Humanoid.Health > 0 then
+                                if not Players:GetPlayerFromCharacter(enemy) and enemy.Name ~= "Base" then
+                                    
+                                    -- ĐÁNH LỪA GAME: Ép tâm ngắm (Target) của vũ khí dính thẳng vào tọa độ quái từ xa
+                                    local hrp = enemy:FindFirstChild("HumanoidRootPart")
+                                    if hrp then
+                                        -- Gọi lệnh kích hoạt gốc của cây Gear ông giáo đang cầm
+                                        tool:Activate()
+                                        
+                                        -- Bổ sung tín hiệu đánh từ xa thông qua Remote nội bộ đính kèm trong cây vũ khí
+                                        local remote = tool:FindFirstChild("Remote") or tool:FindFirstChild("Action") or tool:FindFirstChild("Attack")
+                                        if remote and remote:IsA("RemoteEvent") then
+                                            remote:FireServer(enemy, hrp.Position)
+                                        end
+                                    end
                                 end
                             end
                         end
@@ -188,7 +192,7 @@ task.spawn(function()
     end
 end)
 
--- 2. Safe Zone Max God Mode (Khóa đầy máu thời gian thực cấp độ nhịp tim hệ thống)
+-- 2. Safe Zone Max God Mode (Khóa đầy máu liên tục ở cấp độ nhịp tim hệ thống)
 Toggle2.MouseButton1Click:Connect(function()
     GodModeActive = not GodModeActive
     if GodModeActive then
@@ -210,7 +214,7 @@ RunService.Heartbeat:Connect(function()
             if char then
                 local hum = char:FindFirstChildOfClass("Humanoid")
                 if hum then
-                    hum.Health = hum.MaxHealth -- Liên tục bơm đầy máu chống chết sốclag ở Death Mode
+                    hum.Health = hum.MaxHealth
                     if hum.Health <= 0 then
                         hum:ChangeState(Enum.HumanoidStateType.Running)
                         hum.Health = hum.MaxHealth
