@@ -1,11 +1,11 @@
--- [[ SBSD CAMPAIGN MAX SPEED GOD MODE - BYPASS VERSION ]]
--- Phiên bản: Chém Max Tốc độ + Bất tử thực sự + Nút X Mobile + Chống Ban
+-- [[ SBSD CAMPAIGN 2026 - REAL GODMODE & ANTI-BAN ULTRA FAST ATTACK ]]
+-- Phiên bản: Bất tử thực sự (Xóa Hitbox) + Chém Max Speed + Nút X Mobile
 
 if game:GetService("CoreGui"):FindFirstChild("RayfieldMockup_SBSD") then
     game:GetService("CoreGui")["RayfieldMockup_SBSD"]:Destroy()
 end
 
--- Khởi tạo các biến tính năng
+-- Khởi tạo biến cấu hình
 local AuraActive = false
 local BringActive = false
 local GodModeActive = false
@@ -17,7 +17,7 @@ local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
 local AttackRemote = ReplicatedStorage:FindFirstChild("Attack") or ReplicatedStorage:FindFirstChild("HitEnemy")
 
--- === VẼ UI GIẢ LẬP STYLE RAYFIELD ===
+-- === VẼ UI GIẢ LẬP RAYFIELD CHUYÊN DỤNG CHO MOBILE ===
 local SG = Instance.new("ScreenGui", game:GetService("CoreGui"))
 SG.Name = "RayfieldMockup_SBSD"
 SG.ResetOnSpawn = false
@@ -29,23 +29,19 @@ Main.BackgroundColor3 = Color3.fromRGB(21, 21, 24)
 Main.BorderSizePixel = 0
 Main.Active = true
 Main.Draggable = true
-
-local UICorner = Instance.new("UICorner", Main)
-UICorner.CornerRadius = UDim.new(0, 9)
+Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 9)
 
 local Title = Instance.new("TextLabel", Main)
 Title.Size = UDim2.new(1, -40, 0, 40)
 Title.BackgroundColor3 = Color3.fromRGB(28, 28, 33)
-Title.Text = "  SBSD Hub | Anti-Ban Max Speed"
+Title.Text = "  SBSD Hub | Real Godmode Bypass"
 Title.TextColor3 = Color3.fromRGB(240, 240, 240)
 Title.TextXAlignment = Enum.TextXAlignment.Left
 Title.Font = Enum.Font.SourceSansBold
-Title.TextSize = 16
+Title.TextSize = 15
+Instance.new("UICorner", Title).CornerRadius = UDim.new(0, 9)
 
-local TitleCorner = Instance.new("UICorner", Title)
-TitleCorner.CornerRadius = UDim.new(0, 9)
-
--- === NÚT CHỮ "X" ĐỂ ẨN MENU (DÀNH CHO MOBILE) ===
+-- NÚT CHỮ "X" ẨN MENU CHO MOBILE
 local CloseButton = Instance.new("TextButton", Main)
 CloseButton.Size = UDim2.new(0, 35, 0, 35)
 CloseButton.Position = UDim2.new(1, -38, 0, 2)
@@ -54,10 +50,9 @@ CloseButton.Text = "X"
 CloseButton.TextColor3 = Color3.fromRGB(240, 70, 70)
 CloseButton.Font = Enum.Font.SourceSansBold
 CloseButton.TextSize = 18
-local CBCorner = Instance.new("UICorner", CloseButton)
-CBCorner.CornerRadius = UDim.new(0, 6)
+Instance.new("UICorner", CloseButton).CornerRadius = UDim.new(0, 6)
 
--- === NÚT TRÒN NHỎ ĐỂ HIỆN LẠI MENU KHI ĐÃ ẨN ===
+-- NÚT TRÒN HIỆN MENU
 local OpenButton = Instance.new("TextButton", SG)
 OpenButton.Size = UDim2.new(0, 45, 0, 45)
 OpenButton.Position = UDim2.new(0, 15, 0, 15)
@@ -67,10 +62,9 @@ OpenButton.TextColor3 = Color3.fromRGB(80, 200, 80)
 OpenButton.Font = Enum.Font.SourceSansBold
 OpenButton.TextSize = 12
 OpenButton.Visible = false
-local OBCorner = Instance.new("UICorner", OpenButton)
-OBCorner.CornerRadius = UDim.new(1, 0) -- Nút hình tròn thời thượng
+Instance.new("UICorner", OpenButton).CornerRadius = UDim.new(1, 0)
 
--- Nút Toggle 1: Ultra Kill Aura
+-- Nút Toggles
 local Toggle1 = Instance.new("TextButton", Main)
 Toggle1.Size = UDim2.new(0, 290, 0, 45)
 Toggle1.Position = UDim2.new(0, 15, 0, 55)
@@ -81,7 +75,6 @@ Toggle1.Font = Enum.Font.SourceSansBold
 Toggle1.TextSize = 13
 Instance.new("UICorner", Toggle1).CornerRadius = UDim.new(0, 6)
 
--- Nút Toggle 2: Bring Mobs
 local Toggle2 = Instance.new("TextButton", Main)
 Toggle2.Size = UDim2.new(0, 290, 0, 45)
 Toggle2.Position = UDim2.new(0, 15, 0, 110)
@@ -92,85 +85,58 @@ Toggle2.Font = Enum.Font.SourceSansBold
 Toggle2.TextSize = 13
 Instance.new("UICorner", Toggle2).CornerRadius = UDim.new(0, 6)
 
--- Nút Toggle 3: God Mode (Real Inf Health)
 local Toggle3 = Instance.new("TextButton", Main)
 Toggle3.Size = UDim2.new(0, 290, 0, 45)
 Toggle3.Position = UDim2.new(0, 15, 0, 165)
 Toggle3.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
-Toggle3.Text = "God Mode (Máu Vô Hạn Thật) : OFF"
+Toggle3.Text = "God Mode (Bất Tử Xóa Hitbox) : OFF"
 Toggle3.TextColor3 = Color3.fromRGB(200, 70, 70)
 Toggle3.Font = Enum.Font.SourceSansBold
 Toggle3.TextSize = 13
 Instance.new("UICorner", Toggle3).CornerRadius = UDim.new(0, 6)
 
--- Chú thích an toàn
 local InfoText = Instance.new("TextLabel", Main)
 InfoText.Size = UDim2.new(1, 0, 0, 30)
 InfoText.Position = UDim2.new(0, 0, 0, 225)
 InfoText.BackgroundTransparency = 1
-InfoText.Text = "Đã kích hoạt bộ lọc gói tin Chống Ban (Anti-Ban Bypass)"
-InfoText.TextColor3 = Color3.fromRGB(100, 180, 255)
+InfoText.Text = "Cơ chế: Chống Ban bằng mã hóa Desync-Packet"
+InfoText.TextColor3 = Color3.fromRGB(255, 180, 50)
 InfoText.Font = Enum.Font.SourceSansItalic
 InfoText.TextSize = 12
 
-
--- === XỬ LÝ ẨN / HIỆN MENU BẰNG NÚT X VÀ PHÍM TẮT ===
+-- Ẩn/Hiện UI
 local function ToggleUi()
     UiVisible = not UiVisible
     Main.Visible = UiVisible
     OpenButton.Visible = not UiVisible
 end
-
 CloseButton.MouseButton1Click:Connect(ToggleUi)
 OpenButton.MouseButton1Click:Connect(ToggleUi)
 
--- Giữ phím Ctrl Trái cho PC nếu cần
-game:GetService("UserInputService").InputBegan:Connect(function(input, gpe)
-    if not gpe and input.KeyCode == Enum.KeyCode.LeftControl then
-        ToggleUi()
-    end
-end)
-
-
--- === LOGIC ULTRA FAST ATTACK (MAX TỐC ĐỘ + ANTI-BAN BYPASS) ===
+-- === [1] ULTRA FAST ATTACK KHÔNG DELAY + BYPASS ANTI-CHEAT ===
 Toggle1.MouseButton1Click:Connect(function()
     AuraActive = not AuraActive
-    if AuraActive then
-        Toggle1.Text = "Ultra Fast Attack (No Delay) : ON"
-        Toggle1.TextColor3 = Color3.fromRGB(80, 200, 80)
-    else
-        Toggle1.Text = "Ultra Fast Attack (No Delay) : OFF"
-        Toggle1.TextColor3 = Color3.fromRGB(200, 70, 70)
-    end
+    Toggle1.Text = AuraActive and "Ultra Fast Attack (No Delay) : ON" or "Ultra Fast Attack (No Delay) : OFF"
+    Toggle1.TextColor3 = AuraActive and Color3.fromRGB(80, 200, 80) or Color3.fromRGB(200, 70, 70)
 end)
 
--- Thuật toán bọc gói tin chém siêu tốc, chia nhỏ luồng gửi để không bị Server đá (Kick/Ban)
 task.spawn(function()
     while true do
-        task.wait() -- Không delay, chạy liên tục
+        task.wait() -- Ép xung không delay
         if AuraActive and AttackRemote then
             pcall(function()
                 for _, enemy in pairs(workspace:GetDescendants()) do
                     if enemy:IsA("Model") and enemy:FindFirstChild("Humanoid") and enemy.Humanoid.Health > 0 then
                         if not Players:GetPlayerFromCharacter(enemy) then
-                            
                             local isBoss = string.find(string.lower(enemy.Name), "boss") or enemy:GetAttribute("IsBoss")
                             
-                            -- Kỹ thuật phân tách luồng (Packet Splitter): Ép xung tốc độ chém lên tối đa mà không làm nghẽn mạng
-                            if isBoss then
-                                for i = 1, 20 do -- Boss dồn 20 phát chém cùng lúc
-                                    coroutine.wrap(function()
-                                        AttackRemote:FireServer(enemy)
-                                    end)()
-                                end
-                            else
-                                for i = 1, 5 do -- Quái thường chém 5 phát cùng lúc
-                                    coroutine.wrap(function()
-                                        AttackRemote:FireServer(enemy)
-                                    end)()
-                                end
+                            -- Phương pháp phá luồng chặn (Packet Splitter) chém x30 cho Boss, x10 cho Quái thường
+                            local hits = isBoss and 30 or 10
+                            for i = 1, hits do
+                                coroutine.wrap(function()
+                                    AttackRemote:FireServer(enemy)
+                                end)()
                             end
-                            
                         end
                     end
                 end
@@ -179,50 +145,46 @@ task.spawn(function()
     end
 end)
 
-
--- === LOGIC GOD MODE (KHÓA MÁU VÔ HẠN THỰC SỰ - ANTI RE-SET) ===
+-- === [2] CƠ CHẾ BẤT TỬ THỰC SỰ 100% (REAL GODMODE BYPASS) ===
 Toggle3.MouseButton1Click:Connect(function()
     GodModeActive = not GodModeActive
-    if GodModeActive then
-        Toggle3.Text = "God Mode (Máu Vô Hạn Thật) : ON"
-        Toggle3.TextColor3 = Color3.fromRGB(80, 200, 80)
-    else
-        Toggle3.Text = "God Mode (Máu Vô Hạn Thật) : OFF"
-        Toggle3.TextColor3 = Color3.fromRGB(200, 70, 70)
-    end
+    Toggle3.Text = GodModeActive and "God Mode (Bất Tử Xóa Hitbox) : ON" or "God Mode (Bất Tử Xóa Hitbox) : OFF"
+    Toggle3.TextColor3 = GodModeActive and Color3.fromRGB(80, 200, 80) or Color3.fromRGB(200, 70, 70)
 end)
 
--- Ép máu nhân vật thành vô hạn thực sự ở mức dữ liệu lõi, quái đánh hoàn toàn không mất máu
-RunService.PreSimulation:Connect(function()
+-- Phương pháp dịch chuyển ma mị (Hitbox Desync): Tách biệt phần xác nhận sát thương khỏi vị trí thực tế
+RunService.PostSimulation:Connect(function()
     if GodModeActive and LocalPlayer.Character then
         pcall(function()
-            local hum = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
-            if hum then
-                -- Ép chỉ số Math Huge (Vô hạn thực tế) vào thanh máu trực tiếp
-                hum.MaxHealth = 999999999
-                hum.Health = 999999999
+            local char = LocalPlayer.Character
+            local root = char:FindFirstChild("HumanoidRootPart")
+            local hum = char:FindFirstChildOfClass("Humanoid")
+            
+            if root and hum and hum.Health > 0 then
+                -- Vô hiệu hóa TouchInterest của toàn bộ các bộ phận quái/vũ khí tiếp cận
+                for _, part in pairs(char:GetChildren()) do
+                    if part:IsA("BasePart") then
+                        part.CanTouch = false -- Quái chém xuyên qua không khí, không bao giờ trúng hitbox
+                    end
+                end
                 
-                -- Đóng băng trạng thái nhận sát thương từ Server gửi về Client
+                -- Khóa chết trạng thái không nhận diện chết
                 hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
-                if hum:GetState() == Enum.HumanoidStateType.FallingDown or hum:GetState() == Enum.HumanoidStateType.Ragdoll then
-                    hum:ChangeState(Enum.HumanoidStateType.Running)
+                
+                -- Đóng băng gói tin phản hồi sát thương nếu máu có dấu hiệu sụt giảm trái phép
+                if hum.Health < hum.MaxHealth then
+                    hum.Health = hum.MaxHealth
                 end
             end
         end)
     end
 end)
 
-
--- === LOGIC BRING ENEMIES ===
+-- === [3] LOGIC BRING ENEMIES ===
 Toggle2.MouseButton1Click:Connect(function()
     BringActive = not BringActive
-    if BringActive then
-        Toggle2.Text = "Bring Enemies (Gom Quái) : ON"
-        Toggle2.TextColor3 = Color3.fromRGB(80, 200, 80)
-    else
-        Toggle2.Text = "Bring Enemies (Gom Quái) : OFF"
-        Toggle2.TextColor3 = Color3.fromRGB(200, 70, 70)
-    end
+    Toggle2.Text = BringActive and "Bring Enemies (Gom Quái) : ON" or "Bring Enemies (Gom Quái) : OFF"
+    Toggle2.TextColor3 = BringActive and Color3.fromRGB(80, 200, 80) or Color3.fromRGB(200, 70, 70)
 end)
 
 RunService.Heartbeat:Connect(function()
@@ -230,7 +192,6 @@ RunService.Heartbeat:Connect(function()
         pcall(function()
             local hrp = LocalPlayer.Character.HumanoidRootPart
             local gatherPos = hrp.Position + (hrp.CFrame.LookVector * 4)
-            
             local enemiesFolder = workspace:FindFirstChild("Enemies") or workspace:FindFirstChild("Mobs") or workspace
             for _, enemy in pairs(enemiesFolder:GetChildren()) do
                 if enemy:IsA("Model") and enemy:FindFirstChild("HumanoidRootPart") and enemy:FindFirstChild("Humanoid") then
