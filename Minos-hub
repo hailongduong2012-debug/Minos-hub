@@ -1,11 +1,10 @@
--- [[ SBSD DEATH MODE HUB V10 - DOOM STYLE GOD MODE ]]
--- ĐẢM BẢO HIỆN HÌNH NỀN 100% - TO BẢNG - TÍCH HỢP ICON ĐÓNG/MỞ - THÊM MAX GOD MODE
+-- [[ SBSD DEATH MODE HUB V11 - FIXED AUTO SUMMON ]]
+-- SỬA LỖI TRIỆU HỒI TELESCOPE - BẤT TỬ GOD MODE - NỀN DOOM SLAYER
 
-if game:GetService("CoreGui"):FindFirstChild("SBSD_Doom_V10") then
-    game:GetService("CoreGui")["SBSD_Doom_V10"]:Destroy()
+if game:GetService("CoreGui"):FindFirstChild("SBSD_Doom_V11") then
+    game:GetService("CoreGui")["SBSD_Doom_V11"]:Destroy()
 end
 
--- Biến cấu hình trạng thái tính năng
 local AuraActive = false
 local GodModeActive = false
 local AutoTeleActive = false
@@ -17,61 +16,50 @@ local LocalPlayer = Players.LocalPlayer
 
 -- === KHỞI TẠO KHUNG CHÍNH (SCREEN GUI) ===
 local SG = Instance.new("ScreenGui")
-SG.Name = "SBSD_Doom_V10"
+SG.Name = "SBSD_Doom_V11"
 SG.Parent = game:GetService("CoreGui")
 SG.ResetOnSpawn = false
 
--- === TẠO ICON ĐẦU LÂU DOOM NHỎ ĐỂ MỞ LẠI BẢNG MENU (ẨN ĐI LÚC ĐẦU) ===
+-- === TẠO ICON ĐẦU LÂU DOOM ĐỂ MỞ LẠI MENU ===
 local OpenIcon = Instance.new("ImageButton")
 OpenIcon.Parent = SG
 OpenIcon.Size = UDim2.new(0, 60, 0, 60)
 OpenIcon.Position = UDim2.new(0.02, 0, 0.25, 0)
 OpenIcon.BackgroundColor3 = Color3.fromRGB(35, 10, 10)
-OpenIcon.Image = "http://roblox.com" -- URL định dạng tải ảnh gốc của Roblox
+OpenIcon.Image = "http://roblox.com"
 OpenIcon.Visible = false
 OpenIcon.Active = true
 OpenIcon.Draggable = true
-
-local IconCorner = Instance.new("UICorner", OpenIcon)
-IconCorner.CornerRadius = UDim.new(1, 0)
-
+Instance.new("UICorner", OpenIcon).CornerRadius = UDim.new(1, 0)
 local IconStroke = Instance.new("UIStroke", OpenIcon)
 IconStroke.Color = Color3.fromRGB(255, 40, 40)
 IconStroke.Thickness = 2.5
 
--- === KHUNG CHÍNH MENU (KÍCH THƯỚC TO: 560 x 340 ĐỂ LỘ HÌNH ĐẸP) ===
-local Main = Instance.new("Frame")
-Main.Parent = SG
+-- === KHUNG CHÍNH MENU (560 x 340) ===
+local Main = Instance.new("Frame", SG)
 Main.Size = UDim2.new(0, 560, 0, 340)
 Main.Position = UDim2.new(0.3, 0, 0.25, 0)
 Main.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
 Main.BorderSizePixel = 0
 Main.Active = true
 Main.Draggable = true
+Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 12)
 
-local UICorner = Instance.new("UICorner", Main)
-UICorner.CornerRadius = UDim.new(0, 12)
-
--- Lớp Hình Nền Doom Slayer siêu nét (Đổi định dạng URL để bypass lỗi ko load ảnh)
-local BackgroundImage = Instance.new("ImageLabel")
-BackgroundImage.Parent = Main
+-- Lớp Hình Nền Doom Slayer
+local BackgroundImage = Instance.new("ImageLabel", Main)
 BackgroundImage.Size = UDim2.new(1, 0, 1, 0)
-BackgroundImage.Position = UDim2.new(0, 0, 0, 0)
-BackgroundImage.Image = "http://roblox.com" -- Gọi ảnh máy chủ trực tiếp
+BackgroundImage.Image = "http://roblox.com"
 BackgroundImage.ScaleType = Enum.ScaleType.Crop
 BackgroundImage.ImageTransparency = 0.35
 BackgroundImage.ZIndex = 0
-
-local BGCorner = Instance.new("UICorner", BackgroundImage)
-BGCorner.CornerRadius = UDim.new(0, 12)
+Instance.new("UICorner", BackgroundImage).CornerRadius = UDim.new(0, 12)
 
 -- Thanh Tiêu Đề
-local Title = Instance.new("TextLabel")
-Title.Parent = Main
+local Title = Instance.new("TextLabel", Main)
 Title.Size = UDim2.new(1, 0, 0, 45)
 Title.BackgroundColor3 = Color3.fromRGB(40, 10, 10)
 Title.BackgroundTransparency = 0.4
-Title.Text = "   SBSD Campaign V10 | DEATH MODE GOD-MODE"
+Title.Text = "   SBSD Campaign V11 | FIXED SUMMON TELESCOPE"
 Title.TextColor3 = Color3.fromRGB(255, 50, 50)
 Title.TextXAlignment = Enum.TextXAlignment.Left
 Title.Font = Enum.Font.SourceSansBold
@@ -79,9 +67,8 @@ Title.TextSize = 17
 Title.ZIndex = 1
 Instance.new("UICorner", Title).CornerRadius = UDim.new(0, 12)
 
--- NÚT X ĐỂ ĐÓNG/ẨN MENU GIAO DIỆN
-local CloseBtn = Instance.new("TextButton")
-CloseBtn.Parent = Main
+-- NÚT X ĐỂ ĐÓNG/ẨN
+local CloseBtn = Instance.new("TextButton", Main)
 CloseBtn.Size = UDim2.new(0, 35, 0, 35)
 CloseBtn.Position = UDim2.new(1, -45, 0, 5)
 CloseBtn.BackgroundColor3 = Color3.fromRGB(160, 20, 20)
@@ -93,17 +80,15 @@ CloseBtn.TextSize = 16
 CloseBtn.ZIndex = 2
 Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(0, 6)
 
--- Khung chứa các nút bấm xếp gọn sang bên trái
-local ButtonContainer = Instance.new("Frame")
-ButtonContainer.Parent = Main
+-- Khung chứa nút bấm bên trái
+local ButtonContainer = Instance.new("Frame", Main)
 ButtonContainer.Size = UDim2.new(0, 270, 0, 260)
 ButtonContainer.Position = UDim2.new(0, 15, 0, 60)
 ButtonContainer.BackgroundTransparency = 1
 ButtonContainer.ZIndex = 1
 
 local function CreateDoomButton(text, posY)
-    local btn = Instance.new("TextButton")
-    btn.Parent = ButtonContainer
+    local btn = Instance.new("TextButton", ButtonContainer)
     btn.Size = UDim2.new(1, 0, 0, 45)
     btn.Position = UDim2.new(0, 0, 0, posY)
     btn.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
@@ -121,30 +106,19 @@ local Toggle1 = CreateDoomButton("Kill Aura (Death Mode Speed)", 10)
 local Toggle2 = CreateDoomButton("Safe Zone Max God Mode", 75)
 local Toggle3 = CreateDoomButton("Auto Spawn Telescope (5 Coins)", 140)
 
--- === XỬ LÝ SỰ KIỆN ĐÓNG / MỞ BẰNG ICON ===
-CloseBtn.MouseButton1Click:Connect(function()
-    Main.Visible = false
-    OpenIcon.Visible = true -- Hiện nút tròn hình đầu lâu Doom ngoài màn hình
-end)
+-- Đóng mở UI
+CloseBtn.MouseButton1Click:Connect(function() Main.Visible = false; OpenIcon.Visible = true end)
+OpenIcon.MouseButton1Click:Connect(function() Main.Visible = true; OpenIcon.Visible = false end)
 
-OpenIcon.MouseButton1Click:Connect(function()
-    Main.Visible = true
-    OpenIcon.Visible = false -- Thu bảng icon lại khi menu chính hiện ra
-end)
+-- === XỬ LÝ LOGIC GAME SBSD ===
 
--- === HỆ THỐNG XỬ LÝ TÍNH NĂNG CHUYÊN DỤNG DEATH MODE ===
-
--- 1. Xử lý Kill Aura Max Tầm Đánh (Giữ nguyên tốc độ hủy diệt quái trâu)
+-- 1. Kill Aura Vô Hạn Range
 Toggle1.MouseButton1Click:Connect(function()
     AuraActive = not AuraActive
     if AuraActive then
-        Toggle1.Text = "Kill Aura (Death Mode Speed) : ON"
-        Toggle1.TextColor3 = Color3.fromRGB(80, 240, 80)
-        Toggle1.BackgroundColor3 = Color3.fromRGB(20, 70, 20)
+        Toggle1.Text = "Kill Aura (Death Mode Speed) : ON"; Toggle1.TextColor3 = Color3.fromRGB(80, 240, 80); Toggle1.BackgroundColor3 = Color3.fromRGB(20, 70, 20)
     else
-        Toggle1.Text = "Kill Aura (Death Mode Speed) : OFF"
-        Toggle1.TextColor3 = Color3.fromRGB(240, 80, 80)
-        Toggle1.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+        Toggle1.Text = "Kill Aura (Death Mode Speed) : OFF"; Toggle1.TextColor3 = Color3.fromRGB(240, 80, 80); Toggle1.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
     end
 end)
 
@@ -158,11 +132,7 @@ task.spawn(function()
                     for _, enemy in pairs(workspace:GetDescendants()) do
                         if enemy:IsA("Model") and enemy:FindFirstChild("Humanoid") and enemy.Humanoid.Health > 0 then
                             if not Players:GetPlayerFromCharacter(enemy) then
-                                if AttackRemote:IsA("RemoteEvent") then
-                                    AttackRemote:FireServer(enemy)
-                                elseif AttackRemote:IsA("RemoteFunction") then
-                                    AttackRemote:InvokeServer(enemy)
-                                end
+                                AttackRemote:FireServer(enemy)
                             end
                         end
                     end
@@ -172,17 +142,13 @@ task.spawn(function()
     end
 end)
 
--- 2. Xử lý Safe Zone Max God Mode (Khóa bất tử máu)
+-- 2. Safe Zone Max God Mode (Bất tử máu)
 Toggle2.MouseButton1Click:Connect(function()
     GodModeActive = not GodModeActive
     if GodModeActive then
-        Toggle2.Text = "Safe Zone Max God Mode : ON"
-        Toggle2.TextColor3 = Color3.fromRGB(80, 240, 80)
-        Toggle2.BackgroundColor3 = Color3.fromRGB(20, 70, 20)
+        Toggle2.Text = "Safe Zone Max God Mode : ON"; Toggle2.TextColor3 = Color3.fromRGB(80, 240, 80); Toggle2.BackgroundColor3 = Color3.fromRGB(20, 70, 20)
     else
-        Toggle2.Text = "Safe Zone Max God Mode : OFF"
-        Toggle2.TextColor3 = Color3.fromRGB(240, 80, 80)
-        Toggle2.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+        Toggle2.Text = "Safe Zone Max God Mode : OFF"; Toggle2.TextColor3 = Color3.fromRGB(240, 80, 80); Toggle2.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
     end
 end)
 
@@ -191,43 +157,47 @@ RunService.Heartbeat:Connect(function()
         pcall(function()
             local char = LocalPlayer.Character
             local hum = char and char:FindFirstChildOfClass("Humanoid")
-            if hum then
-                -- Liên tục ép thanh máu và máu tối đa về trạng thái bất tử (Max God Mode)
-                hum.MaxHealth = math.huge
-                hum.Health = math.huge
-            end
+            if hum then hum.MaxHealth = math.huge; hum.Health = math.huge end
         end)
     end
 end)
 
--- 3. Xử lý Auto Spawn Telescope (5 Coins)
+-- 3. SỬA ĐỔI: TỰ ĐỘNG TRIỆU HỒI TELESCOPE (GỬI KÈM TỌA ĐỘ PHÙ HỢP)
 Toggle3.MouseButton1Click:Connect(function()
     AutoTeleActive = not AutoTeleActive
     if AutoTeleActive then
-        Toggle3.Text = "Auto Spawn Telescope (5 Coins) : ON"
-        Toggle3.TextColor3 = Color3.fromRGB(80, 240, 80)
-        Toggle3.BackgroundColor3 = Color3.fromRGB(20, 70, 20)
+        Toggle3.Text = "Auto Spawn Telescope (5 Coins) : ON"; Toggle3.TextColor3 = Color3.fromRGB(80, 240, 80); Toggle3.BackgroundColor3 = Color3.fromRGB(20, 70, 20)
     else
-        Toggle3.Text = "Auto Spawn Telescope (5 Coins) : OFF"
-        Toggle3.TextColor3 = Color3.fromRGB(240, 80, 80)
-        Toggle3.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+        Toggle3.Text = "Auto Spawn Telescope (5 Coins) : OFF"; Toggle3.TextColor3 = Color3.fromRGB(240, 80, 80); Toggle3.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
     end
 end)
 
 task.spawn(function()
     while true do
-        task.wait(0.25)
+        task.wait(0.5) -- Kiểm tra ví tiền mỗi 0.5s để đặt tháp
         if AutoTeleActive then
             pcall(function()
-                local SummonRemote = ReplicatedStorage:FindFirstChild("HEUGHSUMMONS") or ReplicatedStorage:FindFirstChild("SummonUnit") or ReplicatedStorage:FindFirstChild("Summon")
+                -- Hệ thống nhận diện các cổng Remote thủ thành của SBSD
+                local SummonRemote = ReplicatedStorage:FindFirstChild("PlaceUnit") or ReplicatedStorage:FindFirstChild("SpawnUnit") or ReplicatedStorage:FindFirstChild("HEUGHSUMMONS") or ReplicatedStorage:FindFirstChild("Summon")
                 local stats = LocalPlayer:FindFirstChild("leaderstats")
                 local cash = stats and (stats:FindFirstChild("Cash") or stats:FindFirstChild("Coins") or stats:FindFirstChild("Points"))
                 
                 if cash and cash.Value >= 5 and SummonRemote then
+                    -- Tạo Vector vị trí hợp lệ: Lấy vị trí Base (căn cứ) làm gốc, nếu không thấy thì đặt ngay dưới chân bạn
+                    local targetPos = Vector3.new(0, 0, 0)
+                    if workspace:FindFirstChild("Base") then
+                        targetPos = workspace.Base.Position + Vector3.new(0, 2, 5)
+                    elseif LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                        targetPos = LocalPlayer.Character.HumanoidRootPart.Position + Vector3.new(0, -3, 4)
+                    end
+                    
+                    -- Thực hiện gửi gói tin kèm vị trí để ép máy chủ đặt Telescope
                     if SummonRemote:IsA("RemoteEvent") then
-                        SummonRemote:FireServer("Heli")
+                        SummonRemote:FireServer("Heli", targetPos) -- "Heli" là tên gốc của Telescope giá 5 coin trong mã nguồn game
+                        SummonRemote:FireServer("Telescope", targetPos)
                     elseif SummonRemote:IsA("RemoteFunction") then
-                        SummonRemote:InvokeServer("Heli")
+                        SummonRemote:InvokeServer("Heli", targetPos)
+                        SummonRemote:InvokeServer("Telescope", targetPos)
                     end
                 end
             end)
