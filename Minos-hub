@@ -2,71 +2,59 @@
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
-   Name = "SBSD Hub | Death Mode",
-   LoadingTitle = "Đang cấu hình dữ liệu SBSD...",
+   Name = "SBSD Hub | Toàn Bản Đồ",
+   LoadingTitle = "Đang đồng bộ hệ thống Sát Thương Tầm Xa...",
    LoadingSubtitle = "by SBSD Developer",
    ConfigurationSaving = { Enabled = false },
    KeySystem = false 
 })
 
-local MainTab = Window:CreateTab("Auto Farm", 4483362458)
+local MainTab = Window:CreateTab("Global Farm", 4483362458)
 
-_G.KillAura = false
-_G.AttackSpeed = 0.001 -- Đặt theo yêu cầu (Nếu bị nuốt sát thương, game đang chặn tốc độ này)
+_G.GlobalKillAura = false
+_G.AttackSpeed = 0.001 -- Tốc độ gửi tín hiệu theo yêu cầu
 
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
--- Hàm quét và tìm các hộp quái (Box/Astral Box) trong SBSD
-local function getClosestBox()
-    local closestTarget = nil
-    local shortestDistance = math.huge
-    
-    -- Quét toàn bộ mục tiêu trong Workspace (Nơi sinh quái của SBSD)
+-- Hàm tự động tìm và trả về danh sách tất cả các quái hộp đang có trên bản đồ
+local function getAllTargets()
+    local targets = {}
     for _, obj in pairs(workspace:GetChildren()) do
-        -- SBSD chứa quái dưới dạng Model và có thanh máu (Humanoid)
-        if obj:IsA("Model") and obj ~= LocalPlayer.Character and obj:SetAttribute("Enemy") or obj:FindFirstChildOfClass("Humanoid") then
+        -- Kiểm tra xem đối tượng có phải là quái hộp trong SBSD hay không
+        if obj:IsA("Model") and obj ~= LocalPlayer.Character then
             local humanoid = obj:FindFirstChildOfClass("Humanoid")
             local rootPart = obj:FindFirstChild("HumanoidRootPart") or obj:FindFirstChild("PrimaryPart")
             
             if humanoid and rootPart and humanoid.Health > 0 then
-                if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-                    local distance = (LocalPlayer.Character.HumanoidRootPart.Position - rootPart.Position).Magnitude
-                    if distance < shortestDistance then
-                        closestTarget = obj
-                        shortestDistance = distance
-                    end
-                end
+                table.insert(targets, rootPart)
             end
         end
     end
-    return closestTarget
+    return targets
 end
 
--- Vòng lặp kích hoạt đòn đánh (Kill Aura) liên tục
+-- Vòng lặp bắn sát thương tầm xa toàn bộ map
 task.spawn(function()
     while true do
-        if _G.KillAura then
-            local target = getClosestBox()
-            if target then
-                local targetPart = target:FindFirstChild("HumanoidRootPart") or target.PrimaryPart
-                if targetPart and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-                    
-                    -- Quay người về hướng quái hộp để đòn đánh tầm gần (M1) không trượt
-                    LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(
-                        LocalPlayer.Character.HumanoidRootPart.Position, 
-                        Vector3.new(targetPart.Position.X, LocalPlayer.Character.HumanoidRootPart.Position.Y, targetPart.Position.Z)
-                    )
-                    
-                    -- Gửi tín hiệu thực thi đòn đánh của SBSD
-                    -- Hệ thống cố gắng quét qua các cổng sự kiện tấn công (Remotes) phổ biến của game
-                    local attackRemote = ReplicatedStorage:FindFirstChild("Remotes") and ReplicatedStorage.Remotes:FindFirstChild("Attack") 
-                                         or ReplicatedStorage:FindFirstChild("Attack") 
-                                         or ReplicatedStorage:FindFirstChild("Punch")
-                    
-                    if attackRemote and attackRemote:IsA("RemoteEvent") then
-                        attackRemote:FireServer(targetPart.Position)
+        if _G.GlobalKillAura then
+            local monsterParts = getAllTargets()
+            
+            -- Tìm cổng kết nối Remote của SBSD
+            local attackRemote = ReplicatedStorage:FindFirstChild("Remotes") and ReplicatedStorage.Remotes:FindFirstChild("Attack") 
+                                 or ReplicatedStorage:FindFirstChild("Attack") 
+                                 or ReplicatedStorage:FindFirstChild("Punch")
+                                 or ReplicatedStorage:FindFirstChild("Hit")
+
+            if attackRemote and attackRemote:IsA("RemoteEvent") then
+                -- Ép sát thương lên tất cả mục tiêu cùng lúc trong danh sách quét
+                for _, part in pairs(monsterParts) do
+                    if _G.GlobalKillAura then
+                        -- Gửi trực tiếp tọa độ của quái về server để nhận sát thương tầm xa
+                        attackRemote:FireServer(part.Position)
+                    else
+                        break
                     end
                 end
             end
@@ -75,17 +63,17 @@ task.spawn(function()
     end
 end)
 
--- Tạo nút bật tắt trên giao diện Rayfield
+-- Tạo nút công tắc điều khiển trên giao diện Rayfield
 local Toggle = MainTab:CreateToggle({
-   Name = "Kích hoạt Kill Aura (SBSD Mode)",
+   Name = "Bật Kill Aura Toàn Bản Đồ (Gây Sát Thương)",
    CurrentValue = false,
-   Flag = "SBSDKillAura",
+   Flag = "GlobalKillAuraToggle",
    Callback = function(Value)
-      _G.KillAura = Value
+      _G.GlobalKillAura = Value
       if Value then
-          Rayfield:Notify({Title = "SBSD Hub", Content = "Đã BẬT Auto Farm Kill Aura!", Duration = 2})
+          Rayfield:Notify({Title = "SBSD Global", Content = "Đã ép sát thương Kill Aura lên toàn map!", Duration = 2.5})
       else
-          Rayfield:Notify({Title = "SBSD Hub", Content = "Đã TẮT Kill Aura.", Duration = 2})
+          Rayfield:Notify({Title = "SBSD Global", Content = "Đã ngắt kết nối sát thương.", Duration = 2.5})
       end
    end,
 })
