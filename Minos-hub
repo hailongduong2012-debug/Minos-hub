@@ -1,5 +1,5 @@
--- [[ MINOS HUB PREMIUM ENGINE - UPDATE FOR SBSD ]]
--- TÍNH NĂNG: KILL AURA CHỈNH DELAY 0.0001S & RANGE TOÀN MAP (ĐÃ XÓA GOD MODE & AUTO SUMMON)
+-- [[ MINOS HUB PREMIUM ENGINE - WEAPON SENSITIVE UPDATE ]]
+-- TÍNH NĂNG: KILL AURA HOẠT ĐỘNG KHI CẦM GEAR BẤT KỲ & ĐÁNH TRÚNG TẤT CẢ QUÁI TOÀN MAP
 
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
@@ -30,9 +30,9 @@ local Window = Rayfield:CreateWindow({
 -- Tạo Tab chức năng Auto Farm
 local FarmTab = Window:CreateTab("Death Mode Farm", 4483345998)
 
--- == TÍNH NĂNG GLOBAL KILL AURA TOÀN MAP DELAY 0.0001S ==
+-- == TÍNH NĂNG GLOBAL KILL AURA TOÀN MAP (CHỈ KÍCH HOẠT KHI CẦM GEAR) ==
 FarmTab:CreateToggle({
-   Name = "Global Kill Aura (Infinite Range - Delay 0.0001s)",
+   Name = "Smart Kill Aura (Active when holding Gear - Delay 0.0001s)",
    CurrentValue = false,
    Flag = "KillAuraFlag",
    Callback = function(Value)
@@ -40,40 +40,39 @@ FarmTab:CreateToggle({
    end,
 })
 
--- === HỆ THỐNG XỬ LÝ LOGIC CHẠY NGẦM KHÔNG HOÃN ===
+-- === HỆ THỐNG XỬ LÝ SÁT THƯƠNG DIỆN RỘNG CHẠY NGẦM ===
 task.spawn(function()
     while true do
-        task.wait(0.0001) -- Độ trễ chính xác 0.0001s theo yêu cầu
+        task.wait(0.0001) -- Giữ nguyên độ trễ siêu tốc 0.0001s
+        
+        -- Điều kiện 1: Toggle được bật
+        -- Điều kiện 2: Nhân vật tồn tại hợp lệ
         if A_Active and LP.Character and LP.Character:FindFirstChild("HumanoidRootPart") then
             pcall(function()
-                -- Tự động lấy vũ khí lên tay từ Backpack nếu chưa trang bị
-                local tool = LP.Character:FindFirstChildOfClass("Tool")
-                if not tool then
-                    local backpackTool = LP.Backpack:FindFirstChildOfClass("Tool")
-                    if backpackTool then
-                        backpackTool.Parent = LP.Character
-                        tool = backpackTool
-                    end
-                end
-
-                -- Tìm kiếm hệ thống Remote chiến đấu của trò chơi
-                local AttackRemote = RS:FindFirstChild("Attack") or RS:FindFirstChild("HitEnemy") or RS:FindFirstChild("Damage") or RS:FindFirstChild("Hit")
+                -- KIỂM TRA GEAR: Tìm bất kỳ Tool nào đang được nhân vật cầm trên tay
+                local currentGear = LP.Character:FindFirstChildOfClass("Tool")
                 
-                -- Duyệt qua toàn bộ thực thể trong Workspace (Toàn Map không giới hạn khoảng cách)
-                for _, enemy in pairs(workspace:GetChildren()) do
-                    if enemy:IsA("Model") and enemy:FindFirstChild("Humanoid") and enemy:FindFirstChild("HumanoidRootPart") and enemy.Humanoid.Health > 0 then
-                        if not P:GetPlayerFromCharacter(enemy) and enemy.Name ~= "Base" then
-                            
-                            -- Kích hoạt hành động vung/chém của vũ khí
-                            if tool then 
-                                tool:Activate() 
-                            end
-                            
-                            -- Tấn công từ xa xuyên biên giới: Đồng loạt gửi các gói tin gây sát thương
-                            if AttackRemote and AttackRemote:IsA("RemoteEvent") then
-                                AttackRemote:FireServer(enemy, enemy.HumanoidRootPart.Position)
-                                AttackRemote:FireServer(enemy.HumanoidRootPart, enemy.HumanoidRootPart.Position)
-                                AttackRemote:FireServer(enemy, tool)
+                -- Chỉ thực hiện gây sát thương NẾU người chơi thực sự đang cầm một Gear bất kỳ
+                if currentGear then
+                    -- Tự động kích hoạt hành động sử dụng của Gear đó liên tục
+                    currentGear:Activate() 
+
+                    -- Tìm kiếm cổng nhận tín hiệu sát thương (Remote Event) của Server game
+                    local AttackRemote = RS:FindFirstChild("Attack") or RS:FindFirstChild("HitEnemy") or RS:FindFirstChild("Damage") or RS:FindFirstChild("Hit")
+                    
+                    -- Quét và ép nhận sát thương lên TẤT CẢ mục tiêu trong Workspace cùng lúc
+                    for _, enemy in pairs(workspace:GetChildren()) do
+                        if enemy:IsA("Model") and enemy:FindFirstChild("Humanoid") and enemy:FindFirstChild("HumanoidRootPart") and enemy.Humanoid.Health > 0 then
+                            -- Loại trừ bản thân người chơi và các vật thể môi trường cơ bản
+                            if not P:GetPlayerFromCharacter(enemy) and enemy.Name ~= "Base" then
+                                
+                                -- Đồng loạt gửi gói tin gây sát thương diện rộng toàn bản đồ
+                                if AttackRemote and AttackRemote:IsA("RemoteEvent") then
+                                    AttackRemote:FireServer(enemy, enemy.HumanoidRootPart.Position)
+                                    AttackRemote:FireServer(enemy.HumanoidRootPart, enemy.HumanoidRootPart.Position)
+                                    AttackRemote:FireServer(enemy, currentGear)
+                                end
+                                
                             end
                         end
                     end
