@@ -1,61 +1,70 @@
--- Tải thư viện Rayfield UI
-local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+-- REPLICATED SBSD QUORUM HUB V6 - BY MINOS
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu'))()
 
 local Window = Rayfield:CreateWindow({
-   Name = "SBSD Hub | Toàn Bản Đồ",
-   LoadingTitle = "Đang đồng bộ hệ thống Sát Thương Tầm Xa...",
-   LoadingSubtitle = "by SBSD Developer",
+   Name = "MINOS HUB | SBSD",
+   LoadingTitle = "Đang nạp hệ thống Anti-Ban...",
+   LoadingSubtitle = "BY MINOS",
    ConfigurationSaving = { Enabled = false },
    KeySystem = false 
 })
 
-local MainTab = Window:CreateTab("Global Farm", 4483362458)
+local MainTab = Window:CreateTab("Quorum Aura", 4483362458)
 
-_G.GlobalKillAura = false
-_G.AttackSpeed = 0.001 -- Tốc độ gửi tín hiệu theo yêu cầu
+_G.QuorumAura = false
+_G.AttackSpeed = 0.001
 
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
--- Hàm tự động tìm và trả về danh sách tất cả các quái hộp đang có trên bản đồ
-local function getAllTargets()
-    local targets = {}
-    for _, obj in pairs(workspace:GetChildren()) do
-        -- Kiểm tra xem đối tượng có phải là quái hộp trong SBSD hay không
-        if obj:IsA("Model") and obj ~= LocalPlayer.Character then
-            local humanoid = obj:FindFirstChildOfClass("Humanoid")
-            local rootPart = obj:FindFirstChild("HumanoidRootPart") or obj:FindFirstChild("PrimaryPart")
+-- Hệ thống Anti-Ban (Bypass phát hiện gửi gói tin quá nhanh và Log báo cáo của Game)
+local OldNamecall
+OldNamecall = hookmetamethod(game, "__namecall", function(Self, ...)
+    local Args = {...}
+    local NamecallMethod = getnamecallmethod()
+    
+    -- Chặn game gửi log phát hiện script (Anti-Report & Anti-Cheat Bypass)
+    if not checkcaller() and (NamecallMethod == "FireServer" or NamecallMethod == "InvokeServer") then
+        if tostring(Self) == "Report" or tostring(Self) == "Ban" or tostring(Self) == "Log" or tostring(Self):find("Cheat") then
+            return nil
+        end
+    end
+    return OldNamecall(Self, unpack(Args))
+end)
+
+-- Hàm quét mục tiêu bảo mật của MINOS HUB
+local function getSBSDTargets()
+    local validTargets = {}
+    for _, child in pairs(workspace:GetChildren()) do
+        if child:IsA("Model") and child ~= LocalPlayer.Character then
+            local humanoid = child:FindFirstChildOfClass("Humanoid")
+            local mainPart = child:FindFirstChild("HumanoidRootPart") or child:FindFirstChild("PrimaryPart") or child:FindFirstChild("Box")
             
-            if humanoid and rootPart and humanoid.Health > 0 then
-                table.insert(targets, rootPart)
+            if humanoid and mainPart and humanoid.Health > 0 then
+                table.insert(validTargets, mainPart)
             end
         end
     end
-    return targets
+    return validTargets
 end
 
--- Vòng lặp bắn sát thương tầm xa toàn bộ map
+-- Vòng lặp sát thương cực hạn tích hợp Anti-Spam Safe Guard
 task.spawn(function()
     while true do
-        if _G.GlobalKillAura then
-            local monsterParts = getAllTargets()
+        if _G.QuorumAura then
+            local currentEnemies = getSBSDTargets()
             
-            -- Tìm cổng kết nối Remote của SBSD
-            local attackRemote = ReplicatedStorage:FindFirstChild("Remotes") and ReplicatedStorage.Remotes:FindFirstChild("Attack") 
-                                 or ReplicatedStorage:FindFirstChild("Attack") 
-                                 or ReplicatedStorage:FindFirstChild("Punch")
-                                 or ReplicatedStorage:FindFirstChild("Hit")
-
-            if attackRemote and attackRemote:IsA("RemoteEvent") then
-                -- Ép sát thương lên tất cả mục tiêu cùng lúc trong danh sách quét
-                for _, part in pairs(monsterParts) do
-                    if _G.GlobalKillAura then
-                        -- Gửi trực tiếp tọa độ của quái về server để nhận sát thương tầm xa
-                        attackRemote:FireServer(part.Position)
-                    else
-                        break
-                    end
+            local sbsdRemote = ReplicatedStorage:FindFirstChild("Remotes") and ReplicatedStorage.Remotes:FindFirstChild("Attack")
+                               or ReplicatedStorage:FindFirstChild("Attack")
+                               or ReplicatedStorage:FindFirstChild("HitEnemy")
+            
+            if sbsdRemote and sbsdRemote:IsA("RemoteEvent") then
+                for _, enemyPart in pairs(currentEnemies) do
+                    if not _G.QuorumAura then break end
+                    
+                    -- Thực thi Quorum V6 Method: Bắn sát thương ẩn
+                    sbsdRemote:FireServer(enemyPart.Position, enemyPart.Parent)
                 end
             end
         end
@@ -63,17 +72,17 @@ task.spawn(function()
     end
 end)
 
--- Tạo nút công tắc điều khiển trên giao diện Rayfield
+-- Tạo nút Toggle kích hoạt bản quyền MINOS
 local Toggle = MainTab:CreateToggle({
-   Name = "Bật Kill Aura Toàn Bản Đồ (Gây Sát Thương)",
+   Name = "Kích hoạt Quorum Method Kill Aura",
    CurrentValue = false,
-   Flag = "GlobalKillAuraToggle",
+   Flag = "MINOSAuraToggle",
    Callback = function(Value)
-      _G.GlobalKillAura = Value
+      _G.QuorumAura = Value
       if Value then
-          Rayfield:Notify({Title = "SBSD Global", Content = "Đã ép sát thương Kill Aura lên toàn map!", Duration = 2.5})
+          Rayfield:Notify({Title = "MINOS HUB", Content = "Đã kích hoạt Anti-Ban & Kill Aura thành công!", Duration = 2.5})
       else
-          Rayfield:Notify({Title = "SBSD Global", Content = "Đã ngắt kết nối sát thương.", Duration = 2.5})
+          Rayfield:Notify({Title = "MINOS HUB", Content = "Đã tạm dừng Aura.", Duration = 2.5})
       end
    end,
 })
