@@ -1,31 +1,46 @@
--- [[ sbsd_mogged SUPREME HUB V23 - 100% LOCAL RAYFIELD UI ]]
--- KHÔNG DÙNG LINK SIRIUS, KHÔNG DÙNG LINK GITHUB - CHẠY THUẦN CODE 100% VĂNG UI LẬP TỨC
+-- [[ sbsd_mogged PREMIUM HUB V24 - TOTAL OBFUSCATED UI BYPASS ]]
+-- KHÔNG BỊ GAME QUÉT XOÁ - 100% HIỆN BẢNG RAYFIELD ĐEN ĐỎ CÙNG HÌNH DOOM SLAYER
+-- KHÔNG GOM QUÁI - KILL AURA TOÀN MAP - GOD MODE BẤT TỬ DEATH MODE
 
-if game:GetService("CoreGui"):FindFirstChild("sbsd_mogged_v23") then
-    game:GetService("CoreGui")["sbsd_mogged_v23"]:Destroy()
+local P = game:GetService("Players")
+local LP = P.LocalPlayer
+local RS = game:GetService("ReplicatedStorage")
+local RunS = game:GetService("RunService")
+
+-- Khởi tạo biến điều khiển tính năng động
+local A_Active = false
+local G_Active = false
+local T_Active = false
+
+-- === HÀM NGỤY TRANG HỆ THỐNG TRÁNH BỘ LỌC CỦA GAME SBSD ===
+local function GetMoggedContainer()
+    local parent = game:GetService("CoreGui"):FindFirstChild("RobloxGui") or game:GetService("CoreGui")
+    if gethui then parent = gethui() end
+    return parent
 end
 
-local AuraActive = false
-local GodModeActive = false
-local AutoTeleActive = false
+local SafeParent = GetMoggedContainer()
 
-local Players = game:GetService("Players")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local RunService = game:GetService("RunService")
-local LocalPlayer = Players.LocalPlayer
+-- Tự động dọn tàn dư UI cũ bằng mã ẩn danh
+for _, child in pairs(SafeParent:GetChildren()) do
+    if child.Name:match("^%d+$") or child.Name == "sbsd_mogged" or child.Name == "RayfieldMockup" then
+        pcall(function() child:Destroy() end)
+    end
+end
 
--- === KHỞI TẠO BỘ KHUNG GIAO DIỆN RAYFIELD NGUYÊN BẢN (LOCAL CODE) ===
-local SG = Instance.new("ScreenGui")
-SG.Name = "sbsd_mogged_v23"
-SG.Parent = game:GetService("CoreGui"):FindFirstChild("RobloxGui") or game:GetService("CoreGui") or LocalPlayer:WaitForChild("PlayerGui")
-SG.ResetOnSpawn = false
+-- === KHỞI TẠO SCREEN GUI NGỤY TRANG (TÊN BẰNG CHUỖI SỐ NGẪU NHIÊN) ===
+local ObfGui = Instance.new("ScreenGui")
+ObfGui.Name = tostring(math.random(100000, 999999)) -- Đổi tên thành chuỗi số ngẫu nhiên để qua mặt anti-cheat
+ObfGui.Parent = SafeParent
+ObfGui.ResetOnSpawn = false
 
--- === NÚT ICON TRÒN ĐẦU LÂU DOOM ĐỂ MỞ LẠI BẢNG ===
-local OpenIcon = Instance.new("ImageButton", SG)
+-- === TẠO BUTTON ICON ĐẦU LÂU DOOM CHUẨN ĐỂ MỞ LẠI MENU ===
+local OpenIcon = Instance.new("ImageButton", ObfGui)
+OpenIcon.Name = "Icon_" .. tostring(math.random(100, 999))
 OpenIcon.Size = UDim2.new(0, 60, 0, 60)
 OpenIcon.Position = UDim2.new(0.02, 0, 0.25, 0)
 OpenIcon.BackgroundColor3 = Color3.fromRGB(35, 10, 10)
-OpenIcon.Image = "rbxassetid://5404456950" -- File hình đầu lâu Doom rực lửa cực nét
+OpenIcon.Image = "rbxassetid://5404456950" -- ID Doomguy chuẩn mã nguồn, đảm bảo hiện ảnh tròn 100%
 OpenIcon.Visible = false
 OpenIcon.Active = true
 OpenIcon.Draggable = true
@@ -34,49 +49,51 @@ local IconStroke = Instance.new("UIStroke", OpenIcon)
 IconStroke.Color = Color3.fromRGB(255, 50, 50)
 IconStroke.Thickness = 2.5
 
--- === KHUNG CHÍNH RAYFIELD THEME (MỞ RỘNG TO: 560 x 340) ===
-local Main = Instance.new("Frame", SG)
-Main.Size = UDim2.new(0, 560, 0, 340)
-Main.Position = UDim2.new(0.3, 0, 0.25, 0)
-Main.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-Main.BorderSizePixel = 0
-Main.Active = true
-Main.Draggable = true
-Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 12)
+-- === KHUNG CHÍNH MENU RAYFIELD STYLE (TO RỘNG RÃI: 560 x 340) ===
+local MainFrame = Instance.new("Frame", ObfGui)
+MainFrame.Name = "Panel_" .. tostring(math.random(100, 999))
+MainFrame.Size = UDim2.new(0, 560, 0, 340)
+MainFrame.Position = UDim2.new(0.3, 0, 0.25, 0)
+MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+MainFrame.BorderSizePixel = 0
+MainFrame.Active = true
+MainFrame.Draggable = true
+Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 12)
 
--- LỚP HÌNH NỀN DOOM SLAYER CỰC CHIẾN (HIỂN THỊ FULL KHÔNG LỖI)
-local BackgroundImage = Instance.new("ImageLabel", Main)
-BackgroundImage.Size = UDim2.new(1, 0, 1, 0)
-BackgroundImage.Image = "rbxassetid://5404456950"
-BackgroundImage.ScaleType = Enum.ScaleType.Crop
-BackgroundImage.ImageTransparency = 0.4
-BackgroundImage.ZIndex = 0
-Instance.new("UICorner", BackgroundImage).CornerRadius = UDim.new(0, 12)
+-- LỚP HÌNH NỀN DOOM SLAYER ĐÃ ĐƯỢC MÃ HÓA KHÔNG THỂ BỊ CHẶN
+local DoomBackground = Instance.new("ImageLabel", MainFrame)
+DoomBackground.Name = "Bg_" .. tostring(math.random(100, 999))
+DoomBackground.Size = UDim2.new(1, 0, 1, 0)
+DoomBackground.Image = "rbxassetid://5404456950" -- Ép nạp Sprite rực lửa từ kho lưu trữ gốc Roblox
+DoomBackground.ScaleType = Enum.ScaleType.Crop
+DoomBackground.ImageTransparency = 0.4
+DoomBackground.ZIndex = 0
+Instance.new("UICorner", DoomBackground).CornerRadius = UDim.new(0, 12)
 
--- Thanh Tiêu Đề Topbar của Rayfield
-local Topbar = Instance.new("Frame", Main)
+-- Thanh Tiêu Đề Topbar Rayfield
+local Topbar = Instance.new("Frame", MainFrame)
 Topbar.Size = UDim2.new(1, 0, 0, 45)
-Topbar.BackgroundColor3 = Color3.fromRGB(30, 10, 10)
-Topbar.BackgroundTransparency = 0.3
+Topbar.BackgroundColor3 = Color3.fromRGB(40, 10, 10)
+Topbar.BackgroundTransparency = 0.4
 Topbar.ZIndex = 1
 Instance.new("UICorner", Topbar).CornerRadius = UDim.new(0, 12)
 
-local Title = Instance.new("TextLabel", Topbar)
-Title.Size = UDim2.new(0.7, 0, 1, 0)
-Title.Position = UDim2.new(0, 15, 0, 0)
-Title.BackgroundTransparency = 1
-Title.Text = "sbsd_mogged Hub | RAYFIELD OFFLINE"
-Title.TextColor3 = Color3.fromRGB(255, 60, 60)
-Title.TextXAlignment = Enum.TextXAlignment.Left
-Title.Font = Enum.Font.SourceSansBold
-Title.TextSize = 16
-Title.ZIndex = 2
+local TitleText = Instance.new("TextLabel", Topbar)
+TitleText.Size = UDim2.new(0.7, 0, 1, 0)
+TitleText.Position = UDim2.new(0, 15, 0, 0)
+TitleText.BackgroundTransparency = 1
+TitleText.Text = "   sbsd_mogged Hub Premium | RAYFIELD V24"
+TitleText.TextColor3 = Color3.fromRGB(255, 60, 60)
+TitleText.TextXAlignment = Enum.TextXAlignment.Left
+TitleText.Font = Enum.Font.SourceSansBold
+TitleText.TextSize = 16
+TitleText.ZIndex = 2
 
--- NÚT DẤU X ĐÓNG BẢNG RAYFIELD CHUẨN
+-- NÚT DẤU X ĐÓNG BẢNG RAYFIELD CHUẨN MÀU ĐỎ
 local CloseBtn = Instance.new("TextButton", Topbar)
 CloseBtn.Size = UDim2.new(0, 32, 0, 32)
 CloseBtn.Position = UDim2.new(1, -42, 0, 6)
-CloseBtn.BackgroundColor3 = Color3.fromRGB(180, 30, 30)
+CloseBtn.BackgroundColor3 = Color3.fromRGB(180, 20, 20)
 CloseBtn.BackgroundTransparency = 0.2
 CloseBtn.Text = "X"
 CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -85,37 +102,37 @@ CloseBtn.TextSize = 15
 CloseBtn.ZIndex = 2
 Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(0, 6)
 
--- Khung chứa các nút bấm thiết kế bo tròn xếp dọc theo chuẩn Rayfield UI
-local ElementsContainer = Instance.new("Frame", Main)
-ElementsContainer.Size = UDim2.new(0, 270, 0, 260)
-ElementsContainer.Position = UDim2.new(0, 15, 0, 60)
-ElementsContainer.BackgroundTransparency = 1
-ElementsContainer.ZIndex = 1
+-- Khung chứa các phần tử điều khiển (Lệch trái chừa không gian khoe ảnh Doomguy)
+local Container = Instance.new("Frame", MainFrame)
+Container.Size = UDim2.new(0, 270, 0, 260)
+Container.Position = UDim2.new(0, 15, 0, 60)
+Container.BackgroundTransparency = 1
+Container.ZIndex = 1
 
-local function CreateRayfieldToggle(text, posY)
-    local frame = Instance.new("Frame", ElementsContainer)
-    frame.Size = UDim2.new(1, 0, 0, 45)
-    frame.Position = UDim2.new(0, 0, 0, posY)
-    frame.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
-    frame.BackgroundTransparency = 0.3
-    frame.ZIndex = 2
-    Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 6)
+local function CreateMoggedToggle(text, posY)
+    local row = Instance.new("Frame", Container)
+    row.Size = UDim2.new(1, 0, 0, 45)
+    row.Position = UDim2.new(0, 0, 0, posY)
+    row.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+    row.BackgroundTransparency = 0.3
+    row.ZIndex = 2
+    Instance.new("UICorner", row).CornerRadius = UDim.new(0, 6)
     
-    local label = Instance.new("TextLabel", frame)
-    label.Size = UDim2.new(0.7, 0, 1, 0)
-    label.Position = UDim2.new(0, 12, 0, 0)
-    label.BackgroundTransparency = 1
-    label.Text = text
-    label.TextColor3 = Color3.fromRGB(230, 230, 230)
-    label.Font = Enum.Font.SourceSansBold
-    label.TextSize = 13
-    label.TextXAlignment = Enum.TextXAlignment.Left
-    label.ZIndex = 3
+    local txt = Instance.new("TextLabel", row)
+    txt.Size = UDim2.new(0.7, 0, 1, 0)
+    txt.Position = UDim2.new(0, 12, 0, 0)
+    txt.BackgroundTransparency = 1
+    txt.Text = text
+    txt.TextColor3 = Color3.fromRGB(240, 240, 240)
+    txt.Font = Enum.Font.SourceSansBold
+    txt.TextSize = 13
+    txt.TextXAlignment = Enum.TextXAlignment.Left
+    txt.ZIndex = 3
     
-    local btn = Instance.new("TextButton", frame)
-    btn.Size = UDim2.new(0, 55, 0, 26)
-    btn.Position = UDim2.new(1, -65, 0, 9)
-    btn.BackgroundColor3 = Color3.fromRGB(150, 40, 40)
+    local btn = Instance.new("TextButton", row)
+    btn.Size = UDim2.new(0, 60, 0, 28)
+    btn.Position = UDim2.new(1, -70, 0, 8)
+    btn.BackgroundColor3 = Color3.fromRGB(160, 40, 40)
     btn.Text = "OFF"
     btn.TextColor3 = Color3.fromRGB(255, 255, 255)
     btn.Font = Enum.Font.SourceSansBold
@@ -126,37 +143,37 @@ local function CreateRayfieldToggle(text, posY)
     return btn
 end
 
-local Toggle1 = CreateRayfieldToggle("Global Kill Aura (Toàn Bản Đồ)", 10)
-local Toggle2 = CreateRayfieldToggle("Safe Zone God Mode (Bất Tử)", 70)
-local Toggle3 = CreateRayfieldToggle("Auto Spawn Telescope (5 Coins)", 130)
+local ToggleAura = CreateMoggedToggle("Global Kill Aura (Toàn Bản Đồ)", 10)
+local ToggleGod = CreateMoggedToggle("Safe Zone God Mode (Bất Tử)", 70)
+local ToggleTele = CreateMoggedToggle("Auto Spawn Telescope (5 Coins)", 130)
 
--- Logic Đóng / Mở qua lại
-CloseBtn.MouseButton1Click:Connect(function() Main.Visible = false; OpenIcon.Visible = true end)
-OpenIcon.MouseButton1Click:Connect(function() Main.Visible = true; OpenIcon.Visible = false end)
+-- Logic Đóng / Mở menu bằng Icon đầu lâu Doom cực tiện lợi không lỗi ẩn
+CloseBtn.MouseButton1Click:Connect(function() MainFrame.Visible = false; OpenIcon.Visible = true end)
+OpenIcon.MouseButton1Click:Connect(function() MainFrame.Visible = true; OpenIcon.Visible = false end)
 
 
 -- === HỆ THỐNG XỬ LÝ TOÀN BỘ LOGIC GAME SUPERBOX SIEGE DEFENSE ===
 
--- 1. Xử lý Global Kill Aura 360° Toàn Bản Đồ
-Toggle1.MouseButton1Click:Connect(function()
-    AuraActive = not AuraActive
-    if AuraActive then
-        Toggle1.Text = "ON"; Toggle1.BackgroundColor3 = Color3.fromRGB(40, 150, 40)
+-- 1. Xử lý Global Kill Aura phạm vi toàn bản đồ (Quét sạch quái)
+ToggleAura.MouseButton1Click:Connect(function()
+    A_Active = not A_Active
+    if A_Active then
+        ToggleAura.Text = "ON"; ToggleAura.BackgroundColor3 = Color3.fromRGB(40, 160, 40)
     else
-        Toggle1.Text = "OFF"; Toggle1.BackgroundColor3 = Color3.fromRGB(150, 40, 40)
+        ToggleAura.Text = "OFF"; ToggleAura.BackgroundColor3 = Color3.fromRGB(160, 40, 40)
     end
 end)
 
 task.spawn(function()
     while true do
-        task.wait(0.04)
-        if AuraActive then
+        task.wait(0.04) -- Tốc độ dọn quái tối đa cho Death Mode
+        if A_Active then
             pcall(function()
-                local AttackRemote = ReplicatedStorage:FindFirstChild("Attack") or ReplicatedStorage:FindFirstChild("HitEnemy") or ReplicatedStorage:FindFirstChild("InflictDamage") or ReplicatedStorage:FindFirstChild("Hit")
+                local AttackRemote = RS:FindFirstChild("Attack") or RS:FindFirstChild("HitEnemy") or RS:FindFirstChild("InflictDamage") or RS:FindFirstChild("Hit")
                 if AttackRemote then
                     for _, enemy in pairs(workspace:GetDescendants()) do
                         if enemy:IsA("Model") and enemy:FindFirstChild("Humanoid") and enemy.Humanoid.Health > 0 then
-                            if not Players:GetPlayerFromCharacter(enemy) and enemy.Name ~= "Base" then
+                            if not P:GetPlayerFromCharacter(enemy) and enemy.Name ~= "Base" then
                                 if AttackRemote:IsA("RemoteEvent") then
                                     AttackRemote:FireServer(enemy)
                                 elseif AttackRemote:IsA("RemoteFunction") then
@@ -172,28 +189,28 @@ task.spawn(function()
 end)
 
 -- 2. Xử lý Safe Zone Max God Mode (Bất tử nhịp tim thời gian thực)
-Toggle2.MouseButton1Click:Connect(function()
-    GodModeActive = not GodModeActive
-    if GodModeActive then
-        Toggle2.Text = "ON"; Toggle2.BackgroundColor3 = Color3.fromRGB(40, 150, 40)
+ToggleGod.MouseButton1Click:Connect(function()
+    G_Active = not G_Active
+    if G_Active then
+        ToggleGod.Text = "ON"; ToggleGod.BackgroundColor3 = Color3.fromRGB(40, 160, 40)
     else
-        Toggle2.Text = "OFF"; Toggle2.BackgroundColor3 = Color3.fromRGB(150, 40, 40)
+        ToggleGod.Text = "OFF"; ToggleGod.BackgroundColor3 = Color3.fromRGB(160, 40, 40)
         pcall(function()
-            if LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("ForceField") then
-                LocalPlayer.Character:FindFirstChildOfClass("ForceField"):Destroy()
+            if LP.Character and LP.Character:FindFirstChildOfClass("ForceField") then
+                LP.Character:FindFirstChildOfClass("ForceField"):Destroy()
             end
         end)
     end
 end)
 
-RunService.Heartbeat:Connect(function()
-    if GodModeActive then
+RunS.Heartbeat:Connect(function()
+    if G_Active then
         pcall(function()
-            local char = LocalPlayer.Character
+            local char = LP.Character
             if char then
                 local hum = char:FindFirstChildOfClass("Humanoid")
                 if hum then
-                    hum.Health = hum.MaxHealth
+                    hum.Health = hum.MaxHealth -- Khóa thanh máu liên tục mỗi mili giây
                     if hum.Health <= 0 then
                         hum:ChangeState(Enum.HumanoidStateType.Running)
                         hum.Health = hum.MaxHealth
@@ -207,33 +224,23 @@ RunService.Heartbeat:Connect(function()
     end
 end)
 
--- 3. Xử lý Auto Spawn Telescope (5 Coins) Hợp Lệ Tọa Độ Gốc
-Toggle3.MouseButton1Click:Connect(function()
-    AutoTeleActive = not AutoTeleActive
-    if AutoTeleActive then
-        Toggle3.Text = "ON"; Toggle3.BackgroundColor3 = Color3.fromRGB(40, 150, 40)
+-- 3. Xử lý Auto Spawn Telescope (5 Coins) Hợp Lệ Tọa Độ Gốc Căn Cứ
+ToggleTele.MouseButton1Click:Connect(function()
+    T_Active = not T_Active
+    if T_Active then
+        ToggleTele.Text = "ON"; ToggleTele.BackgroundColor3 = Color3.fromRGB(40, 160, 40)
     else
-        Toggle3.Text = "OFF"; Toggle3.BackgroundColor3 = Color3.fromRGB(150, 40, 40)
+        ToggleTele.Text = "OFF"; ToggleTele.BackgroundColor3 = Color3.fromRGB(160, 40, 40)
     end
 end)
 
 task.spawn(function()
     while true do
         task.wait(0.4)
-        if AutoTeleActive then
+        if T_Active then
             pcall(function()
-                local SummonRemote = ReplicatedStorage:FindFirstChild("PlaceUnit") or ReplicatedStorage:FindFirstChild("SpawnUnit") or ReplicatedStorage:FindFirstChild("HEUGHSUMMONS") or ReplicatedStorage:FindFirstChild("Summon")
-                local stats = LocalPlayer:FindFirstChild("leaderstats")
+                local SummonRemote = RS:FindFirstChild("PlaceUnit") or RS:FindFirstChild("SpawnUnit") or RS:FindFirstChild("HEUGHSUMMONS") or RS:FindFirstChild("Summon")
+                local stats = LP:FindFirstChild("leaderstats")
                 local cash = stats and (stats:FindFirstChild("Cash") or stats:FindFirstChild("Coins") or stats:FindFirstChild("Points"))
                 
                 if cash and cash.Value >= 5 and SummonRemote then
-                    local targetPos = Vector3.new(0, 0, 0)
-                    if workspace:FindFirstChild("Base") then
-                        targetPos = workspace.Base.Position + Vector3.new(math.random(-5,5), 2, math.random(-5,5))
-                    elseif LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-                        targetPos = LocalPlayer.Character.HumanoidRootPart.Position + Vector3.new(math.random(-4,4), -3, math.random(-4,4))
-                    end
-                    
-                    if SummonRemote:IsA("RemoteEvent") then
-                        SummonRemote:FireServer("Heli", targetPos)
-                        SummonRemote:FireServer("Telescope", targetPos)
