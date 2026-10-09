@@ -1,36 +1,36 @@
--- MINOS HUB | SBSD REMOTE TOUCH AURA (CHÉM TẦM XA KHÔNG GOM QUÁI)
+-- MINOS HUB | SBSD SURGE TURBO TOUCH AURA (MAX TICK RATE)
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
-   Name = "MINOS HUB | SBSD",
-   LoadingTitle = "Đang đồng bộ Touch Aura Tầm Xa...",
+   Name = "MINOS HUB | SURGE TURBO",
+   LoadingTitle = "Đang ép nhịp sát thương Surge Driver...",
    LoadingSubtitle = "BY MINOS",
    ConfigurationSaving = { Enabled = false },
    KeySystem = false 
 })
 
-local MainTab = Window:CreateTab("Remote Touch", 4483362458)
+local MainTab = Window:CreateTab("Surge Aura", 4483362458)
 
-_G.RemoteTouchAura = false
-_G.AttackSpeed = 0.01 -- Tốc độ kích hoạt nhịp nhảy damage cực nhanh (0.01 giây)
+_G.SurgeTouchAura = false
+_G.TurboTicks = 5 -- Số nhịp giật damage lặp lại trong 1 khung hình (Tăng tốc độ nhảy số)
 
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 
--- Hàm giả lập chạm kiếm vào quái toàn bản đồ từ xa
-local function applyRemoteTouchAura()
+-- Hàm giả lập chuỗi va chạm siêu tốc toàn map
+local function applySurgeTurboAura()
     local character = LocalPlayer.Character
     if not character then return end
     
-    -- Kiểm tra xem bạn đã cầm vũ khí trên tay chưa
+    -- Kiểm tra xem anh đã cầm vũ khí trên tay chưa
     local tool = character:FindFirstChildOfClass("Tool")
     if not tool then return end
     
-    -- Tìm phần gây sát thương của vũ khí (Handle hoặc Blade)
+    -- Tìm phần lưỡi kiếm/vũ khí gây sát thương
     local toolHandle = tool:FindFirstChild("Handle") or tool:FindFirstChild("Blade") or tool:FindFirstChildOfClass("Part")
     if not toolHandle then return end
 
-    -- Xác định thư mục chứa quái vật trong trận đấu SBSD
+    -- Xác định thư mục chứa quái trong trận đấu SBSD
     local enemyContainer = workspace:FindFirstChild("Enemies") or workspace
 
     for _, child in pairs(enemyContainer:GetChildren()) do
@@ -39,36 +39,38 @@ local function applyRemoteTouchAura()
             local enemyRoot = child:FindFirstChild("HumanoidRootPart") or child:FindFirstChild("PrimaryPart")
             
             if humanoid and enemyRoot and humanoid.Health > 0 then
-                -- Ép sự kiện va chạm (Touch) vật lý giữa lưỡi kiếm và quái từ xa
-                -- Số 0 là bắt đầu chạm (nhận sát thương), số 1 là bỏ chạm (để hồi lại nhịp chém tiếp theo)
-                firetouchinterest(enemyRoot, toolHandle, 0)
-                firetouchinterest(enemyRoot, toolHandle, 1)
+                -- MULTI-TICK METHOD: Bắn liên tiếp nhiều nhịp va chạm cùng lúc để sát thương nhảy liên tục không ngừng
+                for i = 1, _G.TurboTicks do
+                    firetouchinterest(enemyRoot, toolHandle, 0) -- Kích hoạt chạm
+                    firetouchinterest(enemyRoot, toolHandle, 1) -- Ngắt chạm để sẵn sàng cho phát sau
+                end
             end
         end
     end
 end
 
--- Vòng lặp quét quái và kích hoạt sát thương liên tục
+-- Vòng lặp tối ưu hóa chu kỳ quét chống nghẽn CPU
 task.spawn(function()
     while true do
-        if _G.RemoteTouchAura then
-            pcall(applyRemoteTouchAura)
+        if _G.SurgeTouchAura then
+            pcall(applySurgeTurboAura)
         end
-        task.wait(_G.AttackSpeed)
+        -- Dùng runservice hoặc đợi tối thiểu để đạt tốc độ giật điện liên tục mượt mà nhất
+        task.wait() 
     end
 end)
 
--- Tạo nút công tắc Bật/Tắt trên giao diện Rayfield bản quyền MINOS
+-- Tạo nút bật tắt giao diện Rayfield bản quyền MINOS
 local Toggle = MainTab:CreateToggle({
-   Name = "Kích hoạt Remote Touch Aura (Chỉ cần cầm vũ khí)",
+   Name = "Kích hoạt Surge Turbo Aura (Giật Dmg Liên Tục)",
    CurrentValue = false,
-   Flag = "MINOSRemoteTouch",
+   Flag = "MINOSSurgeTurbo",
    Callback = function(Value)
-      _G.RemoteTouchAura = Value
+      _G.SurgeTouchAura = Value
       if Value then
-          Rayfield:Notify({Title = "MINOS HUB", Content = "Đã kích hoạt chém từ xa không gom quái!", Duration = 2.5})
+          Rayfield:Notify({Title = "MINOS HUB", Content = "Đã kích hoạt tốc độ giật điện siêu tốc!", Duration = 2.5})
       else
-          Rayfield:Notify({Title = "MINOS HUB", Content = "Đã tắt Touch Aura.", Duration = 2.5})
+          Rayfield:Notify({Title = "MINOS HUB", Content = "Đã tắt Surge Aura.", Duration = 2.5})
       end
    end,
 })
