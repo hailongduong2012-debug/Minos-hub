@@ -1,5 +1,5 @@
--- [[ SBSD CAMPAIGN 2026 - SKY ANCHORED SAFE ZONE & SILENT MULTI-AURA v29 ]]
--- Tối ưu hóa: Khóa cứng Anchored trên mây + Chém vi mô không delay + Nút X Mobile
+-- [[ SBSD CAMPAIGN 2026 - SKY ANCHORED SAFE ZONE, MAX-RANGE AURA & AUTO TELESCOPE v30 ]]
+-- Tối ưu hóa: Khóa cứng Anchored + Chém toàn bản đồ (Vô hạn diện tích) + Tự động gọi Kính viễn vọng 5 Coin + Nút X Mobile
 
 if game:GetService("CoreGui"):FindFirstChild("RayfieldMockup_SBSD") then
     game:GetService("CoreGui")["RayfieldMockup_SBSD"]:Destroy()
@@ -7,6 +7,7 @@ end
 
 local AutoFarmActive = false
 local SkyAnchoredActive = false
+local AutoTelescopeActive = false
 local UiVisible = true
 local SavedLocation = nil
 
@@ -20,7 +21,7 @@ SG.Name = "RayfieldMockup_SBSD"
 SG.ResetOnSpawn = false
 
 local Main = Instance.new("Frame", SG)
-Main.Size = UDim2.new(0, 320, 0, 230)
+Main.Size = UDim2.new(0, 320, 0, 290) -- Tăng chiều cao để vừa nút mới
 Main.Position = UDim2.new(0.35, 0, 0.25, 0)
 Main.BackgroundColor3 = Color3.fromRGB(21, 21, 24)
 Main.BorderSizePixel = 0
@@ -31,7 +32,7 @@ Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 9)
 local Title = Instance.new("TextLabel", Main)
 Title.Size = UDim2.new(1, -40, 0, 40)
 Title.BackgroundColor3 = Color3.fromRGB(28, 28, 33)
-Title.Text = "  SBSD Hub | Sky Anchored v29"
+Title.Text = "  SBSD Hub | Max-Range Aura & Telescope"
 Title.TextColor3 = Color3.fromRGB(240, 240, 240)
 Title.TextXAlignment = Enum.TextXAlignment.Left
 Title.Font = Enum.Font.SourceSansBold
@@ -61,12 +62,12 @@ OpenButton.TextSize = 12
 OpenButton.Visible = false
 Instance.new("UICorner", OpenButton).CornerRadius = UDim.new(1, 0)
 
--- Nút Toggle 1: Chém Siêu Tốc Vi Mô
+-- Nút Toggle 1: Chém Siêu Tốc Vi Mô - Diện Tích Vô Hạn
 local Toggle1 = Instance.new("TextButton", Main)
 Toggle1.Size = UDim2.new(0, 290, 0, 45)
-Toggle1.Position = UDim2.new(0, 15, 0, 60)
+Toggle1.Position = UDim2.new(0, 15, 0, 55)
 Toggle1.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
-Toggle1.Text = "Micro-Delay Kill Aura (Max Speed) : OFF"
+Toggle1.Text = "Max-Range Kill Aura (Toàn Bản Đồ) : OFF"
 Toggle1.TextColor3 = Color3.fromRGB(200, 70, 70)
 Toggle1.Font = Enum.Font.SourceSansBold
 Toggle1.TextSize = 13
@@ -75,7 +76,7 @@ Instance.new("UICorner", Toggle1).CornerRadius = UDim.new(0, 6)
 -- Nút Toggle 2: Bất Tử Khóa Cứng Trên Trời
 local Toggle2 = Instance.new("TextButton", Main)
 Toggle2.Size = UDim2.new(0, 290, 0, 45)
-Toggle2.Position = UDim2.new(0, 15, 0, 120)
+Toggle2.Position = UDim2.new(0, 15, 0, 110)
 Toggle2.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
 Toggle2.Text = "Sky Safe Zone (Chống Kéo Lùi) : OFF"
 Toggle2.TextColor3 = Color3.fromRGB(200, 70, 70)
@@ -83,11 +84,22 @@ Toggle2.Font = Enum.Font.SourceSansBold
 Toggle2.TextSize = 13
 Instance.new("UICorner", Toggle2).CornerRadius = UDim.new(0, 6)
 
+-- Nút Toggle 3: Tự Động Spawn Telescope (Kính Viễn Vọng)
+local Toggle3 = Instance.new("TextButton", Main)
+Toggle3.Size = UDim2.new(0, 290, 0, 45)
+Toggle3.Position = UDim2.new(0, 15, 0, 165)
+Toggle3.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
+Toggle3.Text = "Auto Spawn Telescope (5 Coins) : OFF"
+Toggle3.TextColor3 = Color3.fromRGB(200, 70, 70)
+Toggle3.Font = Enum.Font.SourceSansBold
+Toggle3.TextSize = 13
+Instance.new("UICorner", Toggle3).CornerRadius = UDim.new(0, 6)
+
 local InfoText = Instance.new("TextLabel", Main)
 InfoText.Size = UDim2.new(1, 0, 0, 30)
-InfoText.Position = UDim2.new(0, 0, 0, 185)
+InfoText.Position = UDim2.new(0, 0, 0, 250)
 InfoText.BackgroundTransparency = 1
-InfoText.Text = "Cơ chế: Khóa cứng Anchored cách ly CFrame 550 Block"
+InfoText.Text = "Cơ chế: Vô hạn diện tích Aura + Auto Shop 5 Coin"
 InfoText.TextColor3 = Color3.fromRGB(0, 255, 180)
 InfoText.Font = Enum.Font.SourceSansItalic
 InfoText.TextSize = 11
@@ -112,12 +124,9 @@ Toggle2.MouseButton1Click:Connect(function()
     local root = char and char:FindFirstChild("HumanoidRootPart")
     
     if SkyAnchoredActive and root then
-        -- Lưu vị trí gốc trên mặt đất
         SavedLocation = root.CFrame
-        -- Đưa thẳng nhân vật lên độ cao an toàn tuyệt đối
         root.CFrame = root.CFrame * CFrame.new(0, 550, 0)
     else
-        -- Trả tự do vật lý và đưa về vị trí cũ khi tắt
         if root then
             root.Anchored = false
             if SavedLocation then root.CFrame = SavedLocation end
@@ -125,7 +134,6 @@ Toggle2.MouseButton1Click:Connect(function()
     end
 end)
 
--- Thực thi vòng lặp khóa cứng tọa độ ở chu kỳ kết xuất để triệt tiêu bộ kéo lùi của Server
 RunService.RenderStepped:Connect(function()
     if SkyAnchoredActive and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
         pcall(function()
@@ -133,7 +141,6 @@ RunService.RenderStepped:Connect(function()
             local playerRoot = char.HumanoidRootPart
             local humanoid = char:FindFirstChildOfClass("Humanoid")
             
-            -- ÉP CHẶT NEO VẬT LÝ: Đóng băng dữ liệu vận tốc, vô hiệu hóa lệnh kéo lùi từ Server
             playerRoot.Anchored = true
             
             if humanoid then
@@ -146,22 +153,21 @@ RunService.RenderStepped:Connect(function()
 end)
 
 
--- === 2. CƠ CHẾ CHÉM ĐA LUỒNG VI MÔ KHÔNG DELAY (MICRO-DELAY AURA) ===
+-- === 2. CƠ CHẾ CHÉM TOÀN BẢN ĐỒ (DIỆN TÍCH TỐI ĐA - KHÔNG GIỚI HẠN KHOẢNG CÁCH) ===
 Toggle1.MouseButton1Click:Connect(function()
     AutoFarmActive = not AutoFarmActive
-    Toggle1.Text = AutoFarmActive and "Micro-Delay Kill Aura (Max Speed) : ON" or "Micro-Delay Kill Aura (Max Speed) : OFF"
+    Toggle1.Text = AutoFarmActive and "Max-Range Kill Aura (Toàn Bản Đồ) : ON" or "Max-Range Kill Aura (Toàn Bản Đồ) : OFF"
     Toggle1.TextColor3 = AutoFarmActive and Color3.fromRGB(80, 200, 80) or Color3.fromRGB(200, 70, 70)
 end)
 
 task.spawn(function()
     while true do
-        RunService.Heartbeat:Wait() -- Nhịp nghỉ phần cứng chống crash game trên thiết bị Mobile
+        RunService.Heartbeat:Wait()
         if AutoFarmActive then
             pcall(function()
                 local char = LocalPlayer.Character
                 local backpack = LocalPlayer:FindFirstChild("Backpack")
                 
-                -- Tự động cầm vũ khí lên tay
                 if char and backpack and not char:FindFirstChildOfClass("Tool") then
                     local tool = backpack:FindFirstChildOfClass("Tool")
                     if tool then tool.Parent = char end
@@ -171,18 +177,17 @@ task.spawn(function()
                 if currentTool then
                     local attackPart = currentTool:FindFirstChild("Handle") or currentTool:FindFirstChildWhichIsA("BasePart")
                     
-                    -- Chém ẩn im lặng không hoạt ảnh vung kiếm để loại bỏ 100% lag giật màn hình
                     if attackPart and firetouchinterest then
                         for _, enemy in pairs(workspace:GetDescendants()) do
                             if enemy:IsA("Model") and enemy:FindFirstChild("Humanoid") and enemy.Humanoid.Health > 0 then
                                 if not Players:GetPlayerFromCharacter(enemy) then
                                     local enemyRoot = enemy:FindFirstChild("HumanoidRootPart") or enemy:FindFirstChildWhichIsA("BasePart")
                                     
+                                    -- Bỏ hoàn toàn kiểm tra khoảng cách (Magnitude) -> Tự động chém trúng quái ở bất kỳ đâu trên Map
                                     if enemyRoot then
                                         local isBoss = string.find(string.lower(enemy.Name), "boss") or enemy:GetAttribute("IsBoss")
-                                        
-                                        -- Phân luồng cực hạn (Micro-Delay): Đốt sát thương Boss x60 phát, Quái x20 phát/khung hình ngầm
                                         local hitCount = isBoss and 60 or 20
+                                        
                                         for i = 1, hitCount do
                                             coroutine.wrap(function()
                                                 firetouchinterest(enemyRoot, attackPart, 0)
@@ -190,7 +195,6 @@ task.spawn(function()
                                             end)()
                                         end
                                     end
-                                    
                                 end
                             end
                         end
@@ -200,3 +204,24 @@ task.spawn(function()
         end
     end
 end)
+
+
+-- === 3. TÍNH NĂNG TỰ ĐỘNG MUA/SPAWN TELESCOPE GIÁ 5 COIN ===
+Toggle3.MouseButton1Click:Connect(function()
+    AutoTelescopeActive = not AutoTelescopeActive
+    Toggle3.Text = AutoTelescopeActive and "Auto Spawn Telescope (5 Coins) : ON" or "Auto Spawn Telescope (5 Coins) : OFF"
+    Toggle3.TextColor3 = AutoTelescopeActive and Color3.fromRGB(80, 200, 80) or Color3.fromRGB(200, 70, 70)
+end)
+
+task.spawn(function()
+    while true do
+        task.wait(1) -- Chu kỳ quét mua vật phẩm mỗi 1 giây để tránh nghẽn lệnh mạng
+        if AutoTelescopeActive then
+            pcall(function()
+                -- Gửi tín hiệu RemoteEvent mua đạo cụ Telescope tới Server game của bạn
+                local shopRemote = game:GetService("ReplicatedStorage"):FindFirstChild("BuyItem", true) 
+                    or game:GetService("ReplicatedStorage"):FindFirstChild("PurchaseItem", true)
+                    or game:GetService("ReplicatedStorage"):FindFirstChild("RemoteEvent", true)
+
+                if shopRemote and shopRemote:IsA("RemoteEvent") then
+                    -- Các cấu trúc tham số giả lập thông dụng trên hệ thống cửa hàng Roblox
