@@ -1,14 +1,10 @@
--- [[ sbsd_mogged SUPREME HUB V38 - RAYFIELD SIRIUS MENU ]]
--- NẠP THƯ VIỆN GIAO DIỆN QUA DOMAIN SIRIUS.MENU CHUẨN CHỈ
--- KHÔNG LƯỚT NHÂN VẬT - TOÀN MAP GEAR ATTACK - SAFE ZONE GOD MODE BẤT TỬ
+-- [[ sbsd_mogged SUPREME HUB V40 - CHUẨN KILL AURA MƯỢT LÚC SÁNG ]]
+-- NẠP QUA SIRIUS.MENU - FIX TRIỆT ĐỂ LỖI KÈT ĐAM - QUÁI SPAWN CHẾT NGAY LẬP TỨC
+-- KHÔNG DASH, KHÔNG LƯỚT - AN TOÀN TUYỆT ĐỐI CHO CAMPAIGN / DEATH MODE
 
--- Ép hệ thống mở chế độ ẩn danh tối cao của Rayfield trước khi gọi link để bypass anti-gui của game
 getgenv().SecureMode = true
-
--- Gọi liên kết nạp thư viện Rayfield chính thức qua sirius.menu theo đúng yêu cầu
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
--- === KHỞI TẠO CỬA SỔ RAYFIELD THEME ĐEN ĐỎ ===
 local Window = Rayfield:CreateWindow({
    Name = "sbsd_mogged Hub | Winner Setup",
    LoadingTitle = "Loading System...",
@@ -18,10 +14,8 @@ local Window = Rayfield:CreateWindow({
    ConfigurationSaving = { Enabled = false }
 })
 
--- Tạo Tab chức năng chính có chữ SBSD màu xanh lá nổi bật
 local MainTab = Window:CreateTab("SBSD Campaign", 4483345998)
 
--- Biến lưu trạng thái tính năng
 local AuraActive = false
 local GodModeActive = false
 
@@ -30,16 +24,14 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
 
--- === KHỞI TẠO NÚT ICON CHỮ SBSD MÀU XANH LÁ KHI THU NHỎ RAYFIELD ===
+-- Fix nút thu nhỏ thành chữ SBSD màu xanh lá kéo thả được
 task.spawn(function()
     task.wait(1.2)
     pcall(function()
-        -- Tìm đến phân vùng chứa nút đóng mở mặc định của Rayfield để đè chữ SBSD lên
         local RayfieldGui = game:GetService("CoreGui"):FindFirstChild("Rayfield") or LocalPlayer.PlayerGui:FindFirstChild("Rayfield")
         if RayfieldGui and RayfieldGui:FindFirstChild("OpenButton") then
             local openBtn = RayfieldGui.OpenButton:FindFirstChildOfClass("ImageButton") or RayfieldGui.OpenButton
             if openBtn then
-                -- Biến đổi hoàn toàn nút hình ảnh mặc định thành nút chữ SBSD màu xanh lá kéo thả được
                 openBtn.Image = ""
                 openBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 22)
                 openBtn.Size = UDim2.new(0, 75, 0, 35)
@@ -48,13 +40,11 @@ task.spawn(function()
                 txt.Size = UDim2.new(1, 0, 1, 0)
                 txt.BackgroundTransparency = 1
                 txt.Text = "SBSD"
-                txt.TextColor3 = Color3.fromRGB(0, 255, 0) -- Ép chữ thành màu xanh lá cây rực rỡ
+                txt.TextColor3 = Color3.fromRGB(0, 255, 0)
                 txt.Font = Enum.Font.SourceSansBold
                 txt.TextSize = 18
                 
-                local corner = Instance.new("UICorner", openBtn)
-                corner.CornerRadius = UDim.new(0, 6)
-                
+                Instance.new("UICorner", openBtn).CornerRadius = UDim.new(0, 6)
                 local stroke = Instance.new("UIStroke", openBtn)
                 stroke.Color = Color3.fromRGB(0, 255, 0)
                 stroke.Thickness = 1.5
@@ -63,51 +53,47 @@ task.spawn(function()
     end)
 end)
 
--- === HỆ THỐNG XỬ LÝ TOÀN BỘ LOGIC GAME SUPERBOX SIEGE DEFENSE ===
+-- =======================================================
+-- BẢN FIX: BỘ GỐC KILL AURA TOÀN MAP SIÊU MƯỢT LÚC SÁNG
+-- =======================================================
+RunService.Stepped:Connect(function()
+    if AuraActive then
+        pcall(function()
+            local char = LocalPlayer.Character
+            if char and char:FindFirstChild("HumanoidRootPart") then
+                local tool = char:FindFirstChildOfClass("Tool")
+                if tool then
+                    -- Quét thẳng cổng đòn đánh từ xa của Gear và hệ thống
+                    local weaponRemote = tool:FindFirstChild("Remote") or tool:FindFirstChild("Action") or tool:FindFirstChild("Attack") or tool:FindFirstChild("Hit")
+                    local globalRemote = ReplicatedStorage:FindFirstChild("Attack") or ReplicatedStorage:FindFirstChild("HitEnemy") or ReplicatedStorage:FindFirstChild("InflictDamage") or ReplicatedStorage:FindFirstChild("Hit")
 
--- 1. TÍNH NĂNG: Global Gear Attack Tấn Công Toàn Map Từ Xa (Không làm nhân vật bị lướt)
-task.spawn(function()
-    while true do
-        task.wait(0.04) -- Tần suất gây sát thương liên tục
-        if AuraActive then
-            pcall(function()
-                local char = LocalPlayer.Character
-                if char and char:FindFirstChild("HumanoidRootPart") then
-                    local tool = char:FindFirstChildOfClass("Tool")
-                    if tool then
-                        -- Lấy các cổng Remote nhận đòn đánh nội bộ của cây vũ khí đang cầm và hệ thống game
-                        local weaponRemote = tool:FindFirstChild("Remote") or tool:FindFirstChild("Action") or tool:FindFirstChild("Attack") or tool:FindFirstChild("Hit")
-                        local globalRemote = ReplicatedStorage:FindFirstChild("Attack") or ReplicatedStorage:FindFirstChild("HitEnemy") or ReplicatedStorage:FindFirstChild("InflictDamage")
-
-                        -- Quét sạch 100% quái vừa spawn ra trên map không giới hạn khoảng cách
-                        for _, enemy in pairs(workspace:GetDescendants()) do
-                            if enemy:IsA("Model") and enemy:FindFirstChild("Humanoid") and enemy.Humanoid.Health > 0 then
-                                if not Players:GetPlayerFromCharacter(enemy) and enemy.Name ~= "Base" then
-                                    local enemyHrp = enemy:FindFirstChild("HumanoidRootPart")
-                                    if enemyHrp then
-                                        -- Gửi tín hiệu dồn sát thương từ xa bỏ qua hoạt ảnh lướt vung đòn của nhân vật
-                                        if weaponRemote and weaponRemote:IsA("RemoteEvent") then
-                                            weaponRemote:FireServer(enemy, enemyHrp.Position)
-                                        end
-                                        if globalRemote then
-                                            if globalRemote:IsA("RemoteEvent") then
-                                                globalRemote:FireServer(enemy, tool)
-                                            elseif globalRemote:IsA("RemoteFunction") then
-                                                globalRemote:InvokeServer(enemy, tool)
-                                            end
-                                        end
+                    -- Chạy vòng lặp quét nhịp tim hệ thống cực nhanh, quái vừa spawn ra dính đam chết ngay
+                    for _, enemy in pairs(workspace:GetDescendants()) do
+                        if enemy:IsA("Model") and enemy:FindFirstChild("Humanoid") and enemy.Humanoid.Health > 0 then
+                            if not Players:GetPlayerFromCharacter(enemy) and enemy.Name ~= "Base" then
+                                local enemyHrp = enemy:FindFirstChild("HumanoidRootPart")
+                                if enemyHrp then
+                                    
+                                    -- Ép nổ sát thương từ xa bằng gói tin gốc, KHÔNG DÙNG lệnh vung đòn gây lướt nhân vật
+                                    if weaponRemote and weaponRemote:IsA("RemoteEvent") then
+                                        weaponRemote:FireServer(enemy, enemyHrp.Position)
                                     end
+                                    
+                                    if globalRemote and globalRemote:IsA("RemoteEvent") then
+                                        globalRemote:FireServer(enemy, tool)
+                                    end
+                                    
                                 end
                             end
                         end
                     end
                 end
-            end)
-        end
+            end
+        end)
     end
 end)
 
--- 2. TÍNH NĂNG: Safe Zone Max God Mode (Khóa đầy máu thời gian thực cấp độ nhịp tim hệ thống)
+-- Safe Zone God Mode bất tử khóa máu nhịp tim
 RunService.Heartbeat:Connect(function()
     if GodModeActive then
         pcall(function()
@@ -115,7 +101,7 @@ RunService.Heartbeat:Connect(function()
             if char then
                 local hum = char:FindFirstChildOfClass("Humanoid")
                 if hum then
-                    hum.Health = hum.MaxHealth -- Liên tục bơm đầy máu chống chết sốclag ở Death Mode
+                    hum.Health = hum.MaxHealth
                     if hum.Health <= 0 then
                         hum:ChangeState(Enum.HumanoidStateType.Running)
                         hum.Health = hum.MaxHealth
@@ -129,27 +115,22 @@ RunService.Heartbeat:Connect(function()
     end
 end)
 
--- === THIẾT LẬP CÁC NÚT GẠT (TOGGLE) CHỮ XANH LÁ TRÊN MENU RAYFIELD ===
-
+-- Nút gạt Toggle trên Rayfield UI
 MainTab:CreateToggle({
    Name = "Global Gear Attack (Toàn Bản Đồ)",
    CurrentValue = false,
    Flag = "GlobalGearAttackFlag",
-   Callback = function(Value)
-      AuraActive = Value
-   end,
+   Callback = function(Value) AuraActive = Value end,
 })
 
 MainTab:CreateToggle({
    Name = "Safe Zone God Mode (Bất Tử)",
    CurrentValue = false,
    Flag = "SafeZoneGodModeFlag",
-   Callback = function(Value)
-      GodModeActive = Value
-   end,
+   Callback = function(Value) GodModeActive = Value end,
 })
 
--- Tạo màu chữ xanh lá nhãn nút gạt chuẩn phong cách sbsd cổ điển
+-- Đổi nhãn chữ thành màu xanh lá cây [sbsd] cổ điển
 pcall(function()
     task.wait(1.5)
     local RayfieldGui = game:GetService("CoreGui"):FindFirstChild("Rayfield") or LocalPlayer.PlayerGui:FindFirstChild("Rayfield")
