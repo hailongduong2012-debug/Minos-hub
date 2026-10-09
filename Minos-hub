@@ -1,103 +1,56 @@
--- [[ SBSD CAMPAIGN 2026 - SILENT RUNNER (NO-UI VERSION) ]]
--- Tối ưu: Bỏ hoàn toàn UI chống lỗi hiển thị, tự động bật Max Aura & Auto Telescope 5 Coin ngay khi chạy
+-- [[ SBSD CAMPAIGN 2026 - ULTRA-LIGHTWEIGHT & ANTI-CRASH CORE ]]
+-- Cơ chế: Ép thực thi dòng lệnh bằng task.defer, loại bỏ hoàn toàn UI và thông báo tránh crash
 
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local LocalPlayer = Players.LocalPlayer
+task.defer(function()
+    local Players = game:GetService("Players")
+    local RunService = game:GetService("RunService")
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
+    local LocalPlayer = Players.LocalPlayer
 
--- CẤU HÌNH TỰ ĐỘNG (BẬT SẴN 100%)
-local AutoFarmActive = true
-local SkyAnchoredActive = true -- Đổi thành false nếu bạn không muốn nhân vật tự bay lên trời chống kéo lùi
-local AutoTelescopeActive = true
-local SavedLocation = nil
-
--- THÔNG BÁO TRÊN MÀN HÌNH CHÍNH CỦA ROBLOX (KHÔNG DÙNG UI RIÊNG)
-game:GetService("StarterGui"):SetCore("SendNotification", {
-    Title = "SBSD Hub Activated",
-    Text = "Aura Toàn Map & Auto Telescope ĐANG CHẠY NGẦM!",
-    Duration = 5,
-    Icon = "rbxassetid://4483345998"
-})
-
--- === 1. CƠ CHẾ CHỐNG KÉO LÙI / KHÓA TRÊN TRỜI ===
-task.spawn(function()
-    local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-    local root = char:WaitForChild("HumanoidRootPart", 10)
-    
-    if SkyAnchoredActive and root then
-        SavedLocation = root.CFrame
-        root.CFrame = root.CFrame * CFrame.new(0, 550, 0) -- Đưa nhân vật lên độ cao an toàn
-    end
-end)
-
-RunService.RenderStepped:Connect(function()
-    if SkyAnchoredActive and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+    -- === 1. CHÉM QUÁI TOÀN MAP (DIỆN TÍCH TỐI ĐA VÔ HẠN) ===
+    RunService.Heartbeat:Connect(function()
         pcall(function()
             local char = LocalPlayer.Character
-            char.HumanoidRootPart.Anchored = true
-            local humanoid = char:FindFirstChildOfClass("Humanoid")
-            if humanoid then
-                humanoid.BreakJointsOnDeath = false
-                humanoid:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
-                if humanoid.Health < humanoid.MaxHealth then humanoid.Health = humanoid.MaxHealth end
+            if not char then return end
+            
+            -- Tự động cầm vũ khí
+            local backpack = LocalPlayer:FindFirstChild("Backpack")
+            if backpack and not char:FindFirstChildOfClass("Tool") then
+                local tool = backpack:FindFirstChildOfClass("Tool")
+                if tool then tool.Parent = char end
             end
-        end)
-    end
-end)
-
--- === 2. KILL AURA DIỆN TÍCH TỐI ĐA (VÔ HẠN KHOẢNG CÁCH) ===
-task.spawn(function()
-    while true do
-        RunService.Heartbeat:Wait()
-        if AutoFarmActive then
-            pcall(function()
-                local char = LocalPlayer.Character
-                local backpack = LocalPlayer:FindFirstChild("Backpack")
-                
-                -- Tự động cầm vũ khí trên tay
-                if char and backpack and not char:FindFirstChildOfClass("Tool") then
-                    local tool = backpack:FindFirstChildOfClass("Tool")
-                    if tool then tool.Parent = char end
-                end
-                
-                local currentTool = char:FindFirstChildOfClass("Tool")
-                if currentTool and firetouchinterest then
-                    local attackPart = currentTool:FindFirstChild("Handle") or currentTool:FindFirstChildWhichIsA("BasePart")
-                    if attackPart then
-                        for _, enemy in pairs(workspace:GetDescendants()) do
-                            if enemy:IsA("Model") and enemy:FindFirstChild("Humanoid") and enemy.Humanoid.Health > 0 then
-                                if not Players:GetPlayerFromCharacter(enemy) then
-                                    local enemyRoot = enemy:FindFirstChild("HumanoidRootPart") or enemy:FindFirstChildWhichIsA("BasePart")
-                                    if enemyRoot then
-                                        -- Chém liên tục toàn bản đồ (Không check khoảng cách Magnitude)
-                                        local isBoss = string.find(string.lower(enemy.Name), "boss") or enemy:GetAttribute("IsBoss")
-                                        local hitCount = isBoss and 40 or 15
-                                        for i = 1, hitCount do
-                                            coroutine.wrap(function()
-                                                firetouchinterest(enemyRoot, attackPart, 0)
-                                                firetouchinterest(enemyRoot, attackPart, 1)
-                                            end)()
-                                        end
-                                    end
+            
+            local currentTool = char:FindFirstChildOfClass("Tool")
+            if currentTool and firetouchinterest then
+                local attackPart = currentTool:FindFirstChild("Handle") or currentTool:FindFirstChildWhichIsA("BasePart")
+                if attackPart then
+                    -- Quét toàn bộ quái trên bản đồ, bỏ qua kiểm tra khoảng cách
+                    for _, enemy in pairs(workspace:GetDescendants()) do
+                        if enemy:IsA("Model") and enemy:FindFirstChild("Humanoid") and enemy.Humanoid.Health > 0 then
+                            if not Players:GetPlayerFromCharacter(enemy) then
+                                local enemyRoot = enemy:FindFirstChild("HumanoidRootPart") or enemy:FindFirstChildWhichIsA("BasePart")
+                                if enemyRoot then
+                                    -- Kích hoạt chạm sát thương (Kill Aura)
+                                    firetouchinterest(enemyRoot, attackPart, 0)
+                                    firetouchinterest(enemyRoot, attackPart, 1)
                                 end
                             end
                         end
                     end
                 end
-            end)
-        end
-    end
-end)
+            end
+        end)
+    end)
 
--- === 3. AUTO SPAWN TELESCOPE (5 COINS) ===
-task.spawn(function()
-    while true do
-        task.wait(0.5) -- Quét liên tục mỗi 0.5 giây để mua Kính Viễn Vọng
-        if AutoTelescopeActive then
+    -- === 2. TỰ ĐỘNG SPWAN TELESCOPE GIÁ 5 COIN ===
+    task.spawn(function()
+        while true do
+            task.wait(0.8) -- Độ trễ an toàn chống spam nghẽn mạng
             pcall(function()
-                local shopRemote = game:GetService("ReplicatedStorage"):FindFirstChild("BuyItem", true) 
-                    or game:GetService("ReplicatedStorage"):FindFirstChild("PurchaseItem", true)
-                    or game:GetService("ReplicatedStorage"):FindFirstChild("RemoteEvent", true)
+                -- Tự động quét tìm RemoteEvent mua/gọi đạo cụ của Game
+                local shopRemote = ReplicatedStorage:FindFirstChild("BuyItem", true) 
+                    or ReplicatedStorage:FindFirstChild("PurchaseItem", true)
+                    or ReplicatedStorage:FindFirstChild("RemoteEvent", true)
 
                 if shopRemote and shopRemote:IsA("RemoteEvent") then
                     shopRemote:FireServer("Telescope", 5)
@@ -105,5 +58,5 @@ task.spawn(function()
                 end
             end)
         end
-    end
+    end)
 end)
