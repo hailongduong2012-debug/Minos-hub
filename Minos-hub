@@ -1,73 +1,78 @@
--- MINOS HUB | SUPERBOX SIEGE DEFENSE V6 BYPASS
-local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+-- MINOS HUB | SBSD V6 SIMULTANEOUS GLOBAL HIT (BYPASS DETECTOR)
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu'))()
 
 local Window = Rayfield:CreateWindow({
-   Name = "MINOS HUB | SBSD",
-   LoadingTitle = "Đang cấu hình Anti-Detector...",
+   Name = "MINOS HUB | SBSD GLOBAL",
+   LoadingTitle = "Đang đồng bộ Quorum V6 Method...",
    LoadingSubtitle = "BY MINOS",
    ConfigurationSaving = { Enabled = false },
    KeySystem = false 
-})
+ })
 
-local MainTab = Window:CreateTab("Safe Aura", 4483362458)
+local MainTab = Window:CreateTab("Global Aura", 4483362458)
 
 _G.QuorumAura = false
--- TĂNG ĐỘ TRỄ AN TOÀN: Giữ ở mức 0.35s - 0.4s để trùng khớp hoàn toàn với tốc độ vung đấm của người chơi thật, đánh lừa bộ quét thời gian (Time-Delay Detector)
-_G.AttackSpeed = 0.38 
+_G.AttackSpeed = 0.35 -- Tốc độ an toàn tuyệt đối chống Time-Delay Detector của SBSD
 
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local VirtualUser = game:GetService("VirtualUser")
 
--- Hàm tìm mục tiêu hợp lệ trong trận đấu (Không quét ở sảnh)
-local function getSBSDTargets()
-    local validTargets = {}
-    -- Anti-Cheat SBSD chứa quái trong folder "Enemies" hoặc trực tiếp tại Workspace khi vào trận
-    local enemyContainer = workspace:FindFirstChild("Enemies") or workspace
-    
-    for _, child in pairs(enemyContainer:GetChildren()) do
-        if child:IsA("Model") and child ~= LocalPlayer.Character then
-            local humanoid = child:FindFirstChildOfClass("Humanoid")
-            local mainPart = child:FindFirstChild("HumanoidRootPart") or child:FindFirstChild("PrimaryPart")
-            
-            if humanoid and mainPart and humanoid.Health > 0 then
-                table.insert(validTargets, mainPart)
-            end
-        end
-    end
-    return #validTargets > 0 and validTargets or nil
+-- Hàm gom và đồng bộ vị trí quái toàn map về trước mặt người chơi (Không Teleport người chơi)
+local function syncGlobalEnemies()
+   local myRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+   if not myRoot then return false end
+
+   local enemyContainer = workspace:FindFirstChild("Enemies") or workspace
+   local hasEnemies = false
+
+   for _, child in pairs(enemyContainer:GetChildren()) do
+       if child:IsA("Model") and child ~= LocalPlayer.Character then
+           local humanoid = child:FindFirstChildOfClass("Humanoid")
+           local enemyRoot = child:FindFirstChild("HumanoidRootPart") or child:FindFirstChild("PrimaryPart")
+           
+           if humanoid and enemyRoot and humanoid.Health > 0 then
+               hasEnemies = true
+               -- METHOD QUORUM V6: Ép CFrame của quái về ngay trước tầm chém vật lý của bạn
+               -- Quái vẫn ở vị trí cũ trên màn hình server nhưng khối Hitbox xử lý sát thương cục bộ được kéo sát vào bạn
+               enemyRoot.CFrame = myRoot.CFrame * CFrame.new(0, 0, -3)
+               enemyRoot.CanCollide = false
+           end
+       end
+   end
+   return hasEnemies
 end
 
--- Vòng lặp mô phỏng click chuột vật lý siêu an toàn
+-- Vòng lặp kích hoạt đòn đánh lan toàn map
 task.spawn(function()
-    while true do
-        if _G.QuorumAura then
-            local currentEnemies = getSBSDTargets()
-            
-            -- Chỉ bấm chuột khi hệ thống xác nhận ĐÃ VÀO TRẬN và CÓ QUÁI XUẤT HIỆN
-            if currentEnemies then
-                local tool = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Tool")
-                if tool then
-                    -- Mô phỏng nhấp chuột trái vật lý (An toàn 100% trước Namecall Detector)
-                    VirtualUser:ClickButton1(Vector2.new(0, 0))
-                end
-            end
-        end
-        -- Luôn giữ thời gian chờ biến thiên một chút để giả lập hành vi con người
-        task.wait(_G.AttackSpeed + math.random(1, 9) / 100)
-    end
+   while true do
+       if _G.QuorumAura then
+           -- Đồng bộ hóa vị trí tất cả quái trước khi tung đòn
+           local isReady = syncGlobalEnemies()
+           
+           if isReady then
+               local tool = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Tool")
+               if tool then
+                   -- Kích hoạt đòn đánh vật lý của Roblox Engine -> Sát thương lan trúng tất cả quái cùng lúc
+                   VirtualUser:ClickButton1(Vector2.new(0, 0))
+               end
+           end
+       end
+       -- Sử dụng math.random nhỏ để giả lập nhịp click con người, bỏ qua hoàn toàn bộ lọc quét AI Anticheat
+       task.wait(_G.AttackSpeed + (math.random(-2, 3) / 100))
+   end
 end)
 
 local Toggle = MainTab:CreateToggle({
-   Name = "Kích hoạt Safe Kill Aura (Bypass Detector)",
+   Name = "Kích hoạt Hit All Toàn Map (Method V6)",
    CurrentValue = false,
-   Flag = "MINOSSafeAura",
+   Flag = "MINOSGlobalAura",
    Callback = function(Value)
       _G.QuorumAura = Value
       if Value then
-          Rayfield:Notify({Title = "MINOS HUB", Content = "Đã kích hoạt Aura an toàn!", Duration = 2.5})
+          Rayfield:Notify({Title = "MINOS HUB", Content = "Đã đồng bộ sát thương toàn map cùng lúc!", Duration = 3})
       else
-          Rayfield:Notify({Title = "MINOS HUB", Content = "Đã tắt Aura.", Duration = 2.5})
+          Rayfield:Notify({Title = "MINOS HUB", Content = "Đã dừng sát thương diện rộng.", Duration = 3})
       end
    end,
 })
