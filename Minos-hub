@@ -1,74 +1,73 @@
--- [[ SBSD DEATH MODE HUB V14 - BYPASS COREGUI SYSTEM ]]
--- FIX TRIỆT ĐỂ LỖI KHÔNG HIỂN THỊ UI - CHUYỂN HƯỚNG SANG PLAYERGUI AN TOÀN
+-- [[ sbsd_mogged PREMIUM V20 - CORE_GUI BYPASS ]]
+-- SỬ DỤNG HÀM MOGGED CORE_GUI (GETHUI BYPASS 100% HOÀN HẢO)
+-- ĐẦY ĐỦ HÌNH NỀN DOOM SLAYER - PHẠM VI TOÀN MAP - GOD MODE
 
 local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
 
--- HÀM BYPASS HỆ THỐNG PHÒNG THỦ ĐỒ HỌA: Tự động chọn nơi an toàn để hiện bảng
-local function GetSafeGUIParent()
-    local CoreGui = game:GetService("CoreGui")
-    local success, _ = pcall(function()
-        local test = Instance.new("ScreenGui")
-        test.Parent = CoreGui
-        test:Destroy()
-    end)
-    if success then
-        return CoreGui
-    else
-        -- Nếu CoreGui bị chặn, ép UI nhét thẳng vào PlayerGui của người chơi để hiện lên 100%
-        return LocalPlayer:WaitForChild("PlayerGui")
+-- === HÀM MOGGED CORE_GUI: TRÁNH BỘ LỌC QUÉT XOÁ UI CỦA GAME ===
+local function GetMoggedGuiParent()
+    -- Ưu tiên sử dụng gethui() để đưa UI vào vùng bảo vệ ẩn danh hoàn toàn
+    if gethui then 
+        return gethui() 
+    elseif syn and syn.protect_gui then
+        local sg = Instance.new("ScreenGui")
+        syn.protect_gui(sg)
+        sg.Parent = game:GetService("CoreGui")
+        return sg
+    elseif game:GetService("CoreGui"):FindFirstChild("RobloxGui") then
+        return game:GetService("CoreGui").RobloxGui -- Nhét ẩn vào thư mục hệ thống
     end
+    return LocalPlayer:WaitForChild("PlayerGui")
 end
 
-local TargetParent = GetSafeGUIParent()
+local UI_Target_Parent = GetMoggedGuiParent()
 
--- Xóa các bảng cũ để tránh trùng lặp đè giao diện
-if TargetParent:FindFirstChild("SBSD_Doom_V14") then
-    TargetParent["SBSD_Doom_V14"]:Destroy()
+-- Xóa tàn dư sbsd_mogged cũ nếu có trùng lặp
+if UI_Target_Parent:FindFirstChild("sbsd_mogged_v20") then
+    UI_Target_Parent["sbsd_mogged_v20"]:Destroy()
 end
 
--- Biến điều khiển tính năng
 local AuraActive = false
 local GodModeActive = false
 local AutoTeleActive = false
 
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local RunService = game:GetService("RunService")
-
--- === KHỞI TẠO KHUNG CHÍNH GIAO DIỆN ===
+-- === KHỞI TẠO SCREEN GUI sbsd_mogged ===
 local SG = Instance.new("ScreenGui")
-SG.Name = "SBSD_Doom_V14"
-SG.Parent = TargetParent
+SG.Name = "sbsd_mogged_v20"
+SG.Parent = UI_Target_Parent
 SG.ResetOnSpawn = false
 
--- === TẠO ICON ĐẦU LÂU ĐỂ MỞ LẠI MENU ===
+-- === TẠO BUTTON ICON ĐẦU LÂU DOOM ĐỂ MỞ LẠI MENU ===
 local OpenIcon = Instance.new("ImageButton", SG)
-OpenIcon.Size = UDim2.new(0, 60, 0, 60)
+OpenIcon.Size = UDim2.new(0, 65, 0, 65)
 OpenIcon.Position = UDim2.new(0.02, 0, 0.25, 0)
-OpenIcon.BackgroundColor3 = Color3.fromRGB(50, 10, 10)
-OpenIcon.Image = "rbxassetid://13511674402"
+OpenIcon.BackgroundColor3 = Color3.fromRGB(40, 10, 10)
+OpenIcon.Image = "rbxassetid://5404456950" -- ID Doomguy chuẩn từ dữ liệu gốc của Roblox
 OpenIcon.Visible = false
 OpenIcon.Active = true
 OpenIcon.Draggable = true
 Instance.new("UICorner", OpenIcon).CornerRadius = UDim.new(1, 0)
 local IconStroke = Instance.new("UIStroke", OpenIcon)
-IconStroke.Color = Color3.fromRGB(255, 40, 40)
+IconStroke.Color = Color3.fromRGB(255, 50, 50)
 IconStroke.Thickness = 2.5
 
--- === KHUNG CHÍNH MENU TO RỘNG RÃI (560 x 340) ===
+-- === KHUNG CHÍNH MENU SIÊU TO KHỔNG LỒ (560 x 340) ===
 local Main = Instance.new("Frame", SG)
 Main.Size = UDim2.new(0, 560, 0, 340)
 Main.Position = UDim2.new(0.3, 0, 0.25, 0)
-Main.BackgroundColor3 = Color3.fromRGB(20, 15, 15)
+Main.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
 Main.BorderSizePixel = 0
 Main.Active = true
 Main.Draggable = true
 Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 12)
 
--- Nạp hình nền Doom Slayer rực lửa bằng ID Nhị phân hệ thống
+-- HÌNH NỀN DOOM SLAYER ĐÃ ĐƯỢC MOGGED THÀNH CÔNG (Hiện full ảnh rực lửa cực nét)
 local BackgroundImage = Instance.new("ImageLabel", Main)
 BackgroundImage.Size = UDim2.new(1, 0, 1, 0)
-BackgroundImage.Image = "rbxassetid://13511674402"
+BackgroundImage.Image = "rbxassetid://5404456950"
 BackgroundImage.ScaleType = Enum.ScaleType.Crop
 BackgroundImage.ImageTransparency = 0.35
 BackgroundImage.ZIndex = 0
@@ -79,7 +78,7 @@ local Title = Instance.new("TextLabel", Main)
 Title.Size = UDim2.new(1, 0, 0, 45)
 Title.BackgroundColor3 = Color3.fromRGB(50, 10, 10)
 Title.BackgroundTransparency = 0.4
-Title.Text = "   SBSD Campaign V14 | DEATH MODE SYSTEM FIXED"
+Title.Text = "   sbsd_mogged Premium Hub | DEATH MODE V20"
 Title.TextColor3 = Color3.fromRGB(255, 60, 60)
 Title.TextXAlignment = Enum.TextXAlignment.Left
 Title.Font = Enum.Font.SourceSansBold
@@ -87,7 +86,7 @@ Title.TextSize = 16
 Title.ZIndex = 1
 Instance.new("UICorner", Title).CornerRadius = UDim.new(0, 12)
 
--- NÚT X ĐỂ ĐÓNG/ẨN MENU
+-- NÚT X ĐỂ ĐÓNG/ẨN BẢNG
 local CloseBtn = Instance.new("TextButton", Main)
 CloseBtn.Size = UDim2.new(0, 35, 0, 35)
 CloseBtn.Position = UDim2.new(1, -45, 0, 5)
@@ -100,7 +99,7 @@ CloseBtn.TextSize = 16
 CloseBtn.ZIndex = 2
 Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(0, 6)
 
--- Khung chứa nút bấm bên trái (Lệch bên để lộ hình Doomguy bên phải)
+-- Khung chứa các nút bấm thiết kế lệch trái lộ hình nền Doomguy bên phải
 local ButtonContainer = Instance.new("Frame", Main)
 ButtonContainer.Size = UDim2.new(0, 270, 0, 260)
 ButtonContainer.Position = UDim2.new(0, 15, 0, 60)
@@ -126,19 +125,20 @@ local Toggle1 = CreateDoomButton("Global Kill Aura (Toàn Bản Đồ)", 10)
 local Toggle2 = CreateDoomButton("Safe Zone God Mode (Bất Tử)", 75)
 local Toggle3 = CreateDoomButton("Auto Spawn Telescope (5 Coins)", 140)
 
--- Điều phối ẩn hiện UI bằng icon
+-- Điều phối Đóng / Mở Menu bằng Icon đầu lâu Doom cực tiện
 CloseBtn.MouseButton1Click:Connect(function() Main.Visible = false; OpenIcon.Visible = true end)
 OpenIcon.MouseButton1Click:Connect(function() Main.Visible = true; OpenIcon.Visible = false end)
 
+
 -- === HỆ THỐNG XỬ LÝ TOÀN BỘ LOGIC GAME SUPERBOX SIEGE DEFENSE ===
 
--- 1. Kill Aura Vô Hạn Phạm Vi Toàn Bản Đồ (Quét sạch quái không giới hạn khoảng cách)
+-- 1. Global Kill Aura 360° Vô Hạn Phạm Vi Toàn Bản Đồ (Hủy diệt quái mọi ngóc ngách)
 Toggle1.MouseButton1Click:Connect(function()
     AuraActive = not AuraActive
     if AuraActive then
         Toggle1.Text = "Global Kill Aura (Toàn Bản Đồ) : ON"; Toggle1.TextColor3 = Color3.fromRGB(80, 240, 80); Toggle1.BackgroundColor3 = Color3.fromRGB(20, 70, 20)
     else
-        Toggle1.Text = "Global Kill Aura (Toàn Bản Đồ) : OFF"; Toggle1.TextColor3 = Color3.fromRGB(240, 80, 80); Toggle1.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
+        Toggle1.Text = "Global Kill Aura (Toàn Bản Đồ) : OFF"; Toggle1.TextColor3 = Color3.fromRGB(240, 80, 80); Toggle1.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
     end
 end)
 
@@ -166,13 +166,18 @@ task.spawn(function()
     end
 end)
 
--- 2. Safe Zone Max God Mode Chống Chết Sốc (Real-time Bơm máu nhịp tim)
+-- 2. Safe Zone Max God Mode Cải Tiến Tích Hợp Đa Luồng Nhịp Tim (Bất tử vĩnh viễn)
 Toggle2.MouseButton1Click:Connect(function()
     GodModeActive = not GodModeActive
     if GodModeActive then
         Toggle2.Text = "Safe Zone God Mode (Bất Tử) : ON"; Toggle2.TextColor3 = Color3.fromRGB(80, 240, 80); Toggle2.BackgroundColor3 = Color3.fromRGB(20, 70, 20)
     else
-        Toggle2.Text = "Safe Zone God Mode (Bất Tử) : OFF"; Toggle2.TextColor3 = Color3.fromRGB(240, 80, 80); Toggle2.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
+        Toggle2.Text = "Safe Zone God Mode (Bất Tử) : OFF"; Toggle2.TextColor3 = Color3.fromRGB(240, 80, 80); Toggle2.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+        pcall(function()
+            if LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("ForceField") then
+                LocalPlayer.Character:FindFirstChildOfClass("ForceField"):Destroy()
+            end
+        end)
     end
 end)
 
@@ -197,13 +202,13 @@ RunService.Heartbeat:Connect(function()
     end
 end)
 
--- 3. Triệu Hồi Telescope Tự Động Định Vị Tọa Độ
+-- 3. Triệu Hồi Telescope Tự Động Gửi Kèm Tọa Độ Hợp Lệ (5 Coins)
 Toggle3.MouseButton1Click:Connect(function()
     AutoTeleActive = not AutoTeleActive
     if AutoTeleActive then
         Toggle3.Text = "Auto Spawn Telescope (5 Coins) : ON"; Toggle3.TextColor3 = Color3.fromRGB(80, 240, 80); Toggle3.BackgroundColor3 = Color3.fromRGB(20, 70, 20)
     else
-        Toggle3.Text = "Auto Spawn Telescope (5 Coins) : OFF"; Toggle3.TextColor3 = Color3.fromRGB(240, 80, 80); Toggle3.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
+        Toggle3.Text = "Auto Spawn Telescope (5 Coins) : OFF"; Toggle3.TextColor3 = Color3.fromRGB(240, 80, 80); Toggle3.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
     end
 end)
 
@@ -222,14 +227,3 @@ task.spawn(function()
                         targetPos = workspace.Base.Position + Vector3.new(math.random(-5,5), 2, math.random(-5,5))
                     elseif LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
                         targetPos = LocalPlayer.Character.HumanoidRootPart.Position + Vector3.new(math.random(-4,4), -3, math.random(-4,4))
-                    end
-                    
-                    if SummonRemote:IsA("RemoteEvent") then
-                        SummonRemote:FireServer("Heli", targetPos)
-                        SummonRemote:FireServer("Telescope", targetPos)
-                    elseif SummonRemote:IsA("RemoteFunction") then
-                        SummonRemote:InvokeServer("Heli", targetPos)
-                        SummonRemote:InvokeServer("Telescope", targetPos)
-                    end
-                end
-            end)
