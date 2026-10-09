@@ -1,70 +1,110 @@
--- [[ SBSD CAMPAIGN HUB V7 - DOOM BACKGROUND FULLY FIXED ]]
--- ÉP HIỆN UI LẬP TỨC - CHỐNG SẬP FILE DO THIẾU REMOTE
+-- [[ SBSD DEATH MODE HUB V9 - DOOM INTERFACE ]]
+-- TỐI ƯU CHO DEATH MODE - MAX SPEED ATTACK & BRING - TO BẢNG CHỐNG LỖI
 
--- 1. XÓA BẢN CŨ ĐỂ TRÁNH TRÙNG LẶP UI
-if game:GetService("CoreGui"):FindFirstChild("SBSD_Doom_V7") then
-    game:GetService("CoreGui")["SBSD_Doom_V7"]:Destroy()
+if game:GetService("CoreGui"):FindFirstChild("SBSD_Doom_V9") then
+    game:GetService("CoreGui")["SBSD_Doom_V9"]:Destroy()
 end
 
--- Khởi tạo biến điều khiển độc lập
+-- Biến cấu hình trạng thái
 local AuraActive = false
 local BringActive = false
 local AutoTeleActive = false
 
--- === VẼ KHUNG UI CHÍNH TRƯỚC (ĐẢM BẢO HIỆN HÌNH NỀN 100%) ===
+-- === KHỞI TẠO KHUNG CHÍNH (SCREEN GUI) ===
 local SG = Instance.new("ScreenGui")
-SG.Name = "SBSD_Doom_V7"
+SG.Name = "SBSD_Doom_V9"
 SG.Parent = game:GetService("CoreGui")
+SG.ResetOnSpawn = false
 
+-- === TẠO ICON TRÒN ĐỂ MỞ LẠI BẢNG MENU ===
+local OpenIcon = Instance.new("ImageButton")
+OpenIcon.Parent = SG
+OpenIcon.Size = UDim2.new(0, 55, 0, 55)
+OpenIcon.Position = UDim2.new(0.02, 0, 0.2, 0)
+OpenIcon.BackgroundColor3 = Color3.fromRGB(30, 10, 10)
+OpenIcon.Image = "rbxassetid://13511674402" -- Icon đầu lâu Doom Slayer xịn
+OpenIcon.Visible = false
+OpenIcon.Active = true
+OpenIcon.Draggable = true
+
+local IconCorner = Instance.new("UICorner", OpenIcon)
+IconCorner.CornerRadius = UDim.new(1, 0)
+
+local IconStroke = Instance.new("UIStroke", OpenIcon)
+IconStroke.Color = Color3.fromRGB(255, 50, 50)
+IconStroke.Thickness = 2
+
+-- === KHUNG CHÍNH MENU (KÍCH THƯỚC TO: 550 x 330) ===
 local Main = Instance.new("Frame")
 Main.Parent = SG
-Main.Size = UDim2.new(0, 320, 0, 240)
-Main.Position = UDim2.new(0.35, 0, 0.3, 0)
+Main.Size = UDim2.new(0, 550, 0, 330)
+Main.Position = UDim2.new(0.3, 0, 0.25, 0)
 Main.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
 Main.BorderSizePixel = 0
 Main.Active = true
 Main.Draggable = true
 
 local UICorner = Instance.new("UICorner", Main)
-UICorner.CornerRadius = UDim.new(0, 9)
+UICorner.CornerRadius = UDim.new(0, 12)
 
--- Tải hình nền Doomguy lên khung chính
+-- Lớp Hình Nền Doom Slayer siêu nét
 local BackgroundImage = Instance.new("ImageLabel")
 BackgroundImage.Parent = Main
 BackgroundImage.Size = UDim2.new(1, 0, 1, 0)
 BackgroundImage.Position = UDim2.new(0, 0, 0, 0)
-BackgroundImage.Image = "rbxassetid://5404456950" -- ID Asset Doom Slayer hợp lệ
+BackgroundImage.Image = "rbxassetid://13511674402" -- ID Asset hình Doom rực lửa cực nét
 BackgroundImage.ScaleType = Enum.ScaleType.Crop
-BackgroundImage.ImageTransparency = 0.4
+BackgroundImage.ImageTransparency = 0.35
 BackgroundImage.ZIndex = 0
 
 local BGCorner = Instance.new("UICorner", BackgroundImage)
-BGCorner.CornerRadius = UDim.new(0, 9)
+BGCorner.CornerRadius = UDim.new(0, 12)
 
--- Tiêu đề bảng Menu phong cách Doom
+-- Thanh Tiêu Đề
 local Title = Instance.new("TextLabel")
 Title.Parent = Main
-Title.Size = UDim2.new(1, 0, 0, 40)
-Title.BackgroundColor3 = Color3.fromRGB(35, 15, 15)
-Title.BackgroundTransparency = 0.2
-Title.Text = "  SBSD Campaign V7 | Doom Slayer Mode"
-Title.TextColor3 = Color3.fromRGB(255, 50, 50)
+Title.Size = UDim2.new(1, 0, 0, 45)
+Title.BackgroundColor3 = Color3.fromRGB(40, 10, 10)
+Title.BackgroundTransparency = 0.4
+Title.Text = "   SBSD Campaign V9 | DEATH MODE EDITION"
+Title.TextColor3 = Color3.fromRGB(255, 40, 40)
 Title.TextXAlignment = Enum.TextXAlignment.Left
 Title.Font = Enum.Font.SourceSansBold
-Title.TextSize = 16
+Title.TextSize = 17
 Title.ZIndex = 1
-Instance.new("UICorner", Title).CornerRadius = UDim.new(0, 9)
+Instance.new("UICorner", Title).CornerRadius = UDim.new(0, 12)
 
--- Hàm tự tạo nút bấm Doom an toàn
+-- NÚT X ĐỂ ĐÓNG/ẨN MENU GIAO DIỆN
+local CloseBtn = Instance.new("TextButton")
+CloseBtn.Parent = Main
+CloseBtn.Size = UDim2.new(0, 35, 0, 35)
+CloseBtn.Position = UDim2.new(1, -45, 0, 5)
+CloseBtn.BackgroundColor3 = Color3.fromRGB(160, 20, 20)
+CloseBtn.BackgroundTransparency = 0.2
+CloseBtn.Text = "X"
+CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+CloseBtn.Font = Enum.Font.SourceSansBold
+CloseBtn.TextSize = 16
+CloseBtn.ZIndex = 2
+Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(0, 6)
+
+-- Khung chứa các nút bấm xếp gọn sang bên trái
+local ButtonContainer = Instance.new("Frame")
+ButtonContainer.Parent = Main
+ButtonContainer.Size = UDim2.new(0, 260, 0, 260)
+ButtonContainer.Position = UDim2.new(0, 15, 0, 60)
+ButtonContainer.BackgroundTransparency = 1
+ButtonContainer.ZIndex = 1
+
 local function CreateDoomButton(text, posY)
     local btn = Instance.new("TextButton")
-    btn.Parent = Main
-    btn.Size = UDim2.new(0, 290, 0, 40)
-    btn.Position = UDim2.new(0, 15, 0, posY)
-    btn.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
-    btn.BackgroundTransparency = 0.2
+    btn.Parent = ButtonContainer
+    btn.Size = UDim2.new(1, 0, 0, 45)
+    btn.Position = UDim2.new(0, 0, 0, posY)
+    btn.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+    btn.BackgroundTransparency = 0.25
     btn.Text = text .. " : OFF"
-    btn.TextColor3 = Color3.fromRGB(220, 80, 80)
+    btn.TextColor3 = Color3.fromRGB(240, 80, 80)
     btn.Font = Enum.Font.SourceSansBold
     btn.TextSize = 14
     btn.ZIndex = 2
@@ -72,37 +112,46 @@ local function CreateDoomButton(text, posY)
     return btn
 end
 
-local Toggle1 = CreateDoomButton("Kill Aura (Vô Hạn Tầm Đánh)", 55)
-local Toggle2 = CreateDoomButton("Bring Enemies (Gom Quái)", 110)
-local Toggle3 = CreateDoomButton("Auto Spawn Telescope (5 Coins)", 165)
+local Toggle1 = CreateDoomButton("Kill Aura (Death Mode Speed)", 10)
+local Toggle2 = CreateDoomButton("Bring Enemies (Gom 1 Điểm)", 75)
+local Toggle3 = CreateDoomButton("Auto Spawn Telescope (5 Coins)", 140)
 
+-- === XỬ LÝ SỰ KIỆN ĐÓNG / MỞ BẰNG ICON ===
+CloseBtn.MouseButton1Click:Connect(function()
+    Main.Visible = false
+    OpenIcon.Visible = true
+end)
 
--- === HỆ THỐNG PHÒNG THỦ CHỐNG LỖI LOGIC GAME ===
+OpenIcon.MouseButton1Click:Connect(function()
+    Main.Visible = true
+    OpenIcon.Visible = false
+end)
+
+-- === HỆ THỐNG XỬ LÝ TÍNH NĂNG CHUYÊN DỤNG DEATH MODE ===
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
 
--- Nút 1: Điều khiển Vô hạn tầm đánh
 Toggle1.MouseButton1Click:Connect(function()
     AuraActive = not AuraActive
     if AuraActive then
-        Toggle1.Text = "Kill Aura (Vô Hạn Tầm Đánh) : ON"
-        Toggle1.TextColor3 = Color3.fromRGB(80, 220, 80)
-        Toggle1.BackgroundColor3 = Color3.fromRGB(20, 60, 20)
+        Toggle1.Text = "Kill Aura (Death Mode Speed) : ON"
+        Toggle1.TextColor3 = Color3.fromRGB(80, 240, 80)
+        Toggle1.BackgroundColor3 = Color3.fromRGB(20, 70, 20)
     else
-        Toggle1.Text = "Kill Aura (Vô Hạn Tầm Đánh) : OFF"
-        Toggle1.TextColor3 = Color3.fromRGB(220, 80, 80)
-        Toggle1.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+        Toggle1.Text = "Kill Aura (Death Mode Speed) : OFF"
+        Toggle1.TextColor3 = Color3.fromRGB(240, 80, 80)
+        Toggle1.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
     end
 end)
 
+-- Đẩy tốc độ quét và xả chiêu lên tối đa (wait 0.05s) để dọn quái siêu trâu của Death Mode nhanh nhất
 task.spawn(function()
     while true do
-        task.wait(0.12)
+        task.wait(0.05)
         if AuraActive then
             pcall(function()
-                -- Quét tìm Remote động ngay trong lúc chạy để tránh bị kẹt file
                 local AttackRemote = ReplicatedStorage:FindFirstChild("Attack") or ReplicatedStorage:FindFirstChild("HitEnemy") or ReplicatedStorage:FindFirstChild("InflictDamage")
                 if AttackRemote then
                     for _, enemy in pairs(workspace:GetDescendants()) do
@@ -122,25 +171,25 @@ task.spawn(function()
     end
 end)
 
--- Nút 2: Gom hút quái Campaign
 Toggle2.MouseButton1Click:Connect(function()
     BringActive = not BringActive
     if BringActive then
-        Toggle2.Text = "Bring Enemies (Gom Quái) : ON"
-        Toggle2.TextColor3 = Color3.fromRGB(80, 220, 80)
-        Toggle2.BackgroundColor3 = Color3.fromRGB(20, 60, 20)
+        Toggle2.Text = "Bring Enemies (Gom 1 Điểm) : ON"
+        Toggle2.TextColor3 = Color3.fromRGB(80, 240, 80)
+        Toggle2.BackgroundColor3 = Color3.fromRGB(20, 70, 20)
     else
-        Toggle2.Text = "Bring Enemies (Gom Quái) : OFF"
-        Toggle2.TextColor3 = Color3.fromRGB(220, 80, 80)
-        Toggle2.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+        Toggle2.Text = "Bring Enemies (Gom 1 Điểm) : OFF"
+        Toggle2.TextColor3 = Color3.fromRGB(240, 80, 80)
+        Toggle2.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
     end
 end)
 
+-- Ép góc quái cố định trước mặt để combo của bạn dồn sát thương chuẩn 100% diện rộng
 RunService.Heartbeat:Connect(function()
     if BringActive and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
         pcall(function()
             local hrp = LocalPlayer.Character.HumanoidRootPart
-            local gatherPos = hrp.Position + (hrp.CFrame.LookVector * 4)
+            local gatherPos = hrp.Position + (hrp.CFrame.LookVector * 4.5)
             
             local enemiesFolder = workspace:FindFirstChild("Enemies") or workspace:FindFirstChild("Mobs") or workspace
             for _, enemy in pairs(enemiesFolder:GetChildren()) do
@@ -155,23 +204,22 @@ RunService.Heartbeat:Connect(function()
     end
 end)
 
--- Nút 3: Tự động Spawn lính khi đủ tiền
 Toggle3.MouseButton1Click:Connect(function()
     AutoTeleActive = not AutoTeleActive
     if AutoTeleActive then
         Toggle3.Text = "Auto Spawn Telescope (5 Coins) : ON"
-        Toggle3.TextColor3 = Color3.fromRGB(80, 220, 80)
-        Toggle3.BackgroundColor3 = Color3.fromRGB(20, 60, 20)
+        Toggle3.TextColor3 = Color3.fromRGB(80, 240, 80)
+        Toggle3.BackgroundColor3 = Color3.fromRGB(20, 70, 20)
     else
         Toggle3.Text = "Auto Spawn Telescope (5 Coins) : OFF"
-        Toggle3.TextColor3 = Color3.fromRGB(220, 80, 80)
-        Toggle3.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+        Toggle3.TextColor3 = Color3.fromRGB(240, 80, 80)
+        Toggle3.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
     end
 end)
 
 task.spawn(function()
     while true do
-        task.wait(0.3)
+        task.wait(0.25)
         if AutoTeleActive then
             pcall(function()
                 local SummonRemote = ReplicatedStorage:FindFirstChild("HEUGHSUMMONS") or ReplicatedStorage:FindFirstChild("SummonUnit") or ReplicatedStorage:FindFirstChild("Summon")
