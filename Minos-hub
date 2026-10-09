@@ -1,11 +1,27 @@
--- [[ sbsd_mockedup_gui PREMIUM - GEAR DAMAGE INSTANT EDITION ]]
--- BYPASS CHẶN UI BẰNG HÀM MOCKEDUP GETHUI - CHẮC CHẮN HIỆN BẢNG 100%
--- ÉP GEAR KÍCH HOẠT ĐÒN ĐÁNH TỪ XA TOÀN MAP - SAFE ZONE GOD MODE - CHỮ SBSD XANH LÁ
+-- [[ sbsd_mogged SUPREME HUB V38 - RAYFIELD SIRIUS MENU ]]
+-- NẠP THƯ VIỆN GIAO DIỆN QUA DOMAIN SIRIUS.MENU CHUẨN CHỈ
+-- KHÔNG LƯỚT NHÂN VẬT - TOÀN MAP GEAR ATTACK - SAFE ZONE GOD MODE BẤT TỬ
 
-if game:GetService("CoreGui"):FindFirstChild("sbsd_winner_gui") then
-    game:GetService("CoreGui")["sbsd_winner_gui"]:Destroy()
-end
+-- Ép hệ thống mở chế độ ẩn danh tối cao của Rayfield trước khi gọi link để bypass anti-gui của game
+getgenv().SecureMode = true
 
+-- Gọi liên kết nạp thư viện Rayfield chính thức qua sirius.menu theo đúng yêu cầu
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
+-- === KHỞI TẠO CỬA SỔ RAYFIELD THEME ĐEN ĐỎ ===
+local Window = Rayfield:CreateWindow({
+   Name = "sbsd_mogged Hub | Winner Setup",
+   LoadingTitle = "Loading System...",
+   LoadingSubtitle = "by Assistant",
+   Theme = "Default",
+   DisableRayfieldPrompts = true,
+   ConfigurationSaving = { Enabled = false }
+})
+
+-- Tạo Tab chức năng chính có chữ SBSD màu xanh lá nổi bật
+local MainTab = Window:CreateTab("SBSD Campaign", 4483345998)
+
+-- Biến lưu trạng thái tính năng
 local AuraActive = false
 local GodModeActive = false
 
@@ -14,172 +30,71 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
 
--- === HÀM MOCKEDUP GUI BẢO MẬT: BỌC QUA GETHUI TRÁNH BỊ GAME QUÉT XOÁ ===
-local function GetMockedupParent()
-    if gethui then 
-        return gethui() 
-    elseif syn and syn.protect_gui then
-        local sg = Instance.new("ScreenGui")
-        syn.protect_gui(sg)
-        sg.Parent = game:GetService("CoreGui")
-        return sg
-    end
-    return game:GetService("CoreGui"):FindFirstChild("RobloxGui") or game:GetService("CoreGui") or LocalPlayer:WaitForChild("PlayerGui")
-end
-
-local UI_Target_Parent = GetMockedupParent()
-
--- === KHỞI TẠO BỘ KHUNG SCREEN GUI MOCKEDUP ===
-local SG = Instance.new("ScreenGui")
-SG.Name = "sbsd_winner_gui"
-SG.Parent = UI_Target_Parent
-SG.ResetOnSpawn = false
-
--- === NÚT ICON CHỮ SBSD MÀU XANH LÁ ĐỂ MỞ LẠI BẢNG ===
-local OpenIcon = Instance.new("TextButton", SG)
-OpenIcon.Size = UDim2.new(0, 75, 0, 35)
-OpenIcon.Position = UDim2.new(0.02, 0, 0.25, 0)
-OpenIcon.BackgroundColor3 = Color3.fromRGB(20, 20, 22)
-OpenIcon.Text = "SBSD" 
-OpenIcon.TextColor3 = Color3.fromRGB(0, 255, 0) -- Chữ SBSD màu xanh lá rực rỡ
-OpenIcon.Font = Enum.Font.SourceSansBold
-OpenIcon.TextSize = 18
-OpenIcon.Visible = false
-OpenIcon.Active = true
-OpenIcon.Draggable = true
-
-local IconCorner = Instance.new("UICorner", OpenIcon)
-IconCorner.CornerRadius = UDim.new(0, 6)
-
-local IconStroke = Instance.new("UIStroke", OpenIcon)
-IconStroke.Color = Color3.fromRGB(0, 255, 0)
-IconStroke.Thickness = 1.5
-
--- === KHUNG CHÍNH MENU MOCKEDUP (GỌN GÀNG: 380 x 190) ===
-local Main = Instance.new("Frame", SG)
-Main.Size = UDim2.new(0, 380, 0, 190)
-Main.Position = UDim2.new(0.35, 0, 0.35, 0)
-Main.BackgroundColor3 = Color3.fromRGB(20, 20, 22)
-Main.BorderSizePixel = 0
-Main.Active = true
-Main.Draggable = true
-Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 10)
-
--- Thanh Tiêu Đề Topbar
-local Topbar = Instance.new("Frame", Main)
-Topbar.Size = UDim2.new(1, 0, 0, 40)
-Topbar.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
-Topbar.ZIndex = 1
-Instance.new("UICorner", Topbar).CornerRadius = UDim.new(0, 10)
-
-local Title = Instance.new("TextLabel", Topbar)
-Title.Size = UDim2.new(0.7, 0, 1, 0)
-Title.Position = UDim2.new(0, 15, 0, 0)
-Title.BackgroundTransparency = 1
-Title.Text = "sbsd_mockedup Hub | Winner Setup"
-Title.TextColor3 = Color3.fromRGB(240, 240, 240)
-Title.TextXAlignment = Enum.TextXAlignment.Left
-Title.Font = Enum.Font.SourceSansBold
-Title.TextSize = 15
-Title.ZIndex = 2
-
--- NÚT DẤU X ĐÓNG BẢNG
-local CloseBtn = Instance.new("TextButton", Topbar)
-CloseBtn.Size = UDim2.new(0, 28, 0, 28)
-CloseBtn.Position = UDim2.new(1, -38, 0, 6)
-CloseBtn.BackgroundColor3 = Color3.fromRGB(150, 40, 40)
-CloseBtn.Text = "X"
-CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-CloseBtn.Font = Enum.Font.SourceSansBold
-CloseBtn.TextSize = 14
-CloseBtn.ZIndex = 2
-Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(0, 5)
-
--- Khung chứa các nút bấm thiết kế bo tròn xếp dọc theo chuẩn Rayfield UI
-local ElementsContainer = Instance.new("Frame", Main)
-ElementsContainer.Size = UDim2.new(1, -30, 0, 120)
-ElementsContainer.Position = UDim2.new(0, 15, 0, 55)
-ElementsContainer.BackgroundTransparency = 1
-ElementsContainer.ZIndex = 1
-
-local function CreateMockedupToggle(text, posY)
-    local frame = Instance.new("Frame", ElementsContainer)
-    frame.Size = UDim2.new(1, 0, 0, 45)
-    frame.Position = UDim2.new(0, 0, 0, posY)
-    frame.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
-    frame.ZIndex = 2
-    Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 6)
-    
-    local label = Instance.new("TextLabel", frame)
-    label.Size = UDim2.new(0.7, 0, 1, 0)
-    label.Position = UDim2.new(0, 12, 0, 0)
-    label.BackgroundTransparency = 1
-    label.Text = "<font color='rgb(0, 255, 0)'>[sbsd]</font> " .. text 
-    label.RichText = true
-    label.TextColor3 = Color3.fromRGB(240, 240, 240)
-    label.Font = Enum.Font.SourceSansBold
-    label.TextSize = 13
-    label.TextXAlignment = Enum.TextXAlignment.Left
-    label.ZIndex = 3
-    
-    local btn = Instance.new("TextButton", frame)
-    btn.Size = UDim2.new(0, 55, 0, 26)
-    btn.Position = UDim2.new(1, -65, 0, 9)
-    btn.BackgroundColor3 = Color3.fromRGB(160, 40, 40) 
-    btn.Text = "OFF"
-    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    btn.Font = Enum.Font.SourceSansBold
-    btn.TextSize = 12
-    btn.ZIndex = 3
-    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 4)
-    
-    return btn
-end
-
-local Toggle1 = CreateMockedupToggle("Global Gear Attack (Toàn Bản Đồ)", 5)
-local Toggle2 = CreateMockedupToggle("Safe Zone God Mode (Bất Tử)", 60)
-
-CloseBtn.MouseButton1Click:Connect(function() Main.Visible = false; OpenIcon.Visible = true end)
-OpenIcon.MouseButton1Click:Connect(function() Main.Visible = true; OpenIcon.Visible = false end)
-
+-- === KHỞI TẠO NÚT ICON CHỮ SBSD MÀU XANH LÁ KHI THU NHỎ RAYFIELD ===
+task.spawn(function()
+    task.wait(1.2)
+    pcall(function()
+        -- Tìm đến phân vùng chứa nút đóng mở mặc định của Rayfield để đè chữ SBSD lên
+        local RayfieldGui = game:GetService("CoreGui"):FindFirstChild("Rayfield") or LocalPlayer.PlayerGui:FindFirstChild("Rayfield")
+        if RayfieldGui and RayfieldGui:FindFirstChild("OpenButton") then
+            local openBtn = RayfieldGui.OpenButton:FindFirstChildOfClass("ImageButton") or RayfieldGui.OpenButton
+            if openBtn then
+                -- Biến đổi hoàn toàn nút hình ảnh mặc định thành nút chữ SBSD màu xanh lá kéo thả được
+                openBtn.Image = ""
+                openBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 22)
+                openBtn.Size = UDim2.new(0, 75, 0, 35)
+                
+                local txt = Instance.new("TextLabel", openBtn)
+                txt.Size = UDim2.new(1, 0, 1, 0)
+                txt.BackgroundTransparency = 1
+                txt.Text = "SBSD"
+                txt.TextColor3 = Color3.fromRGB(0, 255, 0) -- Ép chữ thành màu xanh lá cây rực rỡ
+                txt.Font = Enum.Font.SourceSansBold
+                txt.TextSize = 18
+                
+                local corner = Instance.new("UICorner", openBtn)
+                corner.CornerRadius = UDim.new(0, 6)
+                
+                local stroke = Instance.new("UIStroke", openBtn)
+                stroke.Color = Color3.fromRGB(0, 255, 0)
+                stroke.Thickness = 1.5
+            end
+        end
+    end)
+end)
 
 -- === HỆ THỐNG XỬ LÝ TOÀN BỘ LOGIC GAME SUPERBOX SIEGE DEFENSE ===
 
--- 1. SỬA ĐỔI TOÀN DIỆN: Ép Gear vung đòn đánh từ xa 100% quái vừa hồi sinh trên map
-Toggle1.MouseButton1Click:Connect(function()
-    AuraActive = not AuraActive
-    if AuraActive then
-        Toggle1.Text = "ON"; Toggle1.BackgroundColor3 = Color3.fromRGB(40, 150, 40)
-    else
-        Toggle1.Text = "OFF"; Toggle1.BackgroundColor3 = Color3.fromRGB(150, 40, 40)
-    end
-end)
-
+-- 1. TÍNH NĂNG: Global Gear Attack Tấn Công Toàn Map Từ Xa (Không làm nhân vật bị lướt)
 task.spawn(function()
     while true do
-        task.wait(0.05) -- Tốc độ kích hoạt Gear cực nhanh
+        task.wait(0.04) -- Tần suất gây sát thương liên tục
         if AuraActive then
             pcall(function()
                 local char = LocalPlayer.Character
-                if char then
-                    -- Tự động tìm và ép trang bị/vũ khí ông giáo đang cầm (Sawblade, Ultra...) hoạt động
+                if char and char:FindFirstChild("HumanoidRootPart") then
                     local tool = char:FindFirstChildOfClass("Tool")
                     if tool then
-                        -- Quét sạch mọi ngóc ngách bản đồ
+                        -- Lấy các cổng Remote nhận đòn đánh nội bộ của cây vũ khí đang cầm và hệ thống game
+                        local weaponRemote = tool:FindFirstChild("Remote") or tool:FindFirstChild("Action") or tool:FindFirstChild("Attack") or tool:FindFirstChild("Hit")
+                        local globalRemote = ReplicatedStorage:FindFirstChild("Attack") or ReplicatedStorage:FindFirstChild("HitEnemy") or ReplicatedStorage:FindFirstChild("InflictDamage")
+
+                        -- Quét sạch 100% quái vừa spawn ra trên map không giới hạn khoảng cách
                         for _, enemy in pairs(workspace:GetDescendants()) do
                             if enemy:IsA("Model") and enemy:FindFirstChild("Humanoid") and enemy.Humanoid.Health > 0 then
                                 if not Players:GetPlayerFromCharacter(enemy) and enemy.Name ~= "Base" then
-                                    
-                                    -- ĐÁNH LỪA GAME: Ép tâm ngắm (Target) của vũ khí dính thẳng vào tọa độ quái từ xa
-                                    local hrp = enemy:FindFirstChild("HumanoidRootPart")
-                                    if hrp then
-                                        -- Gọi lệnh kích hoạt gốc của cây Gear ông giáo đang cầm
-                                        tool:Activate()
-                                        
-                                        -- Bổ sung tín hiệu đánh từ xa thông qua Remote nội bộ đính kèm trong cây vũ khí
-                                        local remote = tool:FindFirstChild("Remote") or tool:FindFirstChild("Action") or tool:FindFirstChild("Attack")
-                                        if remote and remote:IsA("RemoteEvent") then
-                                            remote:FireServer(enemy, hrp.Position)
+                                    local enemyHrp = enemy:FindFirstChild("HumanoidRootPart")
+                                    if enemyHrp then
+                                        -- Gửi tín hiệu dồn sát thương từ xa bỏ qua hoạt ảnh lướt vung đòn của nhân vật
+                                        if weaponRemote and weaponRemote:IsA("RemoteEvent") then
+                                            weaponRemote:FireServer(enemy, enemyHrp.Position)
+                                        end
+                                        if globalRemote then
+                                            if globalRemote:IsA("RemoteEvent") then
+                                                globalRemote:FireServer(enemy, tool)
+                                            elseif globalRemote:IsA("RemoteFunction") then
+                                                globalRemote:InvokeServer(enemy, tool)
+                                            end
                                         end
                                     end
                                 end
@@ -192,21 +107,7 @@ task.spawn(function()
     end
 end)
 
--- 2. Safe Zone Max God Mode (Khóa đầy máu liên tục ở cấp độ nhịp tim hệ thống)
-Toggle2.MouseButton1Click:Connect(function()
-    GodModeActive = not GodModeActive
-    if GodModeActive then
-        Toggle2.Text = "ON"; Toggle2.BackgroundColor3 = Color3.fromRGB(40, 150, 40)
-    else
-        Toggle2.Text = "OFF"; Toggle2.BackgroundColor3 = Color3.fromRGB(150, 40, 40)
-        pcall(function()
-            if LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("ForceField") then
-                LocalPlayer.Character:FindFirstChildOfClass("ForceField"):Destroy()
-            end
-        end)
-    end
-end)
-
+-- 2. TÍNH NĂNG: Safe Zone Max God Mode (Khóa đầy máu thời gian thực cấp độ nhịp tim hệ thống)
 RunService.Heartbeat:Connect(function()
     if GodModeActive then
         pcall(function()
@@ -214,7 +115,7 @@ RunService.Heartbeat:Connect(function()
             if char then
                 local hum = char:FindFirstChildOfClass("Humanoid")
                 if hum then
-                    hum.Health = hum.MaxHealth
+                    hum.Health = hum.MaxHealth -- Liên tục bơm đầy máu chống chết sốclag ở Death Mode
                     if hum.Health <= 0 then
                         hum:ChangeState(Enum.HumanoidStateType.Running)
                         hum.Health = hum.MaxHealth
@@ -225,5 +126,39 @@ RunService.Heartbeat:Connect(function()
                 end
             end
         end)
+    end
+end)
+
+-- === THIẾT LẬP CÁC NÚT GẠT (TOGGLE) CHỮ XANH LÁ TRÊN MENU RAYFIELD ===
+
+MainTab:CreateToggle({
+   Name = "Global Gear Attack (Toàn Bản Đồ)",
+   CurrentValue = false,
+   Flag = "GlobalGearAttackFlag",
+   Callback = function(Value)
+      AuraActive = Value
+   end,
+})
+
+MainTab:CreateToggle({
+   Name = "Safe Zone God Mode (Bất Tử)",
+   CurrentValue = false,
+   Flag = "SafeZoneGodModeFlag",
+   Callback = function(Value)
+      GodModeActive = Value
+   end,
+})
+
+-- Tạo màu chữ xanh lá nhãn nút gạt chuẩn phong cách sbsd cổ điển
+pcall(function()
+    task.wait(1.5)
+    local RayfieldGui = game:GetService("CoreGui"):FindFirstChild("Rayfield") or LocalPlayer.PlayerGui:FindFirstChild("Rayfield")
+    if RayfieldGui and RayfieldGui:FindFirstChild("Main") then
+        for _, desc in pairs(RayfieldGui.Main:GetDescendants()) do
+            if desc:IsA("TextLabel") and (desc.Text:match("Global Gear") or desc.Text:match("Safe Zone")) then
+                desc.Text = "<font color='rgb(0, 255, 0)'>[sbsd]</font> " .. desc.Text
+                desc.RichText = true
+            end
+        end
     end
 end)
