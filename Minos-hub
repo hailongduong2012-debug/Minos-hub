@@ -1,62 +1,265 @@
--- [[ SBSD CAMPAIGN 2026 - ULTRA-LIGHTWEIGHT & ANTI-CRASH CORE ]]
--- Cơ chế: Ép thực thi dòng lệnh bằng task.defer, loại bỏ hoàn toàn UI và thông báo tránh crash
+-- [[ SBSD CAMPAIGN HUB - INF RANGE, AUTO SPAWN TELE & SAFE ZONE ]]
+-- Giao diện: Rayfield Mockup UI (100% Hiện bảng - Có Ảnh Nền Doomguy)
 
-task.defer(function()
-    local Players = game:GetService("Players")
-    local RunService = game:GetService("RunService")
-    local ReplicatedStorage = game:GetService("ReplicatedStorage")
-    local LocalPlayer = Players.LocalPlayer
+if game:GetService("CoreGui"):FindFirstChild("RayfieldMockup_SBSD_V6") then
+    game:GetService("CoreGui")["RayfieldMockup_SBSD_V6"]:Destroy()
+end
 
-    -- === 1. CHÉM QUÁI TOÀN MAP (DIỆN TÍCH TỐI ĐA VÔ HẠN) ===
-    RunService.Heartbeat:Connect(function()
-        pcall(function()
-            local char = LocalPlayer.Character
-            if not char then return end
-            
-            -- Tự động cầm vũ khí
-            local backpack = LocalPlayer:FindFirstChild("Backpack")
-            if backpack and not char:FindFirstChildOfClass("Tool") then
-                local tool = backpack:FindFirstChildOfClass("Tool")
-                if tool then tool.Parent = char end
-            end
-            
-            local currentTool = char:FindFirstChildOfClass("Tool")
-            if currentTool and firetouchinterest then
-                local attackPart = currentTool:FindFirstChild("Handle") or currentTool:FindFirstChildWhichIsA("BasePart")
-                if attackPart then
-                    -- Quét toàn bộ quái trên bản đồ, bỏ qua kiểm tra khoảng cách
+-- Khởi tạo các biến tính năng
+local AuraActive = false
+local BringActive = false
+local AutoTeleActive = false
+local SafeZoneActive = false
+
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
+
+-- Xác định các Remote chuẩn của game Superbox Siege Defense
+local AttackRemote = ReplicatedStorage:FindFirstChild("Attack") or ReplicatedStorage:FindFirstChild("HitEnemy")
+local SummonRemote = ReplicatedStorage:FindFirstChild("HEUGHSUMMONS") or ReplicatedStorage:FindFirstChild("Summon")
+
+-- Cấu hình tọa độ Safe Zone tuần tra liên tục
+local SAFE_PATROL = {
+    Vector3.new(-495.3, -22.3, 518.4),
+    Vector3.new(481.9, -24.1, 513.1),
+    Vector3.new(496.6, -26.1, -478.6),
+    Vector3.new(-485.5, -21.9, -473.7),
+}
+local SAFE_PATROL_SPEED = 50
+local safePatrolPos = nil
+local safePatrolTarget = 1
+
+-- === VẼ UI GIẢ LẬP STYLE RAYFIELD (MÀU ĐEN BO GÓC + BACKGROUND) ===
+local SG = Instance.new("ScreenGui", game:GetService("CoreGui"))
+SG.Name = "RayfieldMockup_SBSD_V6"
+
+local Main = Instance.new("Frame", SG)
+Main.Size = UDim2.new(0, 320, 0, 295)
+Main.Position = UDim2.new(0.35, 0, 0.3, 0)
+Main.BackgroundColor3 = Color3.fromRGB(21, 21, 24)
+Main.BorderSizePixel = 0
+Main.Active = true
+Main.Draggable = true
+
+local UICorner = Instance.new("UICorner", Main)
+UICorner.CornerRadius = UDim.new(0, 9)
+
+-- THÊM HÌNH NỀN DOOMGUY (Phủ mờ mượt mà phía sau các nút bấm)
+local BackgroundImg = Instance.new("ImageLabel", Main)
+BackgroundImg.Size = UDim2.new(1, 0, 1, 0)
+BackgroundImg.Position = UDim2.new(0, 0, 0, 0)
+BackgroundImg.BackgroundTransparency = 1
+BackgroundImg.Image = "rbxassetid://4743224771" -- ID ảnh Doomguy chuẩn HD trên Roblox
+BackgroundImg.ImageTransparency = 0.65 -- Độ mờ nền (0 là rõ nét, 1 là trong suốt) để không bị chói mắt khi nhìn nút
+BackgroundImg.ScaleType = Enum.ScaleType.Crop
+BackgroundImg.ZIndex = 0
+
+local BGCorner = Instance.new("UICorner", BackgroundImg)
+BGCorner.CornerRadius = UDim.new(0, 9)
+
+-- Thanh Tiêu Đề
+local Title = Instance.new("TextLabel", Main)
+Title.Size = UDim2.new(1, 0, 0, 40)
+Title.BackgroundColor3 = Color3.fromRGB(28, 28, 33)
+Title.BackgroundTransparency = 0.2 -- Làm trong suốt nhẹ để lộ ảnh nền phía sau
+Title.Text = "  SBSD Campaign Hub | Doom Edition"
+Title.TextColor3 = Color3.fromRGB(240, 240, 240)
+Title.TextXAlignment = Enum.TextXAlignment.Left
+Title.Font = Enum.Font.SourceSansBold
+Title.TextSize = 15
+Title.ZIndex = 2
+
+local TitleCorner = Instance.new("UICorner", Title)
+TitleCorner.CornerRadius = UDim.new(0, 9)
+
+-- Nút Toggle 1: Auto Attack (Inf Range)
+local Toggle1 = Instance.new("TextButton", Main)
+Toggle1.Size = UDim2.new(0, 290, 0, 40)
+Toggle1.Position = UDim2.new(0, 15, 0, 55)
+Toggle1.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
+Toggle1.BackgroundTransparency = 0.15
+Toggle1.Text = "Kill Aura (Vô Hạn Tầm Đánh) : OFF"
+Toggle1.TextColor3 = Color3.fromRGB(200, 70, 70)
+Toggle1.Font = Enum.Font.SourceSansBold
+Toggle1.TextSize = 14
+Toggle1.ZIndex = 2
+
+local T1Corner = Instance.new("UICorner", Toggle1)
+T1Corner.CornerRadius = UDim.new(0, 6)
+
+-- Nút Toggle 2: Bring Mobs
+local Toggle2 = Instance.new("TextButton", Main)
+Toggle2.Size = UDim2.new(0, 290, 0, 40)
+Toggle2.Position = UDim2.new(0, 15, 0, 110)
+Toggle2.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
+Toggle2.BackgroundTransparency = 0.15
+Toggle2.Text = "Bring Enemies (Gom Quái) : OFF"
+Toggle2.TextColor3 = Color3.fromRGB(200, 70, 70)
+Toggle2.Font = Enum.Font.SourceSansBold
+Toggle2.TextSize = 14
+Toggle2.ZIndex = 2
+
+local T2Corner = Instance.new("UICorner", Toggle2)
+T2Corner.CornerRadius = UDim.new(0, 6)
+
+-- Nút Toggle 3: Auto Spawn Telescope
+local Toggle3 = Instance.new("TextButton", Main)
+Toggle3.Size = UDim2.new(0, 290, 0, 40)
+Toggle3.Position = UDim2.new(0, 15, 0, 165)
+Toggle3.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
+Toggle3.BackgroundTransparency = 0.15
+Toggle3.Text = "Auto Spawn Telescope (5 Coins) : OFF"
+Toggle3.TextColor3 = Color3.fromRGB(200, 70, 70)
+Toggle3.Font = Enum.Font.SourceSansBold
+Toggle3.TextSize = 14
+Toggle3.ZIndex = 2
+
+local T3Corner = Instance.new("UICorner", Toggle3)
+T3Corner.CornerRadius = UDim.new(0, 6)
+
+-- Nút Toggle 4: Safe Zone Patrolling
+local Toggle4 = Instance.new("TextButton", Main)
+Toggle4.Size = UDim2.new(0, 290, 0, 40)
+Toggle4.Position = UDim2.new(0, 15, 0, 220)
+Toggle4.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
+Toggle4.BackgroundTransparency = 0.15
+Toggle4.Text = "Safe Zone Patrolling (Né Quái) : OFF"
+Toggle4.TextColor3 = Color3.fromRGB(200, 70, 70)
+Toggle4.Font = Enum.Font.SourceSansBold
+Toggle4.TextSize = 14
+Toggle4.ZIndex = 2
+
+local T4Corner = Instance.new("UICorner", Toggle4)
+T4Corner.CornerRadius = UDim.new(0, 6)
+
+
+-- === XỬ LÝ LOGIC HOẠT ĐỘNG ===
+
+-- 1. Xử lý Kill Aura Vô Hạn Range
+Toggle1.MouseButton1Click:Connect(function()
+    AuraActive = not AuraActive
+    if AuraActive then
+        Toggle1.Text = "Kill Aura (Vô Hạn Tầm Đánh) : ON"
+        Toggle1.TextColor3 = Color3.fromRGB(80, 200, 80)
+    else
+        Toggle1.Text = "Kill Aura (Vô Hạn Tầm Đánh) : OFF"
+        Toggle1.TextColor3 = Color3.fromRGB(200, 70, 70)
+    end
+end)
+
+task.spawn(function()
+    while true do
+        task.wait(0.12)
+        if AuraActive then
+            pcall(function()
+                if AttackRemote then
                     for _, enemy in pairs(workspace:GetDescendants()) do
                         if enemy:IsA("Model") and enemy:FindFirstChild("Humanoid") and enemy.Humanoid.Health > 0 then
                             if not Players:GetPlayerFromCharacter(enemy) then
-                                local enemyRoot = enemy:FindFirstChild("HumanoidRootPart") or enemy:FindFirstChildWhichIsA("BasePart")
-                                if enemyRoot then
-                                    -- Kích hoạt chạm sát thương (Kill Aura)
-                                    firetouchinterest(enemyRoot, attackPart, 0)
-                                    firetouchinterest(enemyRoot, attackPart, 1)
-                                end
+                                AttackRemote:FireServer(enemy)
                             end
                         end
                     end
                 end
+            end)
+        end
+    end
+end)
+
+-- 2. Xử lý nút Bring Enemies
+Toggle2.MouseButton1Click:Connect(function()
+    BringActive = not BringActive
+    if BringActive then
+        Toggle2.Text = "Bring Enemies (Gom Quái) : ON"
+        Toggle2.TextColor3 = Color3.fromRGB(80, 200, 80)
+    else
+        Toggle2.Text = "Bring Enemies (Gom Quái) : OFF"
+        Toggle2.TextColor3 = Color3.fromRGB(200, 70, 70)
+    end
+end)
+
+RunService.Heartbeat:Connect(function()
+    if BringActive and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+        pcall(function()
+            local hrp = LocalPlayer.Character.HumanoidRootPart
+            local gatherPos = hrp.Position + (hrp.CFrame.LookVector * 4)
+            
+            local enemiesFolder = workspace:FindFirstChild("Enemies") or workspace:FindFirstChild("Mobs") or workspace
+            for _, enemy in pairs(enemiesFolder:GetChildren()) do
+                if enemy:IsA("Model") and enemy:FindFirstChild("HumanoidRootPart") and enemy:FindFirstChild("Humanoid") then
+                    if enemy.Humanoid.Health > 0 and not Players:GetPlayerFromCharacter(enemy) then
+                        enemy.HumanoidRootPart.CFrame = CFrame.new(gatherPos)
+                        enemy.HumanoidRootPart.Velocity = Vector3.new(0,0,0)
+                    end
+                end
             end
         end)
-    end)
+    end
+end)
 
-    -- === 2. TỰ ĐỘNG SPWAN TELESCOPE GIÁ 5 COIN ===
-    task.spawn(function()
-        while true do
-            task.wait(0.8) -- Độ trễ an toàn chống spam nghẽn mạng
+-- 3. Xử lý Tự động gọi Telescope
+Toggle3.MouseButton1Click:Connect(function()
+    AutoTeleActive = not AutoTeleActive
+    if AutoTeleActive then
+        Toggle3.Text = "Auto Spawn Telescope (5 Coins) : ON"
+        Toggle3.TextColor3 = Color3.fromRGB(80, 200, 80)
+    else
+        Toggle3.Text = "Auto Spawn Telescope (5 Coins) : OFF"
+        Toggle3.TextColor3 = Color3.fromRGB(200, 70, 70)
+    end
+end)
+
+task.spawn(function()
+    while true do
+        task.wait(0.5)
+        if AutoTeleActive and SummonRemote then
             pcall(function()
-                -- Tự động quét tìm RemoteEvent mua/gọi đạo cụ của Game
-                local shopRemote = ReplicatedStorage:FindFirstChild("BuyItem", true) 
-                    or ReplicatedStorage:FindFirstChild("PurchaseItem", true)
-                    or ReplicatedStorage:FindFirstChild("RemoteEvent", true)
-
-                if shopRemote and shopRemote:IsA("RemoteEvent") then
-                    shopRemote:FireServer("Telescope", 5)
-                    shopRemote:FireServer("SpawnTelescope")
+                local leaderstats = LocalPlayer:FindFirstChild("leaderstats")
+                local cash = leaderstats and (leaderstats:FindFirstChild("Cash") or leaderstats:FindFirstChild("Coins") or leaderstats:FindFirstChild("Points"))
+                
+                if cash and cash.Value >= 5 then
+                    SummonRemote:FireServer("Telescope")
                 end
             end)
         end
-    end)
+    end
 end)
+
+-- 4. Xử lý nút Safe Zone Tuần Tra Chống Quái
+Toggle4.MouseButton1Click:Connect(function()
+    SafeZoneActive = not SafeZoneActive
+    if SafeZoneActive then
+        Toggle4.Text = "Safe Zone Patrolling (Né Quái) : ON"
+        Toggle4.TextColor3 = Color3.fromRGB(80, 200, 80)
+        safePatrolPos = nil
+    else
+        Toggle4.Text = "Safe Zone Patrolling (Né Quái) : OFF"
+        Toggle4.TextColor3 = Color3.fromRGB(200, 70, 70)
+        local char = LocalPlayer.Character
+        local hrp = char and char:FindFirstChild("HumanoidRootPart")
+        if hrp then hrp.Anchored = false end
+    end
+end)
+
+RunService.RenderStepped:Connect(function(deltaTime)
+    if SafeZoneActive then
+        pcall(function()
+            local char = LocalPlayer.Character
+            local hrp = char and char:FindFirstChild("HumanoidRootPart")
+            local humanoid = char and char:FindFirstChildOfClass("Humanoid")
+            
+            if hrp and humanoid and humanoid.Health > 0 then
+                hrp.Anchored = true
+                
+                if not safePatrolPos then
+                    local nearest, nearestDist = 1, math.huge
+                    for i, pos in ipairs(SAFE_PATROL) do
+                        local dist = (hrp.Position - pos).Magnitude
+                        if dist < nearestDist then
+                            nearest = i
+                            nearestDist = dist
+                        end
+                    end
+                    safePatrolPos = SAFE_PATROL[nearest]
