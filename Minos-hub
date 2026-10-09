@@ -1,31 +1,52 @@
--- [[ SBSD DEATH MODE HUB V13 - GLOBAL MAP RANGE & FULL DOOM IMAGE FIXED ]]
--- FIX ẢNH NỀN DOOM SLAYER - SỬA LỖI SUMMON - KILL AURA TOÀN MAP - GOD MODE MAX
+-- [[ SBSD DEATH MODE HUB V14 - BYPASS COREGUI SYSTEM ]]
+-- FIX TRIỆT ĐỂ LỖI KHÔNG HIỂN THỊ UI - CHUYỂN HƯỚNG SANG PLAYERGUI AN TOÀN
 
-if game:GetService("CoreGui"):FindFirstChild("SBSD_Doom_V13") then
-    game:GetService("CoreGui")["SBSD_Doom_V13"]:Destroy()
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+-- HÀM BYPASS HỆ THỐNG PHÒNG THỦ ĐỒ HỌA: Tự động chọn nơi an toàn để hiện bảng
+local function GetSafeGUIParent()
+    local CoreGui = game:GetService("CoreGui")
+    local success, _ = pcall(function()
+        local test = Instance.new("ScreenGui")
+        test.Parent = CoreGui
+        test:Destroy()
+    end)
+    if success then
+        return CoreGui
+    else
+        -- Nếu CoreGui bị chặn, ép UI nhét thẳng vào PlayerGui của người chơi để hiện lên 100%
+        return LocalPlayer:WaitForChild("PlayerGui")
+    end
 end
 
+local TargetParent = GetSafeGUIParent()
+
+-- Xóa các bảng cũ để tránh trùng lặp đè giao diện
+if TargetParent:FindFirstChild("SBSD_Doom_V14") then
+    TargetParent["SBSD_Doom_V14"]:Destroy()
+end
+
+-- Biến điều khiển tính năng
 local AuraActive = false
 local GodModeActive = false
 local AutoTeleActive = false
 
-local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
-local LocalPlayer = Players.LocalPlayer
 
--- === KHỞI TẠO KHUNG CHÍNH GIAO DIỆN (SCREEN GUI) ===
+-- === KHỞI TẠO KHUNG CHÍNH GIAO DIỆN ===
 local SG = Instance.new("ScreenGui")
-SG.Name = "SBSD_Doom_V13"
-SG.Parent = game:GetService("CoreGui")
+SG.Name = "SBSD_Doom_V14"
+SG.Parent = TargetParent
 SG.ResetOnSpawn = false
 
--- === TẠO ICON ĐẦU LÂU DOOM KHÔNG LỖI ĐỂ MỞ MENU ===
+-- === TẠO ICON ĐẦU LÂU ĐỂ MỞ LẠI MENU ===
 local OpenIcon = Instance.new("ImageButton", SG)
 OpenIcon.Size = UDim2.new(0, 60, 0, 60)
 OpenIcon.Position = UDim2.new(0.02, 0, 0.25, 0)
 OpenIcon.BackgroundColor3 = Color3.fromRGB(50, 10, 10)
-OpenIcon.Image = "rbxassetid://13511674402" -- Gọi ID nhị phân gốc đảm bảo luôn hiển thị hình đầu lâu
+OpenIcon.Image = "rbxassetid://13511674402"
 OpenIcon.Visible = false
 OpenIcon.Active = true
 OpenIcon.Draggable = true
@@ -38,16 +59,16 @@ IconStroke.Thickness = 2.5
 local Main = Instance.new("Frame", SG)
 Main.Size = UDim2.new(0, 560, 0, 340)
 Main.Position = UDim2.new(0.3, 0, 0.25, 0)
-Main.BackgroundColor3 = Color3.fromRGB(15, 10, 10)
+Main.BackgroundColor3 = Color3.fromRGB(20, 15, 15)
 Main.BorderSizePixel = 0
 Main.Active = true
 Main.Draggable = true
 Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 12)
 
--- Hệ thống nạp lớp nền ảnh Doom Slayer rực lửa (Đã sửa đổi đường dẫn để chắc chắn hiện lên)
+-- Nạp hình nền Doom Slayer rực lửa bằng ID Nhị phân hệ thống
 local BackgroundImage = Instance.new("ImageLabel", Main)
 BackgroundImage.Size = UDim2.new(1, 0, 1, 0)
-BackgroundImage.Image = "rbxassetid://13511674402" -- Phủ ảnh Doom Slayer chiến binh hủy diệt cực nét lên UI
+BackgroundImage.Image = "rbxassetid://13511674402"
 BackgroundImage.ScaleType = Enum.ScaleType.Crop
 BackgroundImage.ImageTransparency = 0.35
 BackgroundImage.ZIndex = 0
@@ -58,7 +79,7 @@ local Title = Instance.new("TextLabel", Main)
 Title.Size = UDim2.new(1, 0, 0, 45)
 Title.BackgroundColor3 = Color3.fromRGB(50, 10, 10)
 Title.BackgroundTransparency = 0.4
-Title.Text = "   SBSD Campaign V13 | DEATH MODE GLOBAL RANGE"
+Title.Text = "   SBSD Campaign V14 | DEATH MODE SYSTEM FIXED"
 Title.TextColor3 = Color3.fromRGB(255, 60, 60)
 Title.TextXAlignment = Enum.TextXAlignment.Left
 Title.Font = Enum.Font.SourceSansBold
@@ -90,7 +111,7 @@ local function CreateDoomButton(text, posY)
     local btn = Instance.new("TextButton", ButtonContainer)
     btn.Size = UDim2.new(1, 0, 0, 45)
     btn.Position = UDim2.new(0, 0, 0, posY)
-    btn.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+    btn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
     btn.BackgroundTransparency = 0.25
     btn.Text = text .. " : OFF"
     btn.TextColor3 = Color3.fromRGB(240, 80, 80)
@@ -111,24 +132,23 @@ OpenIcon.MouseButton1Click:Connect(function() Main.Visible = true; OpenIcon.Visi
 
 -- === HỆ THỐNG XỬ LÝ TOÀN BỘ LOGIC GAME SUPERBOX SIEGE DEFENSE ===
 
--- 1. CẢI TIẾN: Kill Aura Vô Hạn Phạm Vi Toàn Bản Đồ 360° (Quét sạch map không giới hạn khoảng cách)
+-- 1. Kill Aura Vô Hạn Phạm Vi Toàn Bản Đồ (Quét sạch quái không giới hạn khoảng cách)
 Toggle1.MouseButton1Click:Connect(function()
     AuraActive = not AuraActive
     if AuraActive then
         Toggle1.Text = "Global Kill Aura (Toàn Bản Đồ) : ON"; Toggle1.TextColor3 = Color3.fromRGB(80, 240, 80); Toggle1.BackgroundColor3 = Color3.fromRGB(20, 70, 20)
     else
-        Toggle1.Text = "Global Kill Aura (Toàn Bản Đồ) : OFF"; Toggle1.TextColor3 = Color3.fromRGB(240, 80, 80); Toggle1.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+        Toggle1.Text = "Global Kill Aura (Toàn Bản Đồ) : OFF"; Toggle1.TextColor3 = Color3.fromRGB(240, 80, 80); Toggle1.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
     end
 end)
 
 task.spawn(function()
     while true do
-        task.wait(0.04) -- Tốc độ dọn quái siêu tốc
+        task.wait(0.04)
         if AuraActive then
             pcall(function()
                 local AttackRemote = ReplicatedStorage:FindFirstChild("Attack") or ReplicatedStorage:FindFirstChild("HitEnemy") or ReplicatedStorage:FindFirstChild("InflictDamage") or ReplicatedStorage:FindFirstChild("Hit")
                 if AttackRemote then
-                    -- Quét dứt điểm toàn bộ thực thể trên map bất kể khoảng cách xa gần hay hướng đứng
                     for _, enemy in pairs(workspace:GetDescendants()) do
                         if enemy:IsA("Model") and enemy:FindFirstChild("Humanoid") and enemy.Humanoid.Health > 0 then
                             if not Players:GetPlayerFromCharacter(enemy) and enemy.Name ~= "Base" then
@@ -146,17 +166,16 @@ task.spawn(function()
     end
 end)
 
--- 2. CẢI TIẾN: Safe Zone Max God Mode Chống Chết Sốc Cho Chế Độ Death Mode
+-- 2. Safe Zone Max God Mode Chống Chết Sốc (Real-time Bơm máu nhịp tim)
 Toggle2.MouseButton1Click:Connect(function()
     GodModeActive = not GodModeActive
     if GodModeActive then
         Toggle2.Text = "Safe Zone God Mode (Bất Tử) : ON"; Toggle2.TextColor3 = Color3.fromRGB(80, 240, 80); Toggle2.BackgroundColor3 = Color3.fromRGB(20, 70, 20)
     else
-        Toggle2.Text = "Safe Zone God Mode (Bất Tử) : OFF"; Toggle2.TextColor3 = Color3.fromRGB(240, 80, 80); Toggle2.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+        Toggle2.Text = "Safe Zone God Mode (Bất Tử) : OFF"; Toggle2.TextColor3 = Color3.fromRGB(240, 80, 80); Toggle2.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
     end
 end)
 
--- Tạo luồng chạy lặp nhịp tim liên tục (Heartbeat) ép dữ liệu máu không đổi bất kể quái dồn sát thương
 RunService.Heartbeat:Connect(function()
     if GodModeActive then
         pcall(function()
@@ -164,16 +183,12 @@ RunService.Heartbeat:Connect(function()
             if char then
                 local hum = char:FindFirstChildOfClass("Humanoid")
                 if hum then
-                    hum.Health = hum.MaxHealth -- Liên tục bơm đầy máu mỗi mili giây
-                    
-                    -- Cơ chế chống sập: Đóng băng trạng thái chết bằng cách ép các thuộc tính trạng thái nhân vật
+                    hum.Health = hum.MaxHealth
                     if hum.Health <= 0 then
                         hum:ChangeState(Enum.HumanoidStateType.Running)
                         hum.Health = hum.MaxHealth
                     end
                 end
-                
-                -- Tạo liên tục màng bảo vệ ForceField gốc của hệ thống Roblox để chặn đứng sát thương chí mạng
                 if not char:FindFirstChildOfClass("ForceField") then
                     Instance.new("ForceField", char)
                 end
@@ -188,7 +203,7 @@ Toggle3.MouseButton1Click:Connect(function()
     if AutoTeleActive then
         Toggle3.Text = "Auto Spawn Telescope (5 Coins) : ON"; Toggle3.TextColor3 = Color3.fromRGB(80, 240, 80); Toggle3.BackgroundColor3 = Color3.fromRGB(20, 70, 20)
     else
-        Toggle3.Text = "Auto Spawn Telescope (5 Coins) : OFF"; Toggle3.TextColor3 = Color3.fromRGB(240, 80, 80); Toggle3.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+        Toggle3.Text = "Auto Spawn Telescope (5 Coins) : OFF"; Toggle3.TextColor3 = Color3.fromRGB(240, 80, 80); Toggle3.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
     end
 end)
 
@@ -213,3 +228,8 @@ task.spawn(function()
                         SummonRemote:FireServer("Heli", targetPos)
                         SummonRemote:FireServer("Telescope", targetPos)
                     elseif SummonRemote:IsA("RemoteFunction") then
+                        SummonRemote:InvokeServer("Heli", targetPos)
+                        SummonRemote:InvokeServer("Telescope", targetPos)
+                    end
+                end
+            end)
