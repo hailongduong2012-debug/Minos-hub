@@ -1,5 +1,5 @@
 -- [[ SBSD CAMPAIGN HUB - INF RANGE, AUTO SPAWN TELE & SAFE ZONE ]]
--- Giao diện: Rayfield Mockup UI (100% Hiện bảng - Có Ảnh Nền Doomguy)
+-- Giao diện: Rayfield Mockup UI (FIX LỖI HIỂN THỊ - 100% HIỆN BẢNG)
 
 if game:GetService("CoreGui"):FindFirstChild("RayfieldMockup_SBSD_V6") then
     game:GetService("CoreGui")["RayfieldMockup_SBSD_V6"]:Destroy()
@@ -42,19 +42,20 @@ Main.BackgroundColor3 = Color3.fromRGB(21, 21, 24)
 Main.BorderSizePixel = 0
 Main.Active = true
 Main.Draggable = true
+Main.ZIndex = 1
 
 local UICorner = Instance.new("UICorner", Main)
 UICorner.CornerRadius = UDim.new(0, 9)
 
--- THÊM HÌNH NỀN DOOMGUY (Phủ mờ mượt mà phía sau các nút bấm)
+-- HÌNH NỀN DOOMGUY (Đã sửa lỗi hiển thị đè layer)
 local BackgroundImg = Instance.new("ImageLabel", Main)
 BackgroundImg.Size = UDim2.new(1, 0, 1, 0)
 BackgroundImg.Position = UDim2.new(0, 0, 0, 0)
 BackgroundImg.BackgroundTransparency = 1
-BackgroundImg.Image = "rbxassetid://4743224771" -- ID ảnh Doomguy chuẩn HD trên Roblox
-BackgroundImg.ImageTransparency = 0.65 -- Độ mờ nền (0 là rõ nét, 1 là trong suốt) để không bị chói mắt khi nhìn nút
+BackgroundImg.Image = "rbxassetid://4743224771" -- ID ảnh Doomguy chuẩn HD trên hệ thống Roblox
+BackgroundImg.ImageTransparency = 0.5 -- Cân bằng độ mờ để nhìn rõ cả hình lẫn nút
 BackgroundImg.ScaleType = Enum.ScaleType.Crop
-BackgroundImg.ZIndex = 0
+BackgroundImg.ZIndex = 1 -- Đặt ở lớp thấp nhất để không che mất nút
 
 local BGCorner = Instance.new("UICorner", BackgroundImg)
 BGCorner.CornerRadius = UDim.new(0, 9)
@@ -63,13 +64,13 @@ BGCorner.CornerRadius = UDim.new(0, 9)
 local Title = Instance.new("TextLabel", Main)
 Title.Size = UDim2.new(1, 0, 0, 40)
 Title.BackgroundColor3 = Color3.fromRGB(28, 28, 33)
-Title.BackgroundTransparency = 0.2 -- Làm trong suốt nhẹ để lộ ảnh nền phía sau
+Title.BackgroundTransparency = 0.2
 Title.Text = "  SBSD Campaign Hub | Doom Edition"
 Title.TextColor3 = Color3.fromRGB(240, 240, 240)
 Title.TextXAlignment = Enum.TextXAlignment.Left
 Title.Font = Enum.Font.SourceSansBold
 Title.TextSize = 15
-Title.ZIndex = 2
+Title.ZIndex = 3 -- Đẩy lên lớp cao nhất để hiển thị rõ ràng
 
 local TitleCorner = Instance.new("UICorner", Title)
 TitleCorner.CornerRadius = UDim.new(0, 9)
@@ -84,7 +85,7 @@ Toggle1.Text = "Kill Aura (Vô Hạn Tầm Đánh) : OFF"
 Toggle1.TextColor3 = Color3.fromRGB(200, 70, 70)
 Toggle1.Font = Enum.Font.SourceSansBold
 Toggle1.TextSize = 14
-Toggle1.ZIndex = 2
+Toggle1.ZIndex = 3
 
 local T1Corner = Instance.new("UICorner", Toggle1)
 T1Corner.CornerRadius = UDim.new(0, 6)
@@ -99,7 +100,7 @@ Toggle2.Text = "Bring Enemies (Gom Quái) : OFF"
 Toggle2.TextColor3 = Color3.fromRGB(200, 70, 70)
 Toggle2.Font = Enum.Font.SourceSansBold
 Toggle2.TextSize = 14
-Toggle2.ZIndex = 2
+Toggle2.ZIndex = 3
 
 local T2Corner = Instance.new("UICorner", Toggle2)
 T2Corner.CornerRadius = UDim.new(0, 6)
@@ -114,7 +115,7 @@ Toggle3.Text = "Auto Spawn Telescope (5 Coins) : OFF"
 Toggle3.TextColor3 = Color3.fromRGB(200, 70, 70)
 Toggle3.Font = Enum.Font.SourceSansBold
 Toggle3.TextSize = 14
-Toggle3.ZIndex = 2
+Toggle3.ZIndex = 3
 
 local T3Corner = Instance.new("UICorner", Toggle3)
 T3Corner.CornerRadius = UDim.new(0, 6)
@@ -129,7 +130,7 @@ Toggle4.Text = "Safe Zone Patrolling (Né Quái) : OFF"
 Toggle4.TextColor3 = Color3.fromRGB(200, 70, 70)
 Toggle4.Font = Enum.Font.SourceSansBold
 Toggle4.TextSize = 14
-Toggle4.ZIndex = 2
+Toggle4.ZIndex = 3
 
 local T4Corner = Instance.new("UICorner", Toggle4)
 T4Corner.CornerRadius = UDim.new(0, 6)
