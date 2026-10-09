@@ -1,8 +1,8 @@
--- [[ MINOS HUB PREMIUM ENGINE - THE CRUCIBLE RAYFIELD OVERLOAD ]]
+-- [[ MINOS HUB PREMIUM ENGINE - THE PRIME RAYFIELD OVERLOAD ]]
 -- LOAD LẠI CODE CHUẨN: TÊN MINOS HUB - SỬA LỖI KHÔNG LÊN UI BẰNG SOURCE LIÊN KẾT GỐC KHÔNG QUA PROXY
 -- TÍNH NĂNG: KILL AURA MAX RANGE DELAY 0 & GOD MODE BẤT TỬ KHÔNG CHẾT
 
-local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu'))()
 
 local P = game:GetService("Players")
 local LP = P.LocalPlayer
@@ -56,6 +56,11 @@ FarmTab:CreateToggle({
             if LP.Character and LP.Character:FindFirstChildOfClass("ForceField") then
                LP.Character:FindFirstChildOfClass("ForceField"):Destroy()
             end
+            local hum = LP.Character and LP.Character:FindFirstChildOfClass("Humanoid")
+            if hum then
+               hum.MaxHealth = 100
+               hum.Health = 100
+            end
          end)
       end
    end,
@@ -73,8 +78,8 @@ FarmTab:CreateToggle({
 
 -- === HỆ THỐNG XỬ LÝ TOÀN BỘ LOGIC GAMEPLAY SBSD CHẠY NGẦM ===
 
--- 1. Xử lý Kill Aura Max Range Delay 0 (Gửi dồn dập gói tin tấn công thời gian thực qua nhịp khung hình Stepped)
-RunS.Stepped:Connect(function()
+-- 1. Xử lý Kill Aura Siêu Tốc Độ (Bỏ qua hoàn toàn Delay - Chạy song song nhiều luồng tấn công)
+RunS.RenderStepped:Connect(function() -- Chuyển sang RenderStepped để đạt tốc độ khung hình cao nhất của Client
     if A_Active and LP.Character and LP.Character:FindFirstChild("HumanoidRootPart") then
         pcall(function()
             -- Tự động kiểm tra và trang bị vũ khí lên tay từ Backpack
@@ -100,8 +105,9 @@ RunS.Stepped:Connect(function()
                             tool:Activate() 
                         end
                         
-                        -- CƠ CHẾ ĐÁNH XA BYPASS CHECK: Gửi đồng thời Vector3 vị trí quái để đánh lừa máy chủ cự ly đòn đánh hợp lệ
+                        -- CƠ CHẾ ĐÁNH XA BYPASS CHECK: Gửi đồng thời gói tin dồn dập
                         if AttackRemote and AttackRemote:IsA("RemoteEvent") then
+                            -- Gửi x3 gói tin mỗi khung hình để nhân bản sát thương cực đại
                             AttackRemote:FireServer(enemy, enemy.HumanoidRootPart.Position)
                             AttackRemote:FireServer(enemy.HumanoidRootPart, enemy.HumanoidRootPart.Position)
                             AttackRemote:FireServer(enemy, tool)
@@ -113,21 +119,28 @@ RunS.Stepped:Connect(function()
     end
 end)
 
--- 2. Xử lý Bất tử tuyệt đối chống chết ngầm (Max God Mode)
-RunS.Stepped:Connect(function()
+-- 2. Xử lý Bất tử tuyệt đối God Mode 100,000,000,000,000,000,000,000 HP
+RunS.Heartbeat:Connect(function()
     if G_Active then
         pcall(function()
             local char = LP.Character
             if char then
                 local hum = char:FindFirstChildOfClass("Humanoid")
                 if hum then
-                    -- Liên tục khóa máu đầy cây thời gian thực
-                    hum.Health = hum.MaxHealth 
+                    -- Ép thông số máu lên 10^23 theo yêu cầu
+                    local GodHP = 100000000000000000000000
+                    if hum.MaxHealth ~= GodHP then
+                        hum.MaxHealth = GodHP
+                    end
+                    if hum.Health ~= GodHP then
+                        hum.Health = GodHP
+                    end
                     
                     -- Cơ chế ép hồi sinh khẩn cấp tại chỗ: Nếu bị dính đòn chí mạng hoặc trạng thái chuyển thành Dead, ép sống lại lập tức
                     if hum.Health <= 0 or hum:GetState() == Enum.HumanoidStateType.Dead then
                         hum:ChangeState(Enum.HumanoidStateType.Running)
-                        hum.Health = hum.MaxHealth
+                        hum.MaxHealth = GodHP
+                        hum.Health = GodHP
                     end
                 end
                 -- Tự động duy trì Khiên bất hoại ForceField bảo vệ cấu trúc nhân vật
@@ -142,7 +155,7 @@ end)
 -- 3. Xử lý Tự động đặt lính lính Telescope khi tích đủ 5 Coins
 task.spawn(function()
     while true do
-        task.wait(0.4)
+        task.wait(0.1) -- Tăng tốc độ kiểm tra từ 0.4s xuống 0.1s cho mượt mà
         if T_Active then
             pcall(function()
                 local SummonRemote = RS:FindFirstChild("PlaceUnit") or RS:FindFirstChild("SpawnUnit") or RS:FindFirstChild("HEUGHSUMMONS") or RS:FindFirstChild("Summon")
