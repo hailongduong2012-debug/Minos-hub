@@ -1,5 +1,5 @@
--- [[ SBSD CAMPAIGN AUTO-ATTACK & BRING ENEMIES ]]
--- Giao diện: Rayfield Mockup UI (100% Hiện bảng - Không lỗi link)
+-- [[ SBSD CAMPAIGN INF-DISTANCE FAST ATTACK & BRING ENEMIES ]]
+-- Giao diện: Rayfield Mockup UI (Đã tối ưu hóa hiệu năng bypass khoảng cách)
 
 if game:GetService("CoreGui"):FindFirstChild("RayfieldMockup_SBSD") then
     game:GetService("CoreGui")["RayfieldMockup_SBSD"]:Destroy()
@@ -19,7 +19,6 @@ local AttackRemote = ReplicatedStorage:FindFirstChild("Attack") or ReplicatedSto
 local SG = Instance.new("ScreenGui", game:GetService("CoreGui"))
 SG.Name = "RayfieldMockup_SBSD"
 
--- Khung chính (Window)
 local Main = Instance.new("Frame", SG)
 Main.Size = UDim2.new(0, 320, 0, 190)
 Main.Position = UDim2.new(0.35, 0, 0.35, 0)
@@ -31,11 +30,10 @@ Main.Draggable = true
 local UICorner = Instance.new("UICorner", Main)
 UICorner.CornerRadius = UDim.new(0, 9)
 
--- Thanh Tiêu Đề (Title Bar)
 local Title = Instance.new("TextLabel", Main)
 Title.Size = UDim2.new(1, 0, 0, 40)
 Title.BackgroundColor3 = Color3.fromRGB(28, 28, 33)
-Title.Text = "  SBSD Campaign Hub | Rayfield Style"
+Title.Text = "  SBSD Campaign Hub | God Fast Attack"
 Title.TextColor3 = Color3.fromRGB(240, 240, 240)
 Title.TextXAlignment = Enum.TextXAlignment.Left
 Title.Font = Enum.Font.SourceSansBold
@@ -44,15 +42,15 @@ Title.TextSize = 16
 local TitleCorner = Instance.new("UICorner", Title)
 TitleCorner.CornerRadius = UDim.new(0, 9)
 
--- Nút Toggle 1: Auto Attack
+-- Nút Toggle 1: Fast Attack (FF Aura)
 local Toggle1 = Instance.new("TextButton", Main)
 Toggle1.Size = UDim2.new(0, 290, 0, 45)
 Toggle1.Position = UDim2.new(0, 15, 0, 60)
 Toggle1.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
-Toggle1.Text = "Auto Attack (Safe Aura) : OFF"
+Toggle1.Text = "Fast Attack (FF Aura - Mọi Khoảng Cách) : OFF"
 Toggle1.TextColor3 = Color3.fromRGB(200, 70, 70)
 Toggle1.Font = Enum.Font.SourceSansBold
-Toggle1.TextSize = 15
+Toggle1.TextSize = 13
 
 local T1Corner = Instance.new("UICorner", Toggle1)
 T1Corner.CornerRadius = UDim.new(0, 6)
@@ -72,39 +70,48 @@ T2Corner.CornerRadius = UDim.new(0, 6)
 
 -- === XỬ LÝ LOGIC HOẠT ĐỘNG ===
 
--- 1. Xử lý nút Auto Attack
+-- 1. Xử lý nút Fast Attack (Mọi khoảng cách + Spam Boss)
 Toggle1.MouseButton1Click:Connect(function()
     AuraActive = not AuraActive
     if AuraActive then
-        Toggle1.Text = "Auto Attack (Safe Aura) : ON"
+        Toggle1.Text = "Fast Attack (FF Aura - Mọi Khoảng Cách) : ON"
         Toggle1.TextColor3 = Color3.fromRGB(80, 200, 80)
     else
-        Toggle1.Text = "Auto Attack (Safe Aura) : OFF"
+        Toggle1.Text = "Fast Attack (FF Aura - Mọi Khoảng Cách) : OFF"
         Toggle1.TextColor3 = Color3.fromRGB(200, 70, 70)
     end
 end)
 
-task.spawn(function()
-    while true do
-        task.wait(0.15)
-        if AuraActive then
-            pcall(function()
-                local char = LocalPlayer.Character
-                if char and char:FindFirstChild("HumanoidRootPart") and AttackRemote then
-                    for _, enemy in pairs(workspace:GetDescendants()) do
-                        if enemy:IsA("Model") and enemy:FindFirstChild("Humanoid") and enemy.Humanoid.Health > 0 then
-                            if not Players:GetPlayerFromCharacter(enemy) then
+-- Chạy trên luồng Heartbeat để đạt tốc độ FF (Tối đa khung hình/giây) và không giới hạn khoảng cách
+RunService.Heartbeat:Connect(function()
+    if AuraActive and AttackRemote then
+        pcall(function()
+            -- Quét toàn bộ Workspace để tìm mục tiêu ở bất kỳ khoảng cách nào
+            for _, enemy in pairs(workspace:GetDescendants()) do
+                if enemy:IsA("Model") and enemy:FindFirstChild("Humanoid") and enemy.Humanoid.Health > 0 then
+                    if not Players:GetPlayerFromCharacter(enemy) then
+                        
+                        -- KIỂM TRA BOSS: Nếu tên hoặc thuộc tính có chứa chữ "Boss", hệ thống tự động spam x5 sát thương mỗi khung hình
+                        local isBoss = string.find(string.lower(enemy.Name), "boss") or enemy:GetAttribute("IsBoss")
+                        
+                        if isBoss then
+                            -- Gây sát thương liên tục siêu tốc cho Boss (Multi-hit bypass)
+                            for i = 1, 5 do
                                 AttackRemote:FireServer(enemy)
                             end
+                        else
+                            -- Quái thường: Gây sát thương ở tốc độ FF thông thường
+                            AttackRemote:FireServer(enemy)
                         end
+                        
                     end
                 end
-            end)
-        end
+            end
+        end)
     end
 end)
 
--- 2. Xử lý nút Bring Enemies
+-- 2. Xử lý nút Bring Enemies (Giữ nguyên từ bản gốc của bạn)
 Toggle2.MouseButton1Click:Connect(function()
     BringActive = not BringActive
     if BringActive then
