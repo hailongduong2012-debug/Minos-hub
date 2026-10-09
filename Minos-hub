@@ -1,17 +1,18 @@
--- [[ MINOS HUB PREMIUM ENGINE - WEAPON SENSITIVE UPDATE ]]
--- TÍNH NĂNG: KILL AURA HOẠT ĐỘNG KHI CẦM GEAR BẤT KỲ & ĐÁNH TRÚNG TẤT CẢ QUÁI TOÀN MAP
+-- [[ MINOS HUB OVERLOAD ENGINE ]]
+-- CHỨC NĂNG: SỬA INTERFACE CHUẨN MINOS, KILL AURA KHÔNG DELAY, RANGE TOÀN BẢN ĐỒ KHI CẦM GEAR
 
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local P = game:GetService("Players")
 local LP = P.LocalPlayer
 local RS = game:GetService("ReplicatedStorage")
+local RunS = game:GetService("RunService")
 
 local A_Active = false
 
--- === KHỞI TẠO BẢNG ĐIỀU KHIỂN RAYFIELD ===
+-- === KHỞI TẠO BẢNG ĐIỀU KHIỂN CHUẨN MINOS HUB ===
 local Window = Rayfield:CreateWindow({
-   Name = "Minos hub Premium | SBSD EDITION",
+   Name = "Minos hub Premium | SBSD GLOBAL",
    LoadingTitle = "Minos hub Loading...",
    LoadingSubtitle = "by minos",
    ConfigurationSaving = {
@@ -19,20 +20,16 @@ local Window = Rayfield:CreateWindow({
       FolderName = "MinosHubSBSD",
       FileName = "MinosConfig"
    },
-   Discord = {
-      Enabled = false,
-      Invite = "",
-      RememberJoins = true
-   },
+   Discord = { Enabled = false, Invite = "", RememberJoins = true },
    KeySystem = false
 })
 
--- Tạo Tab chức năng Auto Farm
+-- Tạo đúng cấu trúc Tab Farm của Minos Hub
 local FarmTab = Window:CreateTab("Death Mode Farm", 4483345998)
 
--- == TÍNH NĂNG GLOBAL KILL AURA TOÀN MAP (CHỈ KÍCH HOẠT KHI CẦM GEAR) ==
+-- Đổi tên tính năng theo yêu cầu: Loại bỏ chữ "Global", cấu trúc lại thông số
 FarmTab:CreateToggle({
-   Name = "Smart Kill Aura (Active when holding Gear - Delay 0.0001s)",
+   Name = "Kill Aura (No Delay - Map Range)",
    CurrentValue = false,
    Flag = "KillAuraFlag",
    Callback = function(Value)
@@ -40,44 +37,45 @@ FarmTab:CreateToggle({
    end,
 })
 
--- === HỆ THỐNG XỬ LÝ SÁT THƯƠNG DIỆN RỘNG CHẠY NGẦM ===
-task.spawn(function()
-    while true do
-        task.wait(0.0001) -- Giữ nguyên độ trễ siêu tốc 0.0001s
-        
-        -- Điều kiện 1: Toggle được bật
-        -- Điều kiện 2: Nhân vật tồn tại hợp lệ
-        if A_Active and LP.Character and LP.Character:FindFirstChild("HumanoidRootPart") then
-            pcall(function()
-                -- KIỂM TRA GEAR: Tìm bất kỳ Tool nào đang được nhân vật cầm trên tay
-                local currentGear = LP.Character:FindFirstChildOfClass("Tool")
-                
-                -- Chỉ thực hiện gây sát thương NẾU người chơi thực sự đang cầm một Gear bất kỳ
-                if currentGear then
-                    -- Tự động kích hoạt hành động sử dụng của Gear đó liên tục
-                    currentGear:Activate() 
+-- === HÀM THỰC THI SÁT THƯƠNG DIỆN RỘNG (MAP RANGE) ===
+local function FireAbsoluteDamage(enemy, currentGear)
+    if enemy:IsA("Model") and enemy:FindFirstChild("Humanoid") and enemy.Humanoid.Health > 0 then
+        -- Loại trừ chính bạn, người chơi cùng phòng và Base để tránh lỗi game
+        if not P:GetPlayerFromCharacter(enemy) and enemy.Name ~= "Base" and enemy ~= LP.Character then
+            
+            -- Ép kích hoạt Gear trên tay vung đòn liên tục không khoảng cách
+            pcall(function() currentGear:Activate() end)
 
-                    -- Tìm kiếm cổng nhận tín hiệu sát thương (Remote Event) của Server game
-                    local AttackRemote = RS:FindFirstChild("Attack") or RS:FindFirstChild("HitEnemy") or RS:FindFirstChild("Damage") or RS:FindFirstChild("Hit")
-                    
-                    -- Quét và ép nhận sát thương lên TẤT CẢ mục tiêu trong Workspace cùng lúc
-                    for _, enemy in pairs(workspace:GetChildren()) do
-                        if enemy:IsA("Model") and enemy:FindFirstChild("Humanoid") and enemy:FindFirstChild("HumanoidRootPart") and enemy.Humanoid.Health > 0 then
-                            -- Loại trừ bản thân người chơi và các vật thể môi trường cơ bản
-                            if not P:GetPlayerFromCharacter(enemy) and enemy.Name ~= "Base" then
-                                
-                                -- Đồng loạt gửi gói tin gây sát thương diện rộng toàn bản đồ
-                                if AttackRemote and AttackRemote:IsA("RemoteEvent") then
-                                    AttackRemote:FireServer(enemy, enemy.HumanoidRootPart.Position)
-                                    AttackRemote:FireServer(enemy.HumanoidRootPart, enemy.HumanoidRootPart.Position)
-                                    AttackRemote:FireServer(enemy, currentGear)
-                                end
-                                
-                            end
+            -- Quét sạch mọi Remote Event nhận sát thương trong ReplicatedStorage của SBSD
+            for _, remote in pairs(RS:GetDescendants()) do
+                if remote:IsA("RemoteEvent") and (remote.Name:lower():match("attack") or remote.Name:lower():match("hit") or remote.Name:lower():match("damage") or remote.Name:lower():match("punch")) then
+                    pcall(function()
+                        local hrp = enemy:FindFirstChild("HumanoidRootPart") or enemy:FindFirstChildOfClass("Part")
+                        if hrp then
+                            -- Ép nổ sát thương bằng cách gửi dồn dập các cấu trúc dữ liệu bypass kiểm tra từ Server
+                            remote:FireServer(enemy, hrp.Position)
+                            remote:FireServer(hrp, hrp.Position)
+                            remote:FireServer(enemy, currentGear)
+                            remote:FireServer(enemy)
                         end
-                    end
+                    end)
                 end
-            end)
+            end
+        end
+    end
+end
+
+-- === VÒNG LẶP LIÊN TỤC KHÔNG ĐỘ TRỄ (NO DELAY - RENDERSTEPPED) ===
+RunS.RenderStepped:Connect(function()
+    if A_Active and LP.Character then
+        -- Điều kiện tiên quyết: Chỉ hoạt động khi người chơi lôi một Gear (Tool) bất kỳ ra sử dụng
+        local currentGear = LP.Character:FindFirstChildOfClass("Tool")
+        
+        if currentGear then
+            -- Mở rộng tối đa bộ quét: Duyệt qua tất cả các thư mục con ẩn sâu nhất (GetDescendants)
+            for _, object in pairs(workspace:GetDescendants()) do
+                FireAbsoluteDamage(object, currentGear)
+            end
         end
     end
 end)
