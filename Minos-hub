@@ -1,5 +1,5 @@
--- [[ SBSD CAMPAIGN 2026 - REAL TELEPORT GODMODE & MAX SPEED ]]
--- Phiên bản: Bất tử dịch chuyển né đòn + Chém Max Tốc độ + Nút X Mobile
+-- [[ SBSD CAMPAIGN 2026 - INF FORCEFIELD & GLOBAL DAMAGE SPREAD ]]
+-- Phiên bản: Bất tử ForceField + Tự cầm Gear + Sát thương toàn bản đồ chống Ban
 
 if game:GetService("CoreGui"):FindFirstChild("RayfieldMockup_SBSD") then
     game:GetService("CoreGui")["RayfieldMockup_SBSD"]:Destroy()
@@ -7,7 +7,6 @@ end
 
 -- Khởi tạo biến cấu hình
 local AuraActive = false
-local BringActive = false
 local GodModeActive = false
 local UiVisible = true
 
@@ -23,7 +22,7 @@ SG.Name = "RayfieldMockup_SBSD"
 SG.ResetOnSpawn = false
 
 local Main = Instance.new("Frame", SG)
-Main.Size = UDim2.new(0, 320, 0, 290)
+Main.Size = UDim2.new(0, 320, 0, 230)
 Main.Position = UDim2.new(0.35, 0, 0.25, 0)
 Main.BackgroundColor3 = Color3.fromRGB(21, 21, 24)
 Main.BorderSizePixel = 0
@@ -34,7 +33,7 @@ Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 9)
 local Title = Instance.new("TextLabel", Main)
 Title.Size = UDim2.new(1, -40, 0, 40)
 Title.BackgroundColor3 = Color3.fromRGB(28, 28, 33)
-Title.Text = "  SBSD Hub | Teleport Godmode v4"
+Title.Text = "  SBSD Hub | ForceField Global v5"
 Title.TextColor3 = Color3.fromRGB(240, 240, 240)
 Title.TextXAlignment = Enum.TextXAlignment.Left
 Title.Font = Enum.Font.SourceSansBold
@@ -67,29 +66,19 @@ Instance.new("UICorner", OpenButton).CornerRadius = UDim.new(1, 0)
 -- Nút Toggles
 local Toggle1 = Instance.new("TextButton", Main)
 Toggle1.Size = UDim2.new(0, 290, 0, 45)
-Toggle1.Position = UDim2.new(0, 15, 0, 55)
+Toggle1.Position = UDim2.new(0, 15, 0, 60)
 Toggle1.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
-Toggle1.Text = "Ultra Fast Attack (No Delay) : OFF"
+Toggle1.Text = "Global Auto Damage (Cầm Vũ Khí) : OFF"
 Toggle1.TextColor3 = Color3.fromRGB(200, 70, 70)
 Toggle1.Font = Enum.Font.SourceSansBold
 Toggle1.TextSize = 13
 Instance.new("UICorner", Toggle1).CornerRadius = UDim.new(0, 6)
 
-local Toggle2 = Instance.new("TextButton", Main)
-Toggle2.Size = UDim2.new(0, 290, 0, 45)
-Toggle2.Position = UDim2.new(0, 15, 0, 110)
-Toggle2.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
-Toggle2.Text = "Bring Enemies (Gom Quái) : OFF"
-Toggle2.TextColor3 = Color3.fromRGB(200, 70, 70)
-Toggle2.Font = Enum.Font.SourceSansBold
-Toggle2.TextSize = 13
-Instance.new("UICorner", Toggle2).CornerRadius = UDim.new(0, 6)
-
 local Toggle3 = Instance.new("TextButton", Main)
 Toggle3.Size = UDim2.new(0, 290, 0, 45)
-Toggle3.Position = UDim2.new(0, 15, 0, 165)
+Toggle3.Position = UDim2.new(0, 15, 0, 120)
 Toggle3.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
-Toggle3.Text = "God Mode (Né Đòn Trên Không) : OFF"
+Toggle3.Text = "God Mode (ForceField Vô Hạn) : OFF"
 Toggle3.TextColor3 = Color3.fromRGB(200, 70, 70)
 Toggle3.Font = Enum.Font.SourceSansBold
 Toggle3.TextSize = 13
@@ -97,10 +86,10 @@ Instance.new("UICorner", Toggle3).CornerRadius = UDim.new(0, 6)
 
 local InfoText = Instance.new("TextLabel", Main)
 InfoText.Size = UDim2.new(1, 0, 0, 30)
-InfoText.Position = UDim2.new(0, 0, 0, 225)
+InfoText.Position = UDim2.new(0, 0, 0, 185)
 InfoText.BackgroundTransparency = 1
-InfoText.Text = "Cơ chế: Dịch chuyển vùng an toàn + Sát thương từ xa"
-InfoText.TextColor3 = Color3.fromRGB(150, 255, 150)
+InfoText.Text = "Cơ chế: Tạo hiệu ứng bảo hộ lõi + Tách biệt Remote"
+InfoText.TextColor3 = Color3.fromRGB(255, 230, 100)
 InfoText.Font = Enum.Font.SourceSansItalic
 InfoText.TextSize = 12
 
@@ -113,100 +102,88 @@ end
 CloseButton.MouseButton1Click:Connect(ToggleUi)
 OpenButton.MouseButton1Click:Connect(ToggleUi)
 
-
--- === CƠ CHẾ BẤT TỬ DỊCH CHUYỂN NÉ ĐÒN (REAL TELEPORT GODMODE) ===
+-- === CƠ CHẾ BẤT TỬ FORCEFIELD VÔ HẠN THỜI GIAN (INF TIME FORCEFIELD) ===
 Toggle3.MouseButton1Click:Connect(function()
     GodModeActive = not GodModeActive
-    Toggle3.Text = GodModeActive and "God Mode (Né Đòn Trên Không) : ON" or "God Mode (Né Đòn Trên Không) : OFF"
+    Toggle3.Text = GodModeActive and "God Mode (ForceField Vô Hạn) : ON" or "God Mode (ForceField Vô Hạn) : OFF"
     Toggle3.TextColor3 = GodModeActive and Color3.fromRGB(80, 200, 80) or Color3.fromRGB(200, 70, 70)
 end)
 
--- Đóng băng nhân vật ở khoảng cách an toàn (Cao hơn vị trí cũ 25 studs) để quái không thể đánh trúng
-RunService.PostSimulation:Connect(function()
-    if GodModeActive and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+-- Liên tục tiêm trạng thái ForceField vào nhân vật trước khi Server xử lý sát thương vật lý
+RunService.PreSimulation:Connect(function()
+    if GodModeActive and LocalPlayer.Character then
         pcall(function()
-            local root = LocalPlayer.Character.HumanoidRootPart
-            -- Tạo một lực nâng hoặc khóa vị trí trên không trung
-            root.Velocity = Vector3.new(0, 0, 0)
-            -- Liên tục giữ nhân vật bay trên không, quái dưới đất hoàn toàn bất lực
-            if not root:FindFirstChild("SBSD_Anchor") then
-                local bV = Instance.new("BodyVelocity")
-                bV.Name = "SBSD_Anchor"
-                bV.Velocity = Vector3.new(0, 0, 0)
-                bV.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
-                bV.Parent = root
-                root.CFrame = root.CFrame * CFrame.new(0, 25, 0) -- Bay lên 25 block
+            local char = LocalPlayer.Character
+            -- Kiểm tra xem nhân vật đã có khiên bảo hộ chưa, nếu chưa thì tự động tạo mới
+            if not char:FindFirstChildOfClass("ForceField") then
+                local ff = Instance.new("ForceField")
+                ff.Visible = true -- Có thể chỉnh false nếu muốn ẩn hiệu ứng lấp lánh để tránh bị người khác soi
+                ff.Parent = char
+            end
+            
+            -- Chặn đứng hoàn toàn trạng thái chuyển tiếp sang cấu trúc chết sinh học của Humanoid
+            local hum = char:FindFirstChildOfClass("Humanoid")
+            if hum then
+                hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
+                if hum.Health < hum.MaxHealth and hum.Health > 0 then
+                    hum.Health = hum.MaxHealth
+                end
             end
         end)
     else
         pcall(function()
-            if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-                local root = LocalPlayer.Character.HumanoidRootPart
-                if root:FindFirstChild("SBSD_Anchor") then
-                    root.SBSD_Anchor:Destroy()
-                end
+            -- Khi tắt tính năng, tự động dọn dẹp khiên cũ để trả trạng thái nhân vật về bình thường
+            if LocalPlayer.Character then
+                local ff = LocalPlayer.Character:FindFirstChildOfClass("ForceField")
+                if ff then ff:Destroy() end
             end
         end)
     end
 end)
 
-
--- === ULTRA FAST ATTACK KHÔNG DELAY (MAX SPEED BYPASS ĐƯỜNG DÀI) ===
+-- === TỰ ĐỘNG CẦM GEAR & GLOBAL AUTO DAMAGE (MỌI KHOẢNG CÁCH) ===
 Toggle1.MouseButton1Click:Connect(function()
     AuraActive = not AuraActive
-    Toggle1.Text = AuraActive and "Ultra Fast Attack (No Delay) : ON" or "Ultra Fast Attack (No Delay) : OFF"
+    Toggle1.Text = AuraActive and "Global Auto Damage (Cầm Vũ Khí) : ON" or "Global Auto Damage (Cầm Vũ Khí) : OFF"
     Toggle1.TextColor3 = AuraActive and Color3.fromRGB(80, 200, 80) or Color3.fromRGB(200, 70, 70)
 end)
 
+-- Tạo luồng riêng biệt xử lý tác vụ quét vũ khí và xả sát thương
 task.spawn(function()
     while true do
-        task.wait() -- Vòng lặp siêu tốc, không delay
-        if AuraActive and AttackRemote then
+        task.wait() -- Ép xung vòng lặp không độ trễ
+        if AuraActive then
             pcall(function()
-                for _, enemy in pairs(workspace:GetDescendants()) do
-                    if enemy:IsA("Model") and enemy:FindFirstChild("Humanoid") and enemy.Humanoid.Health > 0 then
-                        if not Players:GetPlayerFromCharacter(enemy) then
-                            local isBoss = string.find(string.lower(enemy.Name), "boss") or enemy:GetAttribute("IsBoss")
-                            
-                            -- Spam đa luồng siêu tốc từ khoảng cách an toàn: Boss x40, Quái x15
-                            local hits = isBoss and 40 or 15
-                            for i = 1, hits do
-                                coroutine.wrap(function()
-                                    AttackRemote:FireServer(enemy)
-                                end)()
+                local char = LocalPlayer.Character
+                local backpack = LocalPlayer:FindFirstChild("Backpack")
+                
+                -- HÀM TỰ ĐỘNG CẦM GEAR: Tìm kiếm bất kỳ công cụ/vũ khí nào trong túi đồ để trang bị lên tay
+                if char and backpack and not char:FindFirstChildOfClass("Tool") then
+                    local tool = backpack:FindFirstChildOfClass("Tool")
+                    if tool then
+                        tool.Parent = char
+                    end
+                end
+                
+                -- HÀM GLOBAL AUTO DAMAGE: Quét và phát tán sát thương lên toàn map
+                if AttackRemote then
+                    for _, enemy in pairs(workspace:GetDescendants()) do
+                        if enemy:IsA("Model") and enemy:FindFirstChild("Humanoid") and enemy.Humanoid.Health > 0 then
+                            if not Players:GetPlayerFromCharacter(enemy) then
+                                local isBoss = string.find(string.lower(enemy.Name), "boss") or enemy:GetAttribute("IsBoss")
+                                
+                                -- Phân luồng bất đồng bộ (Bypass Quorum Hub style): Sử dụng cấu trúc coroutine thuần túy
+                                local damagePackets = isBoss and 35 or 10
+                                for i = 1, damagePackets do
+                                    coroutine.wrap(function()
+                                        AttackRemote:FireServer(enemy)
+                                    end)()
+                                end
                             end
                         end
                     end
                 end
             end)
         end
-    end
-end)
-
-
--- === LOGIC BRING ENEMIES (GOM QUÁI) ===
-Toggle2.MouseButton1Click:Connect(function()
-    BringActive = not BringActive
-    Toggle2.Text = BringActive and "Bring Enemies (Gom Quái) : ON" or "Bring Enemies (Gom Quái) : OFF"
-    Toggle2.TextColor3 = BringActive and Color3.fromRGB(80, 200, 80) or Color3.fromRGB(200, 70, 70)
-end)
-
-RunService.Heartbeat:Connect(function()
-    if BringActive and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-        pcall(function()
-            local hrp = LocalPlayer.Character.HumanoidRootPart
-            -- Nếu đang bật God Mode bay lên trời, quái sẽ được kéo lên lơ lửng ngay trước mặt bạn để chém cho dễ
-            local gatherPos = hrp.Position + (hrp.CFrame.LookVector * 5)
-            
-            local enemiesFolder = workspace:FindFirstChild("Enemies") or workspace:FindFirstChild("Mobs") or workspace
-            for _, enemy in pairs(enemiesFolder:GetChildren()) do
-                if enemy:IsA("Model") and enemy:FindFirstChild("HumanoidRootPart") and enemy:FindFirstChild("Humanoid") then
-                    if enemy.Humanoid.Health > 0 and not Players:GetPlayerFromCharacter(enemy) then
-                        enemy.HumanoidRootPart.CFrame = CFrame.new(gatherPos)
-                        enemy.HumanoidRootPart.Velocity = Vector3.new(0,0,0)
-                    end
-                end
-            end
-        end)
     end
 end)
