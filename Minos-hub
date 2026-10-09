@@ -1,51 +1,31 @@
--- [[ sbsd_mogged PREMIUM V20 - CORE_GUI BYPASS ]]
--- SỬ DỤNG HÀM MOGGED CORE_GUI (GETHUI BYPASS 100% HOÀN HẢO)
--- ĐẦY ĐỦ HÌNH NỀN DOOM SLAYER - PHẠM VI TOÀN MAP - GOD MODE
+-- [[ sbsd_mogged SUPREME HUB V23 - 100% LOCAL RAYFIELD UI ]]
+-- KHÔNG DÙNG LINK SIRIUS, KHÔNG DÙNG LINK GITHUB - CHẠY THUẦN CODE 100% VĂNG UI LẬP TỨC
 
-local Players = game:GetService("Players")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local RunService = game:GetService("RunService")
-local LocalPlayer = Players.LocalPlayer
-
--- === HÀM MOGGED CORE_GUI: TRÁNH BỘ LỌC QUÉT XOÁ UI CỦA GAME ===
-local function GetMoggedGuiParent()
-    -- Ưu tiên sử dụng gethui() để đưa UI vào vùng bảo vệ ẩn danh hoàn toàn
-    if gethui then 
-        return gethui() 
-    elseif syn and syn.protect_gui then
-        local sg = Instance.new("ScreenGui")
-        syn.protect_gui(sg)
-        sg.Parent = game:GetService("CoreGui")
-        return sg
-    elseif game:GetService("CoreGui"):FindFirstChild("RobloxGui") then
-        return game:GetService("CoreGui").RobloxGui -- Nhét ẩn vào thư mục hệ thống
-    end
-    return LocalPlayer:WaitForChild("PlayerGui")
-end
-
-local UI_Target_Parent = GetMoggedGuiParent()
-
--- Xóa tàn dư sbsd_mogged cũ nếu có trùng lặp
-if UI_Target_Parent:FindFirstChild("sbsd_mogged_v20") then
-    UI_Target_Parent["sbsd_mogged_v20"]:Destroy()
+if game:GetService("CoreGui"):FindFirstChild("sbsd_mogged_v23") then
+    game:GetService("CoreGui")["sbsd_mogged_v23"]:Destroy()
 end
 
 local AuraActive = false
 local GodModeActive = false
 local AutoTeleActive = false
 
--- === KHỞI TẠO SCREEN GUI sbsd_mogged ===
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
+
+-- === KHỞI TẠO BỘ KHUNG GIAO DIỆN RAYFIELD NGUYÊN BẢN (LOCAL CODE) ===
 local SG = Instance.new("ScreenGui")
-SG.Name = "sbsd_mogged_v20"
-SG.Parent = UI_Target_Parent
+SG.Name = "sbsd_mogged_v23"
+SG.Parent = game:GetService("CoreGui"):FindFirstChild("RobloxGui") or game:GetService("CoreGui") or LocalPlayer:WaitForChild("PlayerGui")
 SG.ResetOnSpawn = false
 
--- === TẠO BUTTON ICON ĐẦU LÂU DOOM ĐỂ MỞ LẠI MENU ===
+-- === NÚT ICON TRÒN ĐẦU LÂU DOOM ĐỂ MỞ LẠI BẢNG ===
 local OpenIcon = Instance.new("ImageButton", SG)
-OpenIcon.Size = UDim2.new(0, 65, 0, 65)
+OpenIcon.Size = UDim2.new(0, 60, 0, 60)
 OpenIcon.Position = UDim2.new(0.02, 0, 0.25, 0)
-OpenIcon.BackgroundColor3 = Color3.fromRGB(40, 10, 10)
-OpenIcon.Image = "rbxassetid://5404456950" -- ID Doomguy chuẩn từ dữ liệu gốc của Roblox
+OpenIcon.BackgroundColor3 = Color3.fromRGB(35, 10, 10)
+OpenIcon.Image = "rbxassetid://5404456950" -- File hình đầu lâu Doom rực lửa cực nét
 OpenIcon.Visible = false
 OpenIcon.Active = true
 OpenIcon.Draggable = true
@@ -54,7 +34,7 @@ local IconStroke = Instance.new("UIStroke", OpenIcon)
 IconStroke.Color = Color3.fromRGB(255, 50, 50)
 IconStroke.Thickness = 2.5
 
--- === KHUNG CHÍNH MENU SIÊU TO KHỔNG LỒ (560 x 340) ===
+-- === KHUNG CHÍNH RAYFIELD THEME (MỞ RỘNG TO: 560 x 340) ===
 local Main = Instance.new("Frame", SG)
 Main.Size = UDim2.new(0, 560, 0, 340)
 Main.Position = UDim2.new(0.3, 0, 0.25, 0)
@@ -64,81 +44,106 @@ Main.Active = true
 Main.Draggable = true
 Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 12)
 
--- HÌNH NỀN DOOM SLAYER ĐÃ ĐƯỢC MOGGED THÀNH CÔNG (Hiện full ảnh rực lửa cực nét)
+-- LỚP HÌNH NỀN DOOM SLAYER CỰC CHIẾN (HIỂN THỊ FULL KHÔNG LỖI)
 local BackgroundImage = Instance.new("ImageLabel", Main)
 BackgroundImage.Size = UDim2.new(1, 0, 1, 0)
 BackgroundImage.Image = "rbxassetid://5404456950"
 BackgroundImage.ScaleType = Enum.ScaleType.Crop
-BackgroundImage.ImageTransparency = 0.35
+BackgroundImage.ImageTransparency = 0.4
 BackgroundImage.ZIndex = 0
 Instance.new("UICorner", BackgroundImage).CornerRadius = UDim.new(0, 12)
 
--- Thanh Tiêu Đề
-local Title = Instance.new("TextLabel", Main)
-Title.Size = UDim2.new(1, 0, 0, 45)
-Title.BackgroundColor3 = Color3.fromRGB(50, 10, 10)
-Title.BackgroundTransparency = 0.4
-Title.Text = "   sbsd_mogged Premium Hub | DEATH MODE V20"
+-- Thanh Tiêu Đề Topbar của Rayfield
+local Topbar = Instance.new("Frame", Main)
+Topbar.Size = UDim2.new(1, 0, 0, 45)
+Topbar.BackgroundColor3 = Color3.fromRGB(30, 10, 10)
+Topbar.BackgroundTransparency = 0.3
+Topbar.ZIndex = 1
+Instance.new("UICorner", Topbar).CornerRadius = UDim.new(0, 12)
+
+local Title = Instance.new("TextLabel", Topbar)
+Title.Size = UDim2.new(0.7, 0, 1, 0)
+Title.Position = UDim2.new(0, 15, 0, 0)
+Title.BackgroundTransparency = 1
+Title.Text = "sbsd_mogged Hub | RAYFIELD OFFLINE"
 Title.TextColor3 = Color3.fromRGB(255, 60, 60)
 Title.TextXAlignment = Enum.TextXAlignment.Left
 Title.Font = Enum.Font.SourceSansBold
 Title.TextSize = 16
-Title.ZIndex = 1
-Instance.new("UICorner", Title).CornerRadius = UDim.new(0, 12)
+Title.ZIndex = 2
 
--- NÚT X ĐỂ ĐÓNG/ẨN BẢNG
-local CloseBtn = Instance.new("TextButton", Main)
-CloseBtn.Size = UDim2.new(0, 35, 0, 35)
-CloseBtn.Position = UDim2.new(1, -45, 0, 5)
-CloseBtn.BackgroundColor3 = Color3.fromRGB(180, 20, 20)
+-- NÚT DẤU X ĐÓNG BẢNG RAYFIELD CHUẨN
+local CloseBtn = Instance.new("TextButton", Topbar)
+CloseBtn.Size = UDim2.new(0, 32, 0, 32)
+CloseBtn.Position = UDim2.new(1, -42, 0, 6)
+CloseBtn.BackgroundColor3 = Color3.fromRGB(180, 30, 30)
 CloseBtn.BackgroundTransparency = 0.2
 CloseBtn.Text = "X"
 CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 CloseBtn.Font = Enum.Font.SourceSansBold
-CloseBtn.TextSize = 16
+CloseBtn.TextSize = 15
 CloseBtn.ZIndex = 2
 Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(0, 6)
 
--- Khung chứa các nút bấm thiết kế lệch trái lộ hình nền Doomguy bên phải
-local ButtonContainer = Instance.new("Frame", Main)
-ButtonContainer.Size = UDim2.new(0, 270, 0, 260)
-ButtonContainer.Position = UDim2.new(0, 15, 0, 60)
-ButtonContainer.BackgroundTransparency = 1
-ButtonContainer.ZIndex = 1
+-- Khung chứa các nút bấm thiết kế bo tròn xếp dọc theo chuẩn Rayfield UI
+local ElementsContainer = Instance.new("Frame", Main)
+ElementsContainer.Size = UDim2.new(0, 270, 0, 260)
+ElementsContainer.Position = UDim2.new(0, 15, 0, 60)
+ElementsContainer.BackgroundTransparency = 1
+ElementsContainer.ZIndex = 1
 
-local function CreateDoomButton(text, posY)
-    local btn = Instance.new("TextButton", ButtonContainer)
-    btn.Size = UDim2.new(1, 0, 0, 45)
-    btn.Position = UDim2.new(0, 0, 0, posY)
-    btn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
-    btn.BackgroundTransparency = 0.25
-    btn.Text = text .. " : OFF"
-    btn.TextColor3 = Color3.fromRGB(240, 80, 80)
+local function CreateRayfieldToggle(text, posY)
+    local frame = Instance.new("Frame", ElementsContainer)
+    frame.Size = UDim2.new(1, 0, 0, 45)
+    frame.Position = UDim2.new(0, 0, 0, posY)
+    frame.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+    frame.BackgroundTransparency = 0.3
+    frame.ZIndex = 2
+    Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 6)
+    
+    local label = Instance.new("TextLabel", frame)
+    label.Size = UDim2.new(0.7, 0, 1, 0)
+    label.Position = UDim2.new(0, 12, 0, 0)
+    label.BackgroundTransparency = 1
+    label.Text = text
+    label.TextColor3 = Color3.fromRGB(230, 230, 230)
+    label.Font = Enum.Font.SourceSansBold
+    label.TextSize = 13
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.ZIndex = 3
+    
+    local btn = Instance.new("TextButton", frame)
+    btn.Size = UDim2.new(0, 55, 0, 26)
+    btn.Position = UDim2.new(1, -65, 0, 9)
+    btn.BackgroundColor3 = Color3.fromRGB(150, 40, 40)
+    btn.Text = "OFF"
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
     btn.Font = Enum.Font.SourceSansBold
-    btn.TextSize = 13
-    btn.ZIndex = 2
-    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
+    btn.TextSize = 12
+    btn.ZIndex = 3
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 4)
+    
     return btn
 end
 
-local Toggle1 = CreateDoomButton("Global Kill Aura (Toàn Bản Đồ)", 10)
-local Toggle2 = CreateDoomButton("Safe Zone God Mode (Bất Tử)", 75)
-local Toggle3 = CreateDoomButton("Auto Spawn Telescope (5 Coins)", 140)
+local Toggle1 = CreateRayfieldToggle("Global Kill Aura (Toàn Bản Đồ)", 10)
+local Toggle2 = CreateRayfieldToggle("Safe Zone God Mode (Bất Tử)", 70)
+local Toggle3 = CreateRayfieldToggle("Auto Spawn Telescope (5 Coins)", 130)
 
--- Điều phối Đóng / Mở Menu bằng Icon đầu lâu Doom cực tiện
+-- Logic Đóng / Mở qua lại
 CloseBtn.MouseButton1Click:Connect(function() Main.Visible = false; OpenIcon.Visible = true end)
 OpenIcon.MouseButton1Click:Connect(function() Main.Visible = true; OpenIcon.Visible = false end)
 
 
 -- === HỆ THỐNG XỬ LÝ TOÀN BỘ LOGIC GAME SUPERBOX SIEGE DEFENSE ===
 
--- 1. Global Kill Aura 360° Vô Hạn Phạm Vi Toàn Bản Đồ (Hủy diệt quái mọi ngóc ngách)
+-- 1. Xử lý Global Kill Aura 360° Toàn Bản Đồ
 Toggle1.MouseButton1Click:Connect(function()
     AuraActive = not AuraActive
     if AuraActive then
-        Toggle1.Text = "Global Kill Aura (Toàn Bản Đồ) : ON"; Toggle1.TextColor3 = Color3.fromRGB(80, 240, 80); Toggle1.BackgroundColor3 = Color3.fromRGB(20, 70, 20)
+        Toggle1.Text = "ON"; Toggle1.BackgroundColor3 = Color3.fromRGB(40, 150, 40)
     else
-        Toggle1.Text = "Global Kill Aura (Toàn Bản Đồ) : OFF"; Toggle1.TextColor3 = Color3.fromRGB(240, 80, 80); Toggle1.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+        Toggle1.Text = "OFF"; Toggle1.BackgroundColor3 = Color3.fromRGB(150, 40, 40)
     end
 end)
 
@@ -166,13 +171,13 @@ task.spawn(function()
     end
 end)
 
--- 2. Safe Zone Max God Mode Cải Tiến Tích Hợp Đa Luồng Nhịp Tim (Bất tử vĩnh viễn)
+-- 2. Xử lý Safe Zone Max God Mode (Bất tử nhịp tim thời gian thực)
 Toggle2.MouseButton1Click:Connect(function()
     GodModeActive = not GodModeActive
     if GodModeActive then
-        Toggle2.Text = "Safe Zone God Mode (Bất Tử) : ON"; Toggle2.TextColor3 = Color3.fromRGB(80, 240, 80); Toggle2.BackgroundColor3 = Color3.fromRGB(20, 70, 20)
+        Toggle2.Text = "ON"; Toggle2.BackgroundColor3 = Color3.fromRGB(40, 150, 40)
     else
-        Toggle2.Text = "Safe Zone God Mode (Bất Tử) : OFF"; Toggle2.TextColor3 = Color3.fromRGB(240, 80, 80); Toggle2.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+        Toggle2.Text = "OFF"; Toggle2.BackgroundColor3 = Color3.fromRGB(150, 40, 40)
         pcall(function()
             if LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("ForceField") then
                 LocalPlayer.Character:FindFirstChildOfClass("ForceField"):Destroy()
@@ -202,13 +207,13 @@ RunService.Heartbeat:Connect(function()
     end
 end)
 
--- 3. Triệu Hồi Telescope Tự Động Gửi Kèm Tọa Độ Hợp Lệ (5 Coins)
+-- 3. Xử lý Auto Spawn Telescope (5 Coins) Hợp Lệ Tọa Độ Gốc
 Toggle3.MouseButton1Click:Connect(function()
     AutoTeleActive = not AutoTeleActive
     if AutoTeleActive then
-        Toggle3.Text = "Auto Spawn Telescope (5 Coins) : ON"; Toggle3.TextColor3 = Color3.fromRGB(80, 240, 80); Toggle3.BackgroundColor3 = Color3.fromRGB(20, 70, 20)
+        Toggle3.Text = "ON"; Toggle3.BackgroundColor3 = Color3.fromRGB(40, 150, 40)
     else
-        Toggle3.Text = "Auto Spawn Telescope (5 Coins) : OFF"; Toggle3.TextColor3 = Color3.fromRGB(240, 80, 80); Toggle3.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+        Toggle3.Text = "OFF"; Toggle3.BackgroundColor3 = Color3.fromRGB(150, 40, 40)
     end
 end)
 
@@ -227,3 +232,8 @@ task.spawn(function()
                         targetPos = workspace.Base.Position + Vector3.new(math.random(-5,5), 2, math.random(-5,5))
                     elseif LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
                         targetPos = LocalPlayer.Character.HumanoidRootPart.Position + Vector3.new(math.random(-4,4), -3, math.random(-4,4))
+                    end
+                    
+                    if SummonRemote:IsA("RemoteEvent") then
+                        SummonRemote:FireServer("Heli", targetPos)
+                        SummonRemote:FireServer("Telescope", targetPos)
