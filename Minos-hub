@@ -1,12 +1,11 @@
--- [[ SBSD CAMPAIGN 2026 - SERVER CFRAME BAITING GODMODE & SILENT AURA ]]
--- Phiên bản v23: Bất tử giả lập vị trí máy chủ + Hiện số dame không mất máu + Chém ẩn 0.01s + Nút X Mobile
+-- [[ SBSD CAMPAIGN 2026 - SAFE AFK AUTO FARM POINTS & WINS REAL ]]
+-- Cơ chế: Cày Points/Wins thật bằng chuỗi va chạm 0.01s + Tự động xả chiêu thức
 
 if game:GetService("CoreGui"):FindFirstChild("RayfieldMockup_SBSD") then
     game:GetService("CoreGui")["RayfieldMockup_SBSD"]:Destroy()
 end
 
-local GlobalDamageActive = false
-local ServerBaitGodMode = false
+local AutoFarmActive = false
 local UiVisible = true
 
 local Players = game:GetService("Players")
@@ -19,8 +18,8 @@ SG.Name = "RayfieldMockup_SBSD"
 SG.ResetOnSpawn = false
 
 local Main = Instance.new("Frame", SG)
-Main.Size = UDim2.new(0, 320, 0, 230)
-Main.Position = UDim2.new(0.35, 0, 0.25, 0)
+Main.Size = UDim2.new(0, 320, 0, 180)
+Main.Position = UDim2.new(0.35, 0, 0.3, 0)
 Main.BackgroundColor3 = Color3.fromRGB(21, 21, 24)
 Main.BorderSizePixel = 0
 Main.Active = true
@@ -30,7 +29,7 @@ Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 9)
 local Title = Instance.new("TextLabel", Main)
 Title.Size = UDim2.new(1, -40, 0, 40)
 Title.BackgroundColor3 = Color3.fromRGB(28, 28, 33)
-Title.Text = "  SBSD Hub | Server Baiting v23"
+Title.Text = "  SBSD Hub | Real Points Farm v24"
 Title.TextColor3 = Color3.fromRGB(240, 240, 240)
 Title.TextXAlignment = Enum.TextXAlignment.Left
 Title.Font = Enum.Font.SourceSansBold
@@ -60,33 +59,22 @@ OpenButton.TextSize = 12
 OpenButton.Visible = false
 Instance.new("UICorner", OpenButton).CornerRadius = UDim.new(1, 0)
 
--- Nút Toggle 1: Chém Toàn Bản Đồ Không Lag
+-- Nút Toggle: Bật/Tắt Auto Farm Points
 local Toggle1 = Instance.new("TextButton", Main)
-Toggle1.Size = UDim2.new(0, 290, 0, 45)
-Toggle1.Position = UDim2.new(0, 15, 0, 60)
+Toggle1.Size = UDim2.new(0, 290, 0, 50)
+Toggle1.Position = UDim2.new(0, 15, 0, 65)
 Toggle1.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
-Toggle1.Text = "Silent Kill Aura (Nhịp 0.01s) : OFF"
+Toggle1.Text = "Auto Farm Points & Wins (Real) : OFF"
 Toggle1.TextColor3 = Color3.fromRGB(200, 70, 70)
 Toggle1.Font = Enum.Font.SourceSansBold
 Toggle1.TextSize = 13
 Instance.new("UICorner", Toggle1).CornerRadius = UDim.new(0, 6)
 
--- Nút Toggle 3: Bất Tử Giả Lập Vị Trí
-local Toggle3 = Instance.new("TextButton", Main)
-Toggle3.Size = UDim2.new(0, 290, 0, 45)
-Toggle3.Position = UDim2.new(0, 15, 0, 120)
-Toggle3.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
-Toggle3.Text = "God Mode (Bất Tử Giả Lập Server) : OFF"
-Toggle3.TextColor3 = Color3.fromRGB(200, 70, 70)
-Toggle3.Font = Enum.Font.SourceSansBold
-Toggle3.TextSize = 13
-Instance.new("UICorner", Toggle3).CornerRadius = UDim.new(0, 6)
-
 local InfoText = Instance.new("TextLabel", Main)
 InfoText.Size = UDim2.new(1, 0, 0, 30)
-InfoText.Position = UDim2.new(0, 0, 0, 185)
+InfoText.Position = UDim2.new(0, 0, 0, 135)
 InfoText.BackgroundTransparency = 1
-InfoText.Text = "Cơ chế: Phân tách dữ liệu mạng tọa độ Client - Server"
+InfoText.Text = "Cơ chế: Tự cầm kiếm + Xả chiêu thức + Chém ẩn 0.01s"
 InfoText.TextColor3 = Color3.fromRGB(0, 255, 180)
 InfoText.Font = Enum.Font.SourceSansItalic
 InfoText.TextSize = 11
@@ -100,72 +88,35 @@ end
 CloseButton.MouseButton1Click:Connect(ToggleUi)
 OpenButton.MouseButton1Click:Connect(ToggleUi)
 
-
--- === CƠ CHẾ GOD MODE GIẢ LẬP TỌA ĐỘ NETWORKING (SERVER CFRAME BAITING) ===
-Toggle3.MouseButton1Click:Connect(function()
-    ServerBaitGodMode = not ServerBaitGodMode
-    Toggle3.Text = ServerBaitGodMode and "God Mode (Bất Tử Giả Lập Server) : ON" or "God Mode (Bất Tử Giả Lập Server) : OFF"
-    Toggle3.TextColor3 = ServerBaitGodMode and Color3.fromRGB(80, 200, 80) or Color3.fromRGB(200, 70, 70)
-end)
-
--- Chạy liên tục ở tiến trình xử lý mạng luồng PreSimulation để bẻ gãy dữ liệu trả về máy chủ
-RunService.PreSimulation:Connect(function()
-    if ServerBaitGodMode and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-        pcall(function()
-            local char = LocalPlayer.Character
-            local root = char.HumanoidRootPart
-            local hum = char:FindFirstChildOfClass("Humanoid")
-            
-            if hum then
-                hum.BreakJointsOnDeath = false
-                hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
-                
-                -- Khóa trả lại máu đầy liên tục đề phòng xung đột nhỏ
-                if hum.Health < hum.MaxHealth then
-                    hum.Health = hum.MaxHealth
-                end
-            end
-            
-            -- KỸ THUẬT PHÂN TÁCH MẠNG: Ép các bộ phận cơ thể liên tục thay đổi quyền sở hữu mạng (Network Ownership)
-            -- Tạo dữ liệu giả khiến máy chủ nghĩ hitbox của bạn nằm dưới lòng đất sâu, trong khi bạn vẫn đứng trên sàn đấu
-            for _, part in pairs(char:GetChildren()) do
-                if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then
-                    part.CanTouch = false
-                    -- Gửi tín hiệu tọa độ ảo cô lập tầm quét của Server
-                    debug.setupvalue(1, "ReceiveVelocity", Vector3.new(0, -500, 0))
-                end
-            end
-        end)
-    end
-end)
-
-
--- === SILENT GLOBAL AUTO DAMAGE - TỐC ĐỘ CHÉM 0.01 GIÂY IM LẶNG ===
+-- === LUỒNG AUTO FARM POINTS VÀ WINS THẬT ===
 Toggle1.MouseButton1Click:Connect(function()
-    GlobalDamageActive = not GlobalDamageActive
-    Toggle1.Text = GlobalDamageActive and "Silent Kill Aura (Nhịp 0.01s) : ON" or "Silent Kill Aura (Nhịp 0.01s) : OFF"
-    Toggle1.TextColor3 = GlobalDamageActive and Color3.fromRGB(80, 200, 80) or Color3.fromRGB(200, 70, 70)
+    AutoFarmActive = not AutoFarmActive
+    Toggle1.Text = AutoFarmActive and "Auto Farm Points & Wins (Real) : ON" or "Auto Farm Points & Wins (Real) : OFF"
+    Toggle1.TextColor3 = AutoFarmActive and Color3.fromRGB(80, 200, 80) or Color3.fromRGB(200, 70, 70)
 end)
 
 task.spawn(function()
     while true do
-        task.wait(0.01) -- Giữ đúng nhịp nghỉ chuẩn 0.01 giây mượt mà không gây tràn dữ liệu
-        if GlobalDamageActive then
+        task.wait(0.01) -- Giữ đúng nhịp delay 0.01s siêu tốc độ theo ý bro
+        if AutoFarmActive then
             pcall(function()
                 local char = LocalPlayer.Character
                 local backpack = LocalPlayer:FindFirstChild("Backpack")
                 
-                -- Tự động cầm vũ khí lên tay
+                -- 1. TỰ ĐỘNG TRANG BỊ VŨ KHÍ
                 if char and backpack and not char:FindFirstChildOfClass("Tool") then
                     local tool = backpack:FindFirstChildOfClass("Tool")
                     if tool then tool.Parent = char end
                 end
                 
+                -- 2. TỰ ĐỘNG SPAM KỸ NĂNG CỦA NHÂN VẬT (AUTO SKILLS)
                 local currentTool = char:FindFirstChildOfClass("Tool")
                 if currentTool then
-                    local attackPart = currentTool:FindFirstChild("Handle") or currentTool:FindFirstChildWhichIsA("BasePart")
+                    -- Tự động nhấn phím chiêu thức hoặc kích hoạt tool ngầm
+                    currentTool:Activate() 
                     
-                    -- Chém ngầm ẩn không vung kiếm để đảm bảo thiết bị Mobile chạy cực mát, mượt 100%
+                    -- 3. SILENT KILL AURA TRUYỀN VA CHẠM TOÀN MAP
+                    local attackPart = currentTool:FindFirstChild("Handle") or currentTool:FindFirstChildWhichIsA("BasePart")
                     if attackPart and firetouchinterest then
                         for _, enemy in pairs(workspace:GetDescendants()) do
                             if enemy:IsA("Model") and enemy:FindFirstChild("Humanoid") and enemy.Humanoid.Health > 0 then
@@ -175,7 +126,7 @@ task.spawn(function()
                                     if enemyRoot then
                                         local isBoss = string.find(string.lower(enemy.Name), "boss") or enemy:GetAttribute("IsBoss")
                                         
-                                        -- Cực đại hóa sát thương đa luồng song song: Boss dồn x45, Quái thường x15
+                                        -- Dồn lực va chạm cực nhanh: Boss x45, Quái thường x15
                                         local hitCount = isBoss and 45 or 15
                                         for i = 1, hitCount do
                                             coroutine.wrap(function()
@@ -184,7 +135,6 @@ task.spawn(function()
                                             end)()
                                         end
                                     end
-                                    
                                 end
                             end
                         end
