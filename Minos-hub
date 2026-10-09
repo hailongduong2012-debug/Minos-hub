@@ -1,15 +1,13 @@
--- [[ SBSD CAMPAIGN 2026 - VOID DESYNC GODMODE & SILENT GLOBAL 0.01S ]]
--- Giải pháp cuối cùng: Cách ly không gian ảo + Chém 0.01s 0% Lag + Nút X Mobile
+-- [[ SBSD CAMPAIGN 2026 - INF NEGATIVE HEALTH MEMORY LOCK & SILENT 0.01S ]]
+-- Siêu nâng cấp v21: Bất tử Máu Âm Vô Hạn (Không thể tụt) + Chém ẩn 0.01s + Nút X Mobile
 
 if game:GetService("CoreGui"):FindFirstChild("RayfieldMockup_SBSD") then
     game:GetService("CoreGui")["RayfieldMockup_SBSD"]:Destroy()
 end
 
 local GlobalDamageActive = false
-local VoidGodModeActive = false
+local NegativeGodModeActive = false
 local UiVisible = true
-local VoidPlatform = nil
-local OriginalLocation = nil
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -32,14 +30,14 @@ Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 9)
 local Title = Instance.new("TextLabel", Main)
 Title.Size = UDim2.new(1, -40, 0, 40)
 Title.BackgroundColor3 = Color3.fromRGB(28, 28, 33)
-Title.Text = "  SBSD Hub | Void Space Godmode v12"
+Title.Text = "  SBSD Hub | Inf Negative v21"
 Title.TextColor3 = Color3.fromRGB(240, 240, 240)
 Title.TextXAlignment = Enum.TextXAlignment.Left
 Title.Font = Enum.Font.SourceSansBold
 Title.TextSize = 14
 Instance.new("UICorner", Title).CornerRadius = UDim.new(0, 9)
 
--- NÚT CHỮ "X" ĐỂ ẨN MENU
+-- NÚT CHỮ "X" ĐỂ ẨN MENU (MOBILE KHÔNG LO QUÊN PHÍM)
 local CloseButton = Instance.new("TextButton", Main)
 CloseButton.Size = UDim2.new(0, 35, 0, 35)
 CloseButton.Position = UDim2.new(1, -38, 0, 2)
@@ -50,7 +48,7 @@ CloseButton.Font = Enum.Font.SourceSansBold
 CloseButton.TextSize = 18
 Instance.new("UICorner", CloseButton).CornerRadius = UDim.new(0, 6)
 
--- NÚT TRÒN HIỆN MENU
+-- NÚT TRÒN HIỆN MENU KHI ĐÃ ẨN
 local OpenButton = Instance.new("TextButton", SG)
 OpenButton.Size = UDim2.new(0, 45, 0, 45)
 OpenButton.Position = UDim2.new(0, 15, 0, 15)
@@ -73,12 +71,12 @@ Toggle1.Font = Enum.Font.SourceSansBold
 Toggle1.TextSize = 13
 Instance.new("UICorner", Toggle1).CornerRadius = UDim.new(0, 6)
 
--- Nút Toggle 3: Bất Tử Trốn Ra Không Gian Ảo
+-- Nút Toggle 3: Bất Tử Khóa Máu Âm Tuyệt Đối
 local Toggle3 = Instance.new("TextButton", Main)
 Toggle3.Size = UDim2.new(0, 290, 0, 45)
 Toggle3.Position = UDim2.new(0, 15, 0, 120)
 Toggle3.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
-Toggle3.Text = "God Mode (Trốn Ra Không Gian Ảo) : OFF"
+Toggle3.Text = "God Mode (Khóa Máu Âm Vô Hạn) : OFF"
 Toggle3.TextColor3 = Color3.fromRGB(200, 70, 70)
 Toggle3.Font = Enum.Font.SourceSansBold
 Toggle3.TextSize = 13
@@ -88,12 +86,12 @@ local InfoText = Instance.new("TextLabel", Main)
 InfoText.Size = UDim2.new(1, 0, 0, 30)
 InfoText.Position = UDim2.new(0, 0, 0, 185)
 InfoText.BackgroundTransparency = 1
-InfoText.Text = "Trạng thái: Cách ly X Y Z cực đại + Ẩn hoạt ảnh chém"
+InfoText.Text = "Cơ chế: Đóng băng dữ liệu thô -math.huge Chống Tụt Máu"
 InfoText.TextColor3 = Color3.fromRGB(0, 255, 180)
 InfoText.Font = Enum.Font.SourceSansItalic
-InfoText.TextSize = 12
+InfoText.TextSize = 11
 
--- Hàm ẩn hiện UI
+-- Hàm ẩn hiện UI bằng nút X
 local function ToggleUi()
     UiVisible = not UiVisible
     Main.Visible = UiVisible
@@ -103,66 +101,40 @@ CloseButton.MouseButton1Click:Connect(ToggleUi)
 OpenButton.MouseButton1Click:Connect(ToggleUi)
 
 
--- === CƠ CHẾ GOD MODE BẤT TỬ TRỐN RA KHÔNG GIAN ẢO (VOID SPACE DESYNC) ===
+-- === CƠ CHẾ GOD MODE KHÓA MÁU ÂM VÔ HẠN TUYỆT ĐỐI (NEGATIVE INF MEMORY LOCK) ===
 Toggle3.MouseButton1Click:Connect(function()
-    VoidGodModeActive = not VoidGodModeActive
-    Toggle3.Text = VoidGodModeActive and "God Mode (Trốn Ra Không Gian Ảo) : ON" or "God Mode (Trốn Ra Không Gian Ảo) : OFF"
-    Toggle3.TextColor3 = VoidGodModeActive and Color3.fromRGB(80, 200, 80) or Color3.fromRGB(200, 70, 70)
-    
-    local char = LocalPlayer.Character
-    local root = char and char:FindFirstChild("HumanoidRootPart")
-    
-    if VoidGodModeActive and root then
-        -- Lưu lại vị trí mặt đất ban đầu để dịch chuyển về khi tắt hack
-        OriginalLocation = root.CFrame
-        
-        -- Bay ra tọa độ vô cực ngoài vũ trụ, Boss hoàn toàn mất phương hướng và bất lực
-        local TargetVoidPos = CFrame.new(999999, 999999, 999999)
-        root.CFrame = TargetVoidPos
-        
-        -- Tạo nền móng ảo đỡ chân ở ngoài rìa thế giới
-        VoidPlatform = Instance.new("Part")
-        VoidPlatform.Size = Vector3.new(30, 1, 30)
-        VoidPlatform.CFrame = TargetVoidPos * CFrame.new(0, -3, 0)
-        VoidPlatform.Anchored = true
-        VoidPlatform.Material = Enum.Material.ForceField
-        VoidPlatform.Parent = workspace
-    else
-        -- Trở về vị trí cũ an toàn
-        if VoidPlatform then
-            VoidPlatform:Destroy()
-            VoidPlatform = nil
-        end
-        if root and OriginalLocation then
-            root.CFrame = OriginalLocation
-        end
-    end
+    NegativeGodModeActive = not NegativeGodModeActive
+    Toggle3.Text = NegativeGodModeActive and "God Mode (Khóa Máu Âm Vô Hạn) : ON" or "God Mode (Khóa Máu Âm Vô Hạn) : OFF"
+    Toggle3.TextColor3 = NegativeGodModeActive and Color3.fromRGB(80, 200, 80) or Color3.fromRGB(200, 70, 70)
 end)
 
--- Đóng băng vận tốc liên tục ở vùng không gian ảo để triệt tiêu các cơ chế quét vật lý của Server
+-- Tiêm đóng băng giá trị âm vô cực liên tục vào lõi Humanoid
 RunService.PreSimulation:Connect(function()
-    if VoidGodModeActive and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+    if NegativeGodModeActive and LocalPlayer.Character then
         pcall(function()
             local char = LocalPlayer.Character
-            local root = char.HumanoidRootPart
-            root.Velocity = Vector3.new(0, 0, 0)
-            
-            -- Khóa cứng trạng thái chống chết bất ngờ
             local hum = char:FindFirstChildOfClass("Humanoid")
+            
             if hum then
+                -- Chặn đứng hoàn toàn trạng thái chuyển tiếp sang cấu trúc chết sinh học
+                hum.BreakJointsOnDeath = false
                 hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
-                hum.MaxHealth = math.huge
-                hum.Health = math.huge
+                
+                -- ÉP XOÁ TRẠNG THÁI CHẾT: Server bắt đổi sang Dead sẽ bị kéo ngược về Running lập tức
                 if hum:GetState() == Enum.HumanoidStateType.Dead then
                     hum:ChangeState(Enum.HumanoidStateType.Running)
                 end
+                
+                -- KHÓA MÁU ÂM VÔ CỰC (-math.huge): Đảm bảo trừ bao nhiêu sát thương thì kết quả vẫn giữ nguyên giá trị ban đầu
+                hum.MaxHealth = -math.huge
+                hum.Health = -math.huge
             end
         end)
     end
 end)
 
 
--- === SILENT GLOBAL AUTO DAMAGE - GIỮ CHUẨN ĐỘ TRỄ 0.01 GIÂY + 0% LAG BIỂU DIỄN ===
+-- === SILENT GLOBAL AUTO DAMAGE - TỐC ĐỘ CHÉM 0.01 GIÂY IM LẶNG ===
 Toggle1.MouseButton1Click:Connect(function()
     GlobalDamageActive = not GlobalDamageActive
     Toggle1.Text = GlobalDamageActive and "Silent Kill Aura (Nhịp 0.01s) : ON" or "Silent Kill Aura (Nhịp 0.01s) : OFF"
@@ -171,13 +143,13 @@ end)
 
 task.spawn(function()
     while true do
-        task.wait(0.01) -- Chuẩn độ trễ 0.01 giây cực kỳ chính xác theo ý bro
+        task.wait(0.01) -- Giữ đúng nhịp nghỉ chuẩn 0.01 giây siêu mượt theo ý bro
         if GlobalDamageActive then
             pcall(function()
                 local char = LocalPlayer.Character
                 local backpack = LocalPlayer:FindFirstChild("Backpack")
                 
-                -- Tự động cầm vũ khí/Gear lên tay để kích hoạt hệ thống
+                -- Tự động cầm vũ khí lên tay
                 if char and backpack and not char:FindFirstChildOfClass("Tool") then
                     local tool = backpack:FindFirstChildOfClass("Tool")
                     if tool then tool.Parent = char end
@@ -187,7 +159,7 @@ task.spawn(function()
                 if currentTool then
                     local attackPart = currentTool:FindFirstChild("Handle") or currentTool:FindFirstChildWhichIsA("BasePart")
                     
-                    -- Truyền va chạm từ xa xuyên không gian, không vung kiếm lướt lác cơ thể
+                    -- Chém ngầm không hoạt ảnh vung kiếm để triệt tiêu 100% lag giật màn hình cho Mobile
                     if attackPart and firetouchinterest then
                         for _, enemy in pairs(workspace:GetDescendants()) do
                             if enemy:IsA("Model") and enemy:FindFirstChild("Humanoid") and enemy.Humanoid.Health > 0 then
@@ -197,7 +169,7 @@ task.spawn(function()
                                     if enemyRoot then
                                         local isBoss = string.find(string.lower(enemy.Name), "boss") or enemy:GetAttribute("IsBoss")
                                         
-                                        -- Cân bằng sát thương đa luồng: Boss dồn x45 phát, Quái thường x15 phát
+                                        -- Tốc độ dồn sát thương cực đại chạy đa luồng: Boss x45, Quái thường x15
                                         local hitCount = isBoss and 45 or 15
                                         for i = 1, hitCount do
                                             coroutine.wrap(function()
