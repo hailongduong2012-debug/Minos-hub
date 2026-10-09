@@ -1,78 +1,76 @@
--- MINOS HUB | SBSD V6 SIMULTANEOUS GLOBAL HIT (BYPASS DETECTOR)
-local Rayfield = loadstring(game:HttpGet('https://sirius.menu'))()
+-- MINOS HUB | SBSD GLOBAL PASSIVE TOUCH (KHÔNG CAN THIỆP SÂU)
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
-   Name = "MINOS HUB | SBSD GLOBAL",
-   LoadingTitle = "Đang đồng bộ Quorum V6 Method...",
+   Name = "MINOS HUB | SBSD",
+   LoadingTitle = "Đang cấu hình Safe Passive Aura...",
    LoadingSubtitle = "BY MINOS",
    ConfigurationSaving = { Enabled = false },
    KeySystem = false 
- })
+})
 
-local MainTab = Window:CreateTab("Global Aura", 4483362458)
+local MainTab = Window:CreateTab("Passive Aura", 4483362458)
 
-_G.QuorumAura = false
-_G.AttackSpeed = 0.35 -- Tốc độ an toàn tuyệt đối chống Time-Delay Detector của SBSD
+_G.PassiveAura = false
+_G.HitboxSize = 250 -- Phóng to kích thước hitbox để bao phủ toàn bộ map Campaign/Death Mode
 
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
-local VirtualUser = game:GetService("VirtualUser")
 
--- Hàm gom và đồng bộ vị trí quái toàn map về trước mặt người chơi (Không Teleport người chơi)
-local function syncGlobalEnemies()
-   local myRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-   if not myRoot then return false end
+-- Hàm xử lý ép va chạm vật lý giữa vũ khí và quái toàn map
+local function applyGlobalPassiveTouch()
+    local character = LocalPlayer.Character
+    if not character then return end
+    
+    -- Tìm vũ khí (Tool) bạn đang cầm trên tay
+    local tool = character:FindFirstChildOfClass("Tool")
+    if not tool then return end
+    
+    -- Tìm phần lưỡi kiếm hoặc phần gây sát thương của vũ khí (thường là Handle hoặc Blade)
+    local toolHandle = tool:FindFirstChild("Handle") or tool:FindFirstChildOfClass("Part")
+    if not toolHandle then return end
 
-   local enemyContainer = workspace:FindFirstChild("Enemies") or workspace
-   local hasEnemies = false
+    local enemyContainer = workspace:FindFirstChild("Enemies") or workspace
 
-   for _, child in pairs(enemyContainer:GetChildren()) do
-       if child:IsA("Model") and child ~= LocalPlayer.Character then
-           local humanoid = child:FindFirstChildOfClass("Humanoid")
-           local enemyRoot = child:FindFirstChild("HumanoidRootPart") or child:FindFirstChild("PrimaryPart")
-           
-           if humanoid and enemyRoot and humanoid.Health > 0 then
-               hasEnemies = true
-               -- METHOD QUORUM V6: Ép CFrame của quái về ngay trước tầm chém vật lý của bạn
-               -- Quái vẫn ở vị trí cũ trên màn hình server nhưng khối Hitbox xử lý sát thương cục bộ được kéo sát vào bạn
-               enemyRoot.CFrame = myRoot.CFrame * CFrame.new(0, 0, -3)
-               enemyRoot.CanCollide = false
-           end
-       end
-   end
-   return hasEnemies
+    for _, child in pairs(enemyContainer:GetChildren()) do
+        if child:IsA("Model") and child ~= character then
+            local humanoid = child:FindFirstChildOfClass("Humanoid")
+            local enemyRoot = child:FindFirstChild("HumanoidRootPart") or child:FindFirstChild("PrimaryPart")
+            
+            if humanoid and enemyRoot and humanoid.Health > 0 then
+                -- 1. Phóng to hitbox nhận sát thương của quái vật cực đại
+                enemyRoot.Size = Vector3.new(_G.HitboxSize, _G.HitboxSize, _G.HitboxSize)
+                enemyRoot.Transparency = 0.8
+                enemyRoot.CanCollide = false
+                
+                -- 2. Ép vị trí hitbox của quái trùng khít vào lưỡi kiếm của bạn để kích hoạt sự kiện .Touched của game
+                enemyRoot.CFrame = toolHandle.CFrame
+            end
+        end
+    end
 end
 
--- Vòng lặp kích hoạt đòn đánh lan toàn map
+-- Vòng lặp quét và xử lý va chạm liên tục mỗi 0.1 giây
 task.spawn(function()
-   while true do
-       if _G.QuorumAura then
-           -- Đồng bộ hóa vị trí tất cả quái trước khi tung đòn
-           local isReady = syncGlobalEnemies()
-           
-           if isReady then
-               local tool = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Tool")
-               if tool then
-                   -- Kích hoạt đòn đánh vật lý của Roblox Engine -> Sát thương lan trúng tất cả quái cùng lúc
-                   VirtualUser:ClickButton1(Vector2.new(0, 0))
-               end
-           end
-       end
-       -- Sử dụng math.random nhỏ để giả lập nhịp click con người, bỏ qua hoàn toàn bộ lọc quét AI Anticheat
-       task.wait(_G.AttackSpeed + (math.random(-2, 3) / 100))
-   end
+    while true do
+        if _G.PassiveAura then
+            pcall(applyGlobalPassiveTouch)
+        end
+        task.wait(0.1) -- Giãn cách an toàn giúp giảm tải CPU và tránh bị Anticheat nghi ngờ spam
+    end
 end)
 
+-- Tạo nút Toggle kích hoạt bản quyền MINOS
 local Toggle = MainTab:CreateToggle({
-   Name = "Kích hoạt Hit All Toàn Map (Method V6)",
+   Name = "Kích hoạt Passive Aura (Chỉ cần cầm vũ khí)",
    CurrentValue = false,
-   Flag = "MINOSGlobalAura",
+   Flag = "MINOSPassiveAura",
    Callback = function(Value)
-      _G.QuorumAura = Value
+      _G.PassiveAura = Value
       if Value then
-          Rayfield:Notify({Title = "MINOS HUB", Content = "Đã đồng bộ sát thương toàn map cùng lúc!", Duration = 3})
+          Rayfield:Notify({Title = "MINOS HUB", Content = "Đã kích hoạt chế độ tự động chạm sát thương!", Duration = 2.5})
       else
-          Rayfield:Notify({Title = "MINOS HUB", Content = "Đã dừng sát thương diện rộng.", Duration = 3})
+          Rayfield:Notify({Title = "MINOS HUB", Content = "Đã tắt Passive Aura.", Duration = 2.5})
       end
    end,
 })
