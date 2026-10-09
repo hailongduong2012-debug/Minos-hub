@@ -2,7 +2,7 @@
 -- LOAD LẠI CODE CHUẨN: TÊN MINOS HUB - SỬA LỖI KHÔNG LÊN UI BẰNG SOURCE LIÊN KẾT GỐC KHÔNG QUA PROXY
 -- TÍNH NĂNG: KILL AURA MAX RANGE DELAY 0 & GOD MODE BẤT TỬ KHÔNG CHẾT
 
-local Rayfield = loadstring(game:HttpGet('https://sirius.menu'))()
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local P = game:GetService("Players")
 local LP = P.LocalPlayer
