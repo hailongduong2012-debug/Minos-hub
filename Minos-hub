@@ -1,6 +1,5 @@
 -- [[ MINOS HUB SBSD MAXIMUM EDITION - FULL MAP & ANTI-LAG ENGINE ]]
--- CHỨC NĂNG: FIXED KILL AURA TRỪ MÁU QUÁI TOÀN MAP + ANTI-LAG
--- PHƯƠNG PHÁP: VIRTUAL HITBOX BYPASS SERVER VALIDATION
+-- CHỨC NĂNG: SỬA SUBTITLE THÀNH "BY MINOS" + KILL AURA REAL DAMAGE DELAY 0.01S + ANTI-LAG
 
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
@@ -27,12 +26,13 @@ local Window = Rayfield:CreateWindow({
    KeySystem = false
 })
 
+-- Tạo Tab chức năng Auto Farm của Minos Hub
 local FarmTab = Window:CreateTab("Death Mode Farm", 4483345998)
 local SettingsTab = Window:CreateTab("Tối Ưu & Hệ Thống", 4483345998)
 
--- == 1. TÍNH NĂNG CHÍNH: KILL AURA SỬA LỖI KHÔNG MẤT MÁU ==
+-- == 1. TÍNH NĂNG CHÍNH: KILL AURA ĐÃ SỬA GÂY SÁT THƯƠNG THỰC ==
 FarmTab:CreateToggle({
-   Name = "Kill Aura (No Delay - Full Map Target)",
+   Name = "Kill Aura (Delay 0.01s - Full Map Target)",
    CurrentValue = false,
    Flag = "KillAuraFlag",
    Callback = function(Value)
@@ -68,26 +68,25 @@ SettingsTab:CreateToggle({
    end,
 })
 
--- === HỆ THỐNG ĐÁNH LỪA SERVER VÀ ÉP NỔ SÁT THƯƠNG ===
-local function BypassAndDamage(enemy, currentGear, myHrp)
+-- === HÀM ÉP NHẬN SÁT THƯƠNG THỰC TẾ TOÀN BẢN ĐỒ ===
+local function AttackAllMonsters(enemy, currentGear)
     if enemy:IsA("Model") and enemy:FindFirstChild("Humanoid") and enemy.Humanoid.Health > 0 then
         if not P:GetPlayerFromCharacter(enemy) and enemy.Name ~= "Base" and enemy ~= LP.Character then
             
             local enemyPart = enemy:FindFirstChild("HumanoidRootPart") or enemy:FindFirstChildOfClass("Part")
             if enemyPart then
-                -- Vung vũ khí liên tục
+                -- Ép vung đòn vũ khí liên tục
                 pcall(function() currentGear:Activate() end)
 
-                -- BYPASS METHOD: Ép dữ liệu vị trí ảo ngay sát nhân vật (Tầm đánh hợp lệ của Server)
-                local targetPosition = myHrp.Position + myHrp.CFrame.LookVector * 2
-
-                -- Dò quét diện rộng để tìm chính xác Remote xử lý sự kiện trong ReplicatedStorage
+                -- Truy tìm các cổng Remote Event xử lý sát thương thực của SBSD
                 for _, remote in pairs(RS:GetDescendants()) do
                     if remote:IsA("RemoteEvent") and (remote.Name:lower():match("attack") or remote.Name:lower():match("hit") or remote.Name:lower():match("damage") or remote.Name:lower():match("punch")) then
                         pcall(function()
-                            -- Gửi tọa độ đã đồng bộ hóa với tầm đánh của nhân vật để Server chấp nhận damage
-                            remote:FireServer(enemy, targetPosition)
-                            remote:FireServer(enemyPart, targetPosition)
+                            -- ĐỒNG BỘ TỌA ĐỘ THỰC: Lấy vị trí chính xác của quái vật để ép Server trừ máu công bằng
+                            local hitPos = enemyPart.Position
+                            
+                            remote:FireServer(enemy, hitPos)
+                            remote:FireServer(enemyPart, hitPos)
                             remote:FireServer(enemy, currentGear)
                         end)
                     end
@@ -97,21 +96,27 @@ local function BypassAndDamage(enemy, currentGear, myHrp)
     end
 end
 
--- === VÒNG LẶP ĐỒ HỌA THỜI GIAN THỰC KHÔNG DELAY ===
-RunS.RenderStepped:Connect(function()
-    if A_Active and LP.Character then
-        local myHrp = LP.Character:FindFirstChild("HumanoidRootPart")
-        local currentGear = LP.Character:FindFirstChildOfClass("Tool")
+-- === VÒNG LẶP KIỂM SOÁT THỜI GIAN TRỄ ĐÚNG CHUẨN 0.01S ===
+task.spawn(function()
+    while true do
+        task.wait(0.01) -- Độ trễ chuẩn hóa 0.01s giúp dữ liệu mượt mà, tránh bị kick/chặn damage
         
-        -- Chỉ kích hoạt khi bạn thực sự cầm vũ khí/gear trên tay và nhân vật còn sống
-        if currentGear and myHrp then
-            for _, object in pairs(workspace:GetDescendants()) do
-                BypassAndDamage(object, currentGear, myHrp)
+        if A_Active and LP.Character then
+            -- Kích hoạt khi và chỉ khi trên tay nhân vật đang cầm Gear (Tool) bất kỳ
+            local currentGear = LP.Character:FindFirstChildOfClass("Tool")
+            
+            if currentGear then
+                -- Duyệt sâu qua toàn bộ cấu trúc map để xả sát thương lên mọi quái vật đang xuất hiện
+                for _, object in pairs(workspace:GetDescendants()) do
+                    AttackAllMonsters(object, currentGear)
+                end
             end
         end
     end
-    
-    -- Xử lý dọn rác giảm Lag liên tục
+end)
+
+-- Vòng lặp dọn rác Anti-Lag thời gian thực độc lập
+RunS.RenderStepped:Connect(function()
     if AntiLag_Active then
         pcall(function()
             for _, object in pairs(workspace:GetDescendants()) do
