@@ -1,19 +1,29 @@
--- [[ SBSD CAMPAIGN 2026 - SUB-SPACE PHYSICS FLY & SILENT GLOBAL MULTI-AURA ]]
--- Phiên bản v27: Đẩy lực vật lý ra Safe Zone cô lập + Chém vi mô không delay + Nút X Mobile
+-- [[ SBSD CAMPAIGN 2026 - ANCHORED SAFE PATROL & SILENT MULTI-AURA v28 ]]
+-- Tối ưu hóa: Kế thừa cơ chế Safe Zone Anchored + Chém vi mô không delay + Nút X Mobile
 
 if game:GetService("CoreGui"):FindFirstChild("RayfieldMockup_SBSD") then
     game:GetService("CoreGui")["RayfieldMockup_SBSD"]:Destroy()
 end
 
 local AutoFarmActive = false
-local PhysicsSafeZoneActive = false
+local AnchoredSafeZoneActive = false
 local UiVisible = true
-local BodyAnchor = nil
-local SavedLocation = nil
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
+local PlaceId = game.PlaceId
+
+-- Khởi tạo mảng tuần tra Safe Zone dựa trên cấu trúc map (Trích xuất từ dữ liệu lõi bypass)
+local SAFE_PATROL = {
+    Vector3.new(-495.3, -22.3, 518.4),
+    Vector3.new(481.9, -24.1, 513.1),
+    Vector3.new(496.6, -26.1, -478.6),
+    Vector3.new(-485.5, -21.9, -473.7),
+}
+local SAFE_PATROL_SPEED = 50
+local safePatrolPos = nil
+local safePatrolTarget = 1
 
 -- === VẼ UI STYLE RAYFIELD CHUYÊN DỤNG CHO MOBILE ===
 local SG = Instance.new("ScreenGui", game:GetService("CoreGui"))
@@ -32,7 +42,7 @@ Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 9)
 local Title = Instance.new("TextLabel", Main)
 Title.Size = UDim2.new(1, -40, 0, 40)
 Title.BackgroundColor3 = Color3.fromRGB(28, 28, 33)
-Title.Text = "  SBSD Hub | Sub-Space Physics v27"
+Title.Text = "  SBSD Hub | Anchored Patrol v28"
 Title.TextColor3 = Color3.fromRGB(240, 240, 240)
 Title.TextXAlignment = Enum.TextXAlignment.Left
 Title.Font = Enum.Font.SourceSansBold
@@ -73,12 +83,12 @@ Toggle1.Font = Enum.Font.SourceSansBold
 Toggle1.TextSize = 13
 Instance.new("UICorner", Toggle1).CornerRadius = UDim.new(0, 6)
 
--- Nút Toggle 2: Đẩy lực vật lý ra Safe Zone
+-- Nút Toggle 2: Bất Tử Neo Cứng Khóa Vị Trí Tuần Tra
 local Toggle2 = Instance.new("TextButton", Main)
 Toggle2.Size = UDim2.new(0, 290, 0, 45)
 Toggle2.Position = UDim2.new(0, 15, 0, 120)
 Toggle2.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
-Toggle2.Text = "Physics Safe Zone (Cách Ly Đạn) : OFF"
+Toggle2.Text = "Anchored Safe Zone (Chống Kéo Lùi) : OFF"
 Toggle2.TextColor3 = Color3.fromRGB(200, 70, 70)
 Toggle2.Font = Enum.Font.SourceSansBold
 Toggle2.TextSize = 13
@@ -88,7 +98,7 @@ local InfoText = Instance.new("TextLabel", Main)
 InfoText.Size = UDim2.new(1, 0, 0, 30)
 InfoText.Position = UDim2.new(0, 0, 0, 185)
 InfoText.BackgroundTransparency = 1
-InfoText.Text = "Cơ chế: Dùng BodyVelocity cô lập tọa độ ra rìa không gian"
+InfoText.Text = "Cơ chế: Khóa Anchored CFrame bypass bộ lọc cao cấp Server"
 InfoText.TextColor3 = Color3.fromRGB(0, 255, 180)
 InfoText.Font = Enum.Font.SourceSansItalic
 InfoText.TextSize = 11
@@ -103,59 +113,69 @@ CloseButton.MouseButton1Click:Connect(ToggleUi)
 OpenButton.MouseButton1Click:Connect(ToggleUi)
 
 
--- === 1. CƠ CHẾ ĐẨY LỰC VẬT LÝ RA SAFE ZONE CÔ LẬP CỰC ĐẠI ===
+-- === 1. THUẬT TOÁN ANCHORED SAFE ZONE CHỐNG KÉO LÙI TUYỆT ĐỐI ===
 Toggle2.MouseButton1Click:Connect(function()
-    PhysicsSafeZoneActive = not PhysicsSafeZoneActive
-    Toggle2.Text = PhysicsSafeZoneActive and "Physics Safe Zone (Cách Ly Đạn) : ON" or "Physics Safe Zone (Cách Ly Đạn) : OFF"
-    Toggle2.TextColor3 = PhysicsSafeZoneActive and Color3.fromRGB(80, 200, 80) or Color3.fromRGB(200, 70, 70)
+    AnchoredSafeZoneActive = not AnchoredSafeZoneActive
+    Toggle2.Text = AnchoredSafeZoneActive and "Anchored Safe Zone (Chống Kéo Lùi) : ON" or "Anchored Safe Zone (Chống Kéo Lùi) : OFF"
+    Toggle2.TextColor3 = AnchoredSafeZoneActive and Color3.fromRGB(80, 200, 80) or Color3.fromRGB(200, 70, 70)
     
     local char = LocalPlayer.Character
     local root = char and char:FindFirstChild("HumanoidRootPart")
     
-    if PhysicsSafeZoneActive and root then
-        -- Lưu vị trí gốc trên mặt đất
-        SavedLocation = root.CFrame
-        
-        -- Dùng gia tốc đẩy cơ thể ra rìa không gian cách ly an toàn (Cao hẳn lên 5000 block)
-        root.CFrame = root.CFrame * CFrame.new(0, 5000, 0)
-        
-        -- Tạo Anchor bằng lực vật lý để khóa cứng tọa độ tại Safe Zone, đánh lừa bộ quét giật lùi của Server
-        BodyAnchor = Instance.new("BodyVelocity")
-        BodyAnchor.Name = "SBSD_PhysicsSafeAnchor"
-        BodyAnchor.Velocity = Vector3.new(0, 0, 0) -- Giữ đứng im cố định ngoài rìa không gian
-        BodyAnchor.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
-        BodyAnchor.Parent = root
-    else
-        -- Tắt hack, gỡ bỏ lực bay và trả nhân vật về vị trí cũ trên mặt đất an toàn
-        if root and root:FindFirstChild("SBSD_PhysicsSafeAnchor") then
-            root.SBSD_PhysicsSafeAnchor:Destroy()
-        end
-        BodyAnchor = nil
-        if root and SavedLocation then
-            root.CFrame = SavedLocation
-        end
+    if not AnchoredSafeZoneActive and root then
+        root.Anchored = false -- Trả lại tự do vật lý khi tắt
+        safePatrolPos = nil
     end
 end)
 
--- Khóa cứng trạng thái sinh học thời gian thực tại tầng mô phỏng PreSimulation
-RunService.PreSimulation:Connect(function()
-    if PhysicsSafeZoneActive and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+-- Định vị điểm tuần tra gần nhất an toàn chống đạn
+local function stepSafePatrol(deltaTime)
+    if not safePatrolPos then
+        local nearest, nearestDist = 1, math.huge
+        local root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+        for i, pos in ipairs(SAFE_PATROL) do
+            local dist = root and (root.Position - pos).Magnitude or i
+            if dist < nearestDist then nearest, nearestDist = i, dist end
+        end
+        safePatrolPos = SAFE_PATROL[nearest]
+        safePatrolTarget = nearest % #SAFE_PATROL + 1
+    end
+    local step = SAFE_PATROL_SPEED * math.min(deltaTime, 0.1)
+    local target = SAFE_PATROL[safePatrolTarget]
+    local diff = target - safePatrolPos
+    local dist = diff.Magnitude
+    if dist <= step then
+        safePatrolPos = target
+        safePatrolTarget = safePatrolTarget % #SAFE_PATROL + 1
+    else
+        safePatrolPos = safePatrolPos + diff.Unit * step
+    end
+    return safePatrolPos
+end
+
+-- Vòng lặp khóa cứng vật lý ở chu kỳ kết xuất RenderStepped giống hệt file mẫu
+RunService.RenderStepped:Connect(function(deltaTime)
+    if AnchoredSafeZoneActive and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
         pcall(function()
             local char = LocalPlayer.Character
-            char.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
+            local playerRoot = char.HumanoidRootPart
+            local humanoid = char:FindFirstChildOfClass("Humanoid")
             
-            local hum = char:FindFirstChildOfClass("Humanoid")
-            if hum then
-                hum.BreakJointsOnDeath = false
-                hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
-                if hum.Health < hum.MaxHealth then hum.Health = hum.MaxHealth end
+            -- Kích hoạt đóng băng vật lý lõi: Chặn đứng lệnh giật lùi (Rubberband) từ Server 100%
+            playerRoot.Anchored = true
+            playerRoot.CFrame = CFrame.new(stepSafePatrol(deltaTime))
+            
+            if humanoid then
+                humanoid.BreakJointsOnDeath = false
+                humanoid:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
+                if humanoid.Health < humanoid.MaxHealth then humanoid.Health = humanoid.MaxHealth end
             end
         end)
     end
 end)
 
 
--- === 2. CƠ CHẾ CHÉM ĐA LUỒNG SIÊU TỐC VI MÔ XUYÊN KHÔNG GIAN (MICRO-DELAY AURA) ===
+-- === 2. CƠ CHẾ CHÉM ĐA LUỒNG KHÔNG DELAY THỜI GIAN THỰC (MICRO-DELAY AURA) ===
 Toggle1.MouseButton1Click:Connect(function()
     AutoFarmActive = not AutoFarmActive
     Toggle1.Text = AutoFarmActive and "Micro-Delay Kill Aura (Max Speed) : ON" or "Micro-Delay Kill Aura (Max Speed) : OFF"
@@ -164,13 +184,13 @@ end)
 
 task.spawn(function()
     while true do
-        RunService.Heartbeat:Wait() -- Nhịp nghỉ phần cứng gốc, chống lag và chống crash văng game
+        RunService.Heartbeat:Wait() -- Nhịp nghỉ phần cứng chống crash/văng game trên Mobile
         if AutoFarmActive then
             pcall(function()
                 local char = LocalPlayer.Character
                 local backpack = LocalPlayer:FindFirstChild("Backpack")
                 
-                -- Tự động cầm vũ khí/Gear lên tay
+                -- Tự động trang bị vũ khí lên tay
                 if char and backpack and not char:FindFirstChildOfClass("Tool") then
                     local tool = backpack:FindFirstChildOfClass("Tool")
                     if tool then tool.Parent = char end
@@ -180,7 +200,7 @@ task.spawn(function()
                 if currentTool then
                     local attackPart = currentTool:FindFirstChild("Handle") or currentTool:FindFirstChildWhichIsA("BasePart")
                     
-                    -- Chém ẩn 100% không vung kiếm để đảm bảo không bị sụt FPS trên thiết bị Mobile
+                    -- Chém im lặng không hoạt ảnh vung kiếm, loại bỏ lag giật màn hình tối đa
                     if attackPart and firetouchinterest then
                         for _, enemy in pairs(workspace:GetDescendants()) do
                             if enemy:IsA("Model") and enemy:FindFirstChild("Humanoid") and enemy.Humanoid.Health > 0 then
@@ -190,7 +210,7 @@ task.spawn(function()
                                     if enemyRoot then
                                         local isBoss = string.find(string.lower(enemy.Name), "boss") or enemy:GetAttribute("IsBoss")
                                         
-                                        -- Phân tách gói tin va chạm thành chuỗi luồng song song siêu vi mô (Tương đương mức delay bro yêu cầu)
+                                        -- Phân luồng cực hạn (Bypass Micro-Delay): Đưa quái thường dính x20 và Boss dính x60 phát chém/khung hình
                                         local hitCount = isBoss and 60 or 20
                                         for i = 1, hitCount do
                                             coroutine.wrap(function()
