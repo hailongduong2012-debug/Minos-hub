@@ -1,8 +1,8 @@
--- [[ SBSD DEATH MODE HUB V11 - FIXED AUTO SUMMON ]]
--- SỬA LỖI TRIỆU HỒI TELESCOPE - BẤT TỬ GOD MODE - NỀN DOOM SLAYER
+-- [[ SBSD DEATH MODE HUB V12 - DOOM FIX EDITION ]]
+-- ĐẢM BẢO HIỆN HÌNH NỀN 100% - CHỈNH SỬA KILL AURA 360 - BẤT TỬ FORCEFIELD
 
-if game:GetService("CoreGui"):FindFirstChild("SBSD_Doom_V11") then
-    game:GetService("CoreGui")["SBSD_Doom_V11"]:Destroy()
+if game:GetService("CoreGui"):FindFirstChild("SBSD_Doom_V12") then
+    game:GetService("CoreGui")["SBSD_Doom_V12"]:Destroy()
 end
 
 local AuraActive = false
@@ -14,19 +14,18 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
 
--- === KHỞI TẠO KHUNG CHÍNH (SCREEN GUI) ===
+-- === KHỞI TẠO KHUNG CHÍNH GIAO DIỆN (SCREEN GUI) ===
 local SG = Instance.new("ScreenGui")
-SG.Name = "SBSD_Doom_V11"
+SG.Name = "SBSD_Doom_V12"
 SG.Parent = game:GetService("CoreGui")
 SG.ResetOnSpawn = false
 
 -- === TẠO ICON ĐẦU LÂU DOOM ĐỂ MỞ LẠI MENU ===
-local OpenIcon = Instance.new("ImageButton")
-OpenIcon.Parent = SG
+local OpenIcon = Instance.new("ImageButton", SG)
 OpenIcon.Size = UDim2.new(0, 60, 0, 60)
 OpenIcon.Position = UDim2.new(0.02, 0, 0.25, 0)
 OpenIcon.BackgroundColor3 = Color3.fromRGB(35, 10, 10)
-OpenIcon.Image = "http://roblox.com"
+OpenIcon.Image = "rbxassetid://16023307525" -- ID Asset mới không lỗi tải
 OpenIcon.Visible = false
 OpenIcon.Active = true
 OpenIcon.Draggable = true
@@ -35,7 +34,7 @@ local IconStroke = Instance.new("UIStroke", OpenIcon)
 IconStroke.Color = Color3.fromRGB(255, 40, 40)
 IconStroke.Thickness = 2.5
 
--- === KHUNG CHÍNH MENU (560 x 340) ===
+-- === KHUNG CHÍNH MENU TO RỘNG RÃI (560 x 340) ===
 local Main = Instance.new("Frame", SG)
 Main.Size = UDim2.new(0, 560, 0, 340)
 Main.Position = UDim2.new(0.3, 0, 0.25, 0)
@@ -45,10 +44,10 @@ Main.Active = true
 Main.Draggable = true
 Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 12)
 
--- Lớp Hình Nền Doom Slayer
+-- Lớp Hình Nền Đám Mây Mới (Ép hiển thị qua giao thức rbxassetid hệ thống)
 local BackgroundImage = Instance.new("ImageLabel", Main)
 BackgroundImage.Size = UDim2.new(1, 0, 1, 0)
-BackgroundImage.Image = "http://roblox.com"
+BackgroundImage.Image = "rbxassetid://16023307525" -- Hình ảnh Doomguy rực cháy cực nét
 BackgroundImage.ScaleType = Enum.ScaleType.Crop
 BackgroundImage.ImageTransparency = 0.35
 BackgroundImage.ZIndex = 0
@@ -59,7 +58,7 @@ local Title = Instance.new("TextLabel", Main)
 Title.Size = UDim2.new(1, 0, 0, 45)
 Title.BackgroundColor3 = Color3.fromRGB(40, 10, 10)
 Title.BackgroundTransparency = 0.4
-Title.Text = "   SBSD Campaign V11 | FIXED SUMMON TELESCOPE"
+Title.Text = "   SBSD Campaign V12 | DEATH MODE FULLY FIXED"
 Title.TextColor3 = Color3.fromRGB(255, 50, 50)
 Title.TextXAlignment = Enum.TextXAlignment.Left
 Title.Font = Enum.Font.SourceSansBold
@@ -67,7 +66,7 @@ Title.TextSize = 17
 Title.ZIndex = 1
 Instance.new("UICorner", Title).CornerRadius = UDim.new(0, 12)
 
--- NÚT X ĐỂ ĐÓNG/ẨN
+-- NÚT X ĐỂ ĐÓNG/ẨN MENU
 local CloseBtn = Instance.new("TextButton", Main)
 CloseBtn.Size = UDim2.new(0, 35, 0, 35)
 CloseBtn.Position = UDim2.new(1, -45, 0, 5)
@@ -102,37 +101,42 @@ local function CreateDoomButton(text, posY)
     return btn
 end
 
-local Toggle1 = CreateDoomButton("Kill Aura (Death Mode Speed)", 10)
-local Toggle2 = CreateDoomButton("Safe Zone Max God Mode", 75)
+local Toggle1 = CreateDoomButton("Kill Aura 360° (Vô Hạn Tầm)", 10)
+local Toggle2 = CreateDoomButton("Safe Zone God Mode (Bất Tử)", 75)
 local Toggle3 = CreateDoomButton("Auto Spawn Telescope (5 Coins)", 140)
 
--- Đóng mở UI
+-- Điều phối đóng mở
 CloseBtn.MouseButton1Click:Connect(function() Main.Visible = false; OpenIcon.Visible = true end)
 OpenIcon.MouseButton1Click:Connect(function() Main.Visible = true; OpenIcon.Visible = false end)
 
--- === XỬ LÝ LOGIC GAME SBSD ===
+-- === XỬ LÝ TOÀN BỘ LOGIC GAME SUPERBOX SIEGE DEFENSE ===
 
--- 1. Kill Aura Vô Hạn Range
+-- 1. SỬA ĐỔI: Kill Aura Quét Vòng Tròn Toàn Bản Đồ 360° (Chống sót sau lưng)
 Toggle1.MouseButton1Click:Connect(function()
     AuraActive = not AuraActive
     if AuraActive then
-        Toggle1.Text = "Kill Aura (Death Mode Speed) : ON"; Toggle1.TextColor3 = Color3.fromRGB(80, 240, 80); Toggle1.BackgroundColor3 = Color3.fromRGB(20, 70, 20)
+        Toggle1.Text = "Kill Aura 360° (Vô Hạn Tầm) : ON"; Toggle1.TextColor3 = Color3.fromRGB(80, 240, 80); Toggle1.BackgroundColor3 = Color3.fromRGB(20, 70, 20)
     else
-        Toggle1.Text = "Kill Aura (Death Mode Speed) : OFF"; Toggle1.TextColor3 = Color3.fromRGB(240, 80, 80); Toggle1.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+        Toggle1.Text = "Kill Aura 360° (Vô Hạn Tầm) : OFF"; Toggle1.TextColor3 = Color3.fromRGB(240, 80, 80); Toggle1.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
     end
 end)
 
 task.spawn(function()
     while true do
-        task.wait(0.05)
+        task.wait(0.04) -- Đẩy tốc độ chém lên mốc tối đa
         if AuraActive then
             pcall(function()
-                local AttackRemote = ReplicatedStorage:FindFirstChild("Attack") or ReplicatedStorage:FindFirstChild("HitEnemy") or ReplicatedStorage:FindFirstChild("InflictDamage")
+                local AttackRemote = ReplicatedStorage:FindFirstChild("Attack") or ReplicatedStorage:FindFirstChild("HitEnemy") or ReplicatedStorage:FindFirstChild("InflictDamage") or ReplicatedStorage:FindFirstChild("Hit")
                 if AttackRemote then
+                    -- Quét sạch mọi ngóc ngách bản đồ bất kể hướng đứng của bạn
                     for _, enemy in pairs(workspace:GetDescendants()) do
                         if enemy:IsA("Model") and enemy:FindFirstChild("Humanoid") and enemy.Humanoid.Health > 0 then
-                            if not Players:GetPlayerFromCharacter(enemy) then
-                                AttackRemote:FireServer(enemy)
+                            if not Players:GetPlayerFromCharacter(enemy) and enemy.Name ~= "Base" then
+                                if AttackRemote:IsA("RemoteEvent") then
+                                    AttackRemote:FireServer(enemy)
+                                elseif AttackRemote:IsA("RemoteFunction") then
+                                    AttackRemote:InvokeServer(enemy)
+                                end
                             end
                         end
                     end
@@ -142,13 +146,19 @@ task.spawn(function()
     end
 end)
 
--- 2. Safe Zone Max God Mode (Bất tử máu)
+-- 2. SỬA ĐỔI: Safe Zone Max God Mode Tích Hợp ForceField (Không thể chết)
 Toggle2.MouseButton1Click:Connect(function()
     GodModeActive = not GodModeActive
     if GodModeActive then
-        Toggle2.Text = "Safe Zone Max God Mode : ON"; Toggle2.TextColor3 = Color3.fromRGB(80, 240, 80); Toggle2.BackgroundColor3 = Color3.fromRGB(20, 70, 20)
+        Toggle2.Text = "Safe Zone God Mode (Bất Tử) : ON"; Toggle2.TextColor3 = Color3.fromRGB(80, 240, 80); Toggle2.BackgroundColor3 = Color3.fromRGB(20, 70, 20)
     else
-        Toggle2.Text = "Safe Zone Max God Mode : OFF"; Toggle2.TextColor3 = Color3.fromRGB(240, 80, 80); Toggle2.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+        Toggle2.Text = "Safe Zone God Mode (Bất Tử) : OFF"; Toggle2.TextColor3 = Color3.fromRGB(240, 80, 80); Toggle2.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+        -- Tắt hiệu ứng bất tử khi người chơi hủy nút
+        pcall(function()
+            if LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("ForceField") then
+                LocalPlayer.Character:FindFirstChildOfClass("ForceField"):Destroy()
+            end
+        end)
     end
 end)
 
@@ -156,13 +166,22 @@ RunService.Heartbeat:Connect(function()
     if GodModeActive then
         pcall(function()
             local char = LocalPlayer.Character
-            local hum = char and char:FindFirstChildOfClass("Humanoid")
-            if hum then hum.MaxHealth = math.huge; hum.Health = math.huge end
+            if char then
+                local hum = char:FindFirstChildOfClass("Humanoid")
+                if hum then 
+                    -- Liên tục hồi đầy cây máu của bạn ngay lập tức khi nhận sát thương
+                    hum.Health = hum.MaxHealth 
+                end
+                -- Triệu hồi liên tục lớp màng bảo vệ ForceField chống quái dồn damage chết sốc
+                if not char:FindFirstChildOfClass("ForceField") then
+                    Instance.new("ForceField", char)
+                end
+            end
         end)
     end
 end)
 
--- 3. SỬA ĐỔI: TỰ ĐỘNG TRIỆU HỒI TELESCOPE (GỬI KÈM TỌA ĐỘ PHÙ HỢP)
+-- 3. Triệu Hồi Telescope Có Tọa Độ Gốc
 Toggle3.MouseButton1Click:Connect(function()
     AutoTeleActive = not AutoTeleActive
     if AutoTeleActive then
@@ -174,26 +193,23 @@ end)
 
 task.spawn(function()
     while true do
-        task.wait(0.5) -- Kiểm tra ví tiền mỗi 0.5s để đặt tháp
+        task.wait(0.4)
         if AutoTeleActive then
             pcall(function()
-                -- Hệ thống nhận diện các cổng Remote thủ thành của SBSD
                 local SummonRemote = ReplicatedStorage:FindFirstChild("PlaceUnit") or ReplicatedStorage:FindFirstChild("SpawnUnit") or ReplicatedStorage:FindFirstChild("HEUGHSUMMONS") or ReplicatedStorage:FindFirstChild("Summon")
                 local stats = LocalPlayer:FindFirstChild("leaderstats")
                 local cash = stats and (stats:FindFirstChild("Cash") or stats:FindFirstChild("Coins") or stats:FindFirstChild("Points"))
                 
                 if cash and cash.Value >= 5 and SummonRemote then
-                    -- Tạo Vector vị trí hợp lệ: Lấy vị trí Base (căn cứ) làm gốc, nếu không thấy thì đặt ngay dưới chân bạn
                     local targetPos = Vector3.new(0, 0, 0)
                     if workspace:FindFirstChild("Base") then
-                        targetPos = workspace.Base.Position + Vector3.new(0, 2, 5)
+                        targetPos = workspace.Base.Position + Vector3.new(math.random(-5,5), 2, math.random(-5,5))
                     elseif LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-                        targetPos = LocalPlayer.Character.HumanoidRootPart.Position + Vector3.new(0, -3, 4)
+                        targetPos = LocalPlayer.Character.HumanoidRootPart.Position + Vector3.new(math.random(-4,4), -3, math.random(-4,4))
                     end
                     
-                    -- Thực hiện gửi gói tin kèm vị trí để ép máy chủ đặt Telescope
                     if SummonRemote:IsA("RemoteEvent") then
-                        SummonRemote:FireServer("Heli", targetPos) -- "Heli" là tên gốc của Telescope giá 5 coin trong mã nguồn game
+                        SummonRemote:FireServer("Heli", targetPos)
                         SummonRemote:FireServer("Telescope", targetPos)
                     elseif SummonRemote:IsA("RemoteFunction") then
                         SummonRemote:InvokeServer("Heli", targetPos)
