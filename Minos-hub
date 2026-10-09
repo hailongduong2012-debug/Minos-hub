@@ -1,26 +1,22 @@
--- [[ MINOS HUB PREMIUM ENGINE - THE PRIME RAYFIELD OVERLOAD ]]
--- LOAD LẠI CODE CHUẨN: TÊN MINOS HUB - SỬA LỖI KHÔNG LÊN UI BẰNG SOURCE LIÊN KẾT GỐC KHÔNG QUA PROXY
--- TÍNH NĂNG: KILL AURA MAX RANGE DELAY 0 & GOD MODE BẤT TỬ KHÔNG CHẾT
+-- [[ MINOS HUB PREMIUM ENGINE - UPDATE FOR SBSD ]]
+-- TÍNH NĂNG: KILL AURA CHỈNH DELAY 0.0001S & RANGE TOÀN MAP (ĐÃ XÓA GOD MODE & AUTO SUMMON)
 
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local P = game:GetService("Players")
 local LP = P.LocalPlayer
 local RS = game:GetService("ReplicatedStorage")
-local RunS = game:GetService("RunService")
 
 local A_Active = false
-local G_Active = false
-local T_Active = false
 
--- === KHỞI TẠO BẢNG ĐIỀU KHIỂN CHUẨN RAYFIELD (MINOS HUB ĐỎ ĐEN DOOM) ===
+-- === KHỞI TẠO BẢNG ĐIỀU KHIỂN RAYFIELD ===
 local Window = Rayfield:CreateWindow({
    Name = "Minos hub Premium | SBSD EDITION",
    LoadingTitle = "Minos hub Loading...",
-   LoadingSubtitle = "by hailongduong2012-debug",
+   LoadingSubtitle = "by minos",
    ConfigurationSaving = {
       Enabled = true,
-      FolderName = "MinosHubSBSD", -- Tên thư mục lưu cấu hình đồng bộ
+      FolderName = "MinosHubSBSD",
       FileName = "MinosConfig"
    },
    Discord = {
@@ -31,12 +27,12 @@ local Window = Rayfield:CreateWindow({
    KeySystem = false
 })
 
--- Tạo Tab chức năng Auto Farm chính cho Death Mode
+-- Tạo Tab chức năng Auto Farm
 local FarmTab = Window:CreateTab("Death Mode Farm", 4483345998)
 
--- == 1. TÍNH NĂNG GLOBAL KILL AURA MAX RANGE DELAY 0 ==
+-- == TÍNH NĂNG GLOBAL KILL AURA TOÀN MAP DELAY 0.0001S ==
 FarmTab:CreateToggle({
-   Name = "Global Kill Aura (Max Range - Delay 0)",
+   Name = "Global Kill Aura (Infinite Range - Delay 0.0001s)",
    CurrentValue = false,
    Flag = "KillAuraFlag",
    Callback = function(Value)
@@ -44,127 +40,43 @@ FarmTab:CreateToggle({
    end,
 })
 
--- == 2. TÍNH NĂNG MAX SAFE ZONE GOD MODE (BẤT TỬ TUYỆT ĐỐI KHÔNG CHẾT) ==
-FarmTab:CreateToggle({
-   Name = "Safe Zone God Mode (Bất Tử Không Chết)",
-   CurrentValue = false,
-   Flag = "GodModeFlag",
-   Callback = function(Value)
-      G_Active = Value
-      if not G_Active then
-         pcall(function()
-            if LP.Character and LP.Character:FindFirstChildOfClass("ForceField") then
-               LP.Character:FindFirstChildOfClass("ForceField"):Destroy()
-            end
-            local hum = LP.Character and LP.Character:FindFirstChildOfClass("Humanoid")
-            if hum then
-               hum.MaxHealth = 100
-               hum.Health = 100
-            end
-         end)
-      end
-   end,
-})
-
--- == 3. TÍNH NĂNG AUTO SPAWN TELESCOPE ==
-FarmTab:CreateToggle({
-   Name = "Auto Spawn Telescope (5 Coins)",
-   CurrentValue = false,
-   Flag = "AutoTeleFlag",
-   Callback = function(Value)
-      T_Active = Value
-   end,
-})
-
--- === HỆ THỐNG XỬ LÝ TOÀN BỘ LOGIC GAMEPLAY SBSD CHẠY NGẦM ===
-
--- 1. Xử lý Kill Aura Siêu Tốc Độ (Bỏ qua hoàn toàn Delay - Chạy song song nhiều luồng tấn công)
-RunS.RenderStepped:Connect(function() -- Chuyển sang RenderStepped để đạt tốc độ khung hình cao nhất của Client
-    if A_Active and LP.Character and LP.Character:FindFirstChild("HumanoidRootPart") then
-        pcall(function()
-            -- Tự động kiểm tra và trang bị vũ khí lên tay từ Backpack
-            local tool = LP.Character:FindFirstChildOfClass("Tool")
-            if not tool then
-                local backpackTool = LP.Backpack:FindFirstChildOfClass("Tool")
-                if backpackTool then
-                    backpackTool.Parent = LP.Character
-                    tool = backpackTool
-                end
-            end
-
-            -- Tìm kiếm Remote chiến đấu thực tế của game SBSD để ép nhảy damage
-            local AttackRemote = RS:FindFirstChild("Attack") or RS:FindFirstChild("HitEnemy") or RS:FindFirstChild("Damage") or RS:FindFirstChild("Hit")
-            
-            -- Quét toàn bộ workspace (Max Range) không giới hạn khoảng cách quái vật
-            for _, enemy in pairs(workspace:GetChildren()) do
-                if enemy:IsA("Model") and enemy:FindFirstChild("Humanoid") and enemy:FindFirstChild("HumanoidRootPart") and enemy.Humanoid.Health > 0 then
-                    if not P:GetPlayerFromCharacter(enemy) and enemy.Name ~= "Base" then
-                        
-                        -- Vung vũ khí liên tục thời gian thực không độ trễ
-                        if tool then 
-                            tool:Activate() 
-                        end
-                        
-                        -- CƠ CHẾ ĐÁNH XA BYPASS CHECK: Gửi đồng thời gói tin dồn dập
-                        if AttackRemote and AttackRemote:IsA("RemoteEvent") then
-                            -- Gửi x3 gói tin mỗi khung hình để nhân bản sát thương cực đại
-                            AttackRemote:FireServer(enemy, enemy.HumanoidRootPart.Position)
-                            AttackRemote:FireServer(enemy.HumanoidRootPart, enemy.HumanoidRootPart.Position)
-                            AttackRemote:FireServer(enemy, tool)
-                        end
-                    end
-                end
-            end
-        end)
-    end
-end)
-
--- 2. Xử lý Bất tử tuyệt đối God Mode 100,000,000,000,000,000,000,000 HP
-RunS.Heartbeat:Connect(function()
-    if G_Active then
-        pcall(function()
-            local char = LP.Character
-            if char then
-                local hum = char:FindFirstChildOfClass("Humanoid")
-                if hum then
-                    -- Ép thông số máu lên 10^23 theo yêu cầu
-                    local GodHP = 100000000000000000000000
-                    if hum.MaxHealth ~= GodHP then
-                        hum.MaxHealth = GodHP
-                    end
-                    if hum.Health ~= GodHP then
-                        hum.Health = GodHP
-                    end
-                    
-                    -- Cơ chế ép hồi sinh khẩn cấp tại chỗ: Nếu bị dính đòn chí mạng hoặc trạng thái chuyển thành Dead, ép sống lại lập tức
-                    if hum.Health <= 0 or hum:GetState() == Enum.HumanoidStateType.Dead then
-                        hum:ChangeState(Enum.HumanoidStateType.Running)
-                        hum.MaxHealth = GodHP
-                        hum.Health = GodHP
-                    end
-                end
-                -- Tự động duy trì Khiên bất hoại ForceField bảo vệ cấu trúc nhân vật
-                if not char:FindFirstChildOfClass("ForceField") then
-                    Instance.new("ForceField", char)
-                end
-            end
-        end)
-    end
-end)
-
--- 3. Xử lý Tự động đặt lính lính Telescope khi tích đủ 5 Coins
+-- === HỆ THỐNG XỬ LÝ LOGIC CHẠY NGẦM KHÔNG HOÃN ===
 task.spawn(function()
     while true do
-        task.wait(0.1) -- Tăng tốc độ kiểm tra từ 0.4s xuống 0.1s cho mượt mà
-        if T_Active then
+        task.wait(0.0001) -- Độ trễ chính xác 0.0001s theo yêu cầu
+        if A_Active and LP.Character and LP.Character:FindFirstChild("HumanoidRootPart") then
             pcall(function()
-                local SummonRemote = RS:FindFirstChild("PlaceUnit") or RS:FindFirstChild("SpawnUnit") or RS:FindFirstChild("HEUGHSUMMONS") or RS:FindFirstChild("Summon")
-                local stats = LP:FindFirstChild("leaderstats")
-                local cash = stats and (stats:FindFirstChild("Cash") or stats:FindFirstChild("Coins") or stats:FindFirstChild("Points"))
+                -- Tự động lấy vũ khí lên tay từ Backpack nếu chưa trang bị
+                local tool = LP.Character:FindFirstChildOfClass("Tool")
+                if not tool then
+                    local backpackTool = LP.Backpack:FindFirstChildOfClass("Tool")
+                    if backpackTool then
+                        backpackTool.Parent = LP.Character
+                        tool = backpackTool
+                    end
+                end
+
+                -- Tìm kiếm hệ thống Remote chiến đấu của trò chơi
+                local AttackRemote = RS:FindFirstChild("Attack") or RS:FindFirstChild("HitEnemy") or RS:FindFirstChild("Damage") or RS:FindFirstChild("Hit")
                 
-                if cash and cash.Value >= 5 and SummonRemote then
-                    local spawnPos = LP.Character and LP.Character.HumanoidRootPart.Position or Vector3.new(0, 0, 0)
-                    SummonRemote:FireServer("Telescope", spawnPos)
+                -- Duyệt qua toàn bộ thực thể trong Workspace (Toàn Map không giới hạn khoảng cách)
+                for _, enemy in pairs(workspace:GetChildren()) do
+                    if enemy:IsA("Model") and enemy:FindFirstChild("Humanoid") and enemy:FindFirstChild("HumanoidRootPart") and enemy.Humanoid.Health > 0 then
+                        if not P:GetPlayerFromCharacter(enemy) and enemy.Name ~= "Base" then
+                            
+                            -- Kích hoạt hành động vung/chém của vũ khí
+                            if tool then 
+                                tool:Activate() 
+                            end
+                            
+                            -- Tấn công từ xa xuyên biên giới: Đồng loạt gửi các gói tin gây sát thương
+                            if AttackRemote and AttackRemote:IsA("RemoteEvent") then
+                                AttackRemote:FireServer(enemy, enemy.HumanoidRootPart.Position)
+                                AttackRemote:FireServer(enemy.HumanoidRootPart, enemy.HumanoidRootPart.Position)
+                                AttackRemote:FireServer(enemy, tool)
+                            end
+                        end
+                    end
                 end
             end)
         end
