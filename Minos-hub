@@ -1,17 +1,12 @@
 -----------------------------------------------------
--- ENVIRONMENT SETUP (COMPLETELY FIXED UI LOADING)
+-- ENVIRONMENT SETUP (COMPLETELY FIXED & OPTIMIZED)
 -- Author: garry
 -----------------------------------------------------
+local StarterGui = game:GetService('StarterGui')
 local Players = game:GetService('Players')
 local LocalPlayer = Players.LocalPlayer
 local PlaceId = game.PlaceId
 local TweenService = game:GetService("TweenService")
-local workspace = game:GetService("Workspace")
-local runService = game:GetService("RunService")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local UserInputService = game:GetService("UserInputService")
-local virtualInputManager = game:GetService("VirtualInputManager")
-local VirtualUser = game:GetService("VirtualUser")
 
 local IS_131_GAME = tostring(PlaceId):sub(1, 3) == "131"
 
@@ -19,42 +14,15 @@ local IS_131_GAME = tostring(PlaceId):sub(1, 3) == "131"
 if not IS_131_GAME then
     pcall(function()
         local visuals = workspace:FindFirstChild("visuals")
-        if visuals then visuals:Destroy() end
+        if visuals then
+            visuals:Destroy()
+        end
     end)
 end
 
 -----------------------------------------------------
--- KIỂM TRA PLACEID (CẬP NHẬT TRÁNH CRASH)
+-- SCRIPT CHÍNH (BỎ QUA CHECK ID LỖI ĐỂ TRÁNH CRASH)
 -----------------------------------------------------
-local supportedPlaces = {
-    [15735896047] = true,
-    [12377995562] = true,
-    [14852797539] = true
-}
-
-local function showNotSupportedMessage()
-    local sg = Instance.new("ScreenGui")
-    sg.Name = "NotSupportedMsg"
-    if gethui then sg.Parent = gethui() else
-        local success = pcall(function() sg.Parent = game:GetService("CoreGui") end)
-        if not success then sg.Parent = LocalPlayer:WaitForChild("PlayerGui") end
-    end
-    local txt = Instance.new("TextLabel")
-    txt.Parent = sg
-    txt.Size = UDim2.new(1, 0, 1, 0)
-    txt.BackgroundTransparency = 1
-    txt.Text = "This game is not supported"
-    txt.Font = Enum.Font.GothamBlack
-    txt.TextSize = 50
-    txt.TextColor3 = Color3.fromRGB(255, 50, 50)
-    txt.TextStrokeTransparency = 0
-    task.delay(5, function() if sg then sg:Destroy() end end)
-end
-
-if not supportedPlaces[PlaceId] and not IS_131_GAME then 
-    task.spawn(showNotSupportedMessage)
-end
-
 if PlaceId == 14852797539 then
     local sg = Instance.new("ScreenGui")
     sg.Name = "ElevatorMsg"
@@ -75,15 +43,23 @@ if PlaceId == 14852797539 then
 end
 
 -----------------------------------------------------
--- THAO TÁC LIÊN QUAN ĐẾN HỆ THỐNG ( CHẠY TRONG TÁC VỤ NGẦM )
+-- SERVICE & ANTI-AFK
 -----------------------------------------------------
-task.spawn(function()
-    LocalPlayer.Idled:Connect(function()
-        VirtualUser:CaptureController()
-        VirtualUser:ClickButton2(Vector2.new())
-    end)
+local workspace = game:GetService("Workspace")
+local runService = game:GetService("RunService")
+local virtualInputManager = game:GetService("VirtualInputManager")
+local VirtualUser = game:GetService("VirtualUser")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local UserInputService = game:GetService("UserInputService")
+
+LocalPlayer.Idled:Connect(function()
+    VirtualUser:CaptureController()
+    VirtualUser:ClickButton2(Vector2.new())
 end)
 
+-----------------------------------------------------
+-- ANTI-CHEAT
+-----------------------------------------------------
 if not IS_131_GAME then
     task.spawn(function()
         local gc = getgc(true)
@@ -127,17 +103,15 @@ if not IS_131_GAME then
             if tryDestroy() then break end
             task.wait(0.25)
         end
-        -- ĐÃ SỬA: Đưa vòng lặp vô hạn này vào một luồng riêng biệt để tránh làm kẹt script chính
         task.spawn(function()
-            while task.wait(1) do 
-                pcall(tryDestroy) 
-            end
+            while task.wait(1) do tryDestroy() end
         end)
     end)
 end
+-----------------------------------------------------
 
 -----------------------------------------------------
--- SILENT AIM LOGIC
+-- SILENT AIM
 -----------------------------------------------------
 local silentAimEnabled    = false
 local silentAimDistance   = 5000
@@ -264,3 +238,29 @@ local function SA_UpdateTarget()
                     if silentAimPrediction > 0 and obj:FindFirstChild("HumanoidRootPart") then
                         tPos = tPos + (obj.HumanoidRootPart.Velocity * silentAimPrediction)
                     end
+                    local dist3D = (tPos - localRoot.Position).Magnitude
+                    if dist3D <= closestDist then
+                        closestDist = dist3D
+                        closestPart = tPart
+                        closestModel = obj
+                    end
+                end
+            end
+        end
+    end
+
+    SA_CurrentNPC = closestModel
+    SA_TargetPart = closestPart
+end
+
+if not IS_131_GAME then
+    local SA_oldNamecall = nil
+    SA_oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
+        if checkcaller() or not silentAimEnabled or not SA_TargetPart then return SA_oldNamecall(self, ...) end
+        if SA_IsCameraOrSystemScript() then return SA_oldNamecall(self, ...) end
+
+        local method = getnamecallmethod()
+        local args = {...}
+
+        if (method == "FireServer" or method == "InvokeServer") then
+            local nameLower = self.Name:lower()
