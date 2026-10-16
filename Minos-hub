@@ -1,5 +1,5 @@
 -----------------------------------------------------
--- ENVIRONMENT SETUP (OPTIMIZED BY AI)
+-- ENVIRONMENT SETUP (FIXED & OPTIMIZED)
 -- Author: garry
 -----------------------------------------------------
 local StarterGui = game:GetService('StarterGui')
@@ -21,13 +21,12 @@ if not IS_131_GAME then
 end
 
 -----------------------------------------------------
--- KIỂM TRA PLACEID
+-- KIỂM TRA PLACEID (ĐÃ SỬA LỖI TRỐNG BẢNG)
 -----------------------------------------------------
 local supportedPlaces = {
-    [13151311229] = true,
-    [14852797539] = true,
-    [12377995562] = true,
     [15735896047] = true,
+    [12377995562] = true,
+    [14852797539] = true,
 }
 
 local function showNotSupportedMessage()
@@ -49,7 +48,10 @@ local function showNotSupportedMessage()
     task.delay(5, function() if sg then sg:Destroy() end end)
 end
 
-if not supportedPlaces[PlaceId] then showNotSupportedMessage() end
+-- Nếu game thuộc series 131 hoặc nằm trong danh sách hỗ trợ thì bỏ qua check lỗi
+if not supportedPlaces[PlaceId] and not IS_131_GAME then 
+    showNotSupportedMessage() 
+end
 
 -----------------------------------------------------
 -- SCRIPT CHÍNH
@@ -97,7 +99,7 @@ if not IS_131_GAME then
         for _, v in pairs(gc) do
             pcall(function()
                 local idx = rawget(v, "indexInstance")
-                if type(idx) == "table" and idx[1] == "kick" then
+                if type(idx) == "table" and idx == "kick" then
                     setreadonly(v, false)
                     v.tvk = { "kick", function() return workspace:WaitForChild("") end }
                 end
@@ -205,7 +207,6 @@ local function SA_GetTargetPart(char)
         or char:FindFirstChild("HumanoidRootPart")
 end
 
--- Tối ưu quét quái bằng cách quét trong Folder chỉ định hoặc giảm thiểu GetChildren
 local function SA_UpdateTarget()
     local localRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
     if not localRoot then SA_CurrentNPC = nil; SA_TargetPart = nil; return end
