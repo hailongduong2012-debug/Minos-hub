@@ -1,76 +1,269 @@
--- MINOS HUB | SBSD SURGE TURBO TOUCH AURA (MAX TICK RATE)
-local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
-
-local Window = Rayfield:CreateWindow({
-   Name = "MINOS HUB | SURGE TURBO",
-   LoadingTitle = "Đang ép nhịp sát thương Surge Driver...",
-   LoadingSubtitle = "BY MINOS",
-   ConfigurationSaving = { Enabled = false },
-   KeySystem = false 
-})
-
-local MainTab = Window:CreateTab("Surge Aura", 4483362458)
-
-_G.SurgeTouchAura = false
-_G.TurboTicks = 5 -- Số nhịp giật damage lặp lại trong 1 khung hình (Tăng tốc độ nhảy số)
-
-local Players = game:GetService("Players")
+-----------------------------------------------------
+-- ENVIRONMENT SETUP (OPTIMIZED BY AI)
+-- Author: garry
+-----------------------------------------------------
+local StarterGui = game:GetService('StarterGui')
+local Players = game:GetService('Players')
 local LocalPlayer = Players.LocalPlayer
+local PlaceId = game.PlaceId
+local TweenService = game:GetService("TweenService")
 
--- Hàm giả lập chuỗi va chạm siêu tốc toàn map
-local function applySurgeTurboAura()
-    local character = LocalPlayer.Character
-    if not character then return end
-    
-    -- Kiểm tra xem anh đã cầm vũ khí trên tay chưa
-    local tool = character:FindFirstChildOfClass("Tool")
-    if not tool then return end
-    
-    -- Tìm phần lưỡi kiếm/vũ khí gây sát thương
-    local toolHandle = tool:FindFirstChild("Handle") or tool:FindFirstChild("Blade") or tool:FindFirstChildOfClass("Part")
-    if not toolHandle then return end
+local IS_131_GAME = tostring(PlaceId):sub(1, 3) == "131"
 
-    -- Xác định thư mục chứa quái trong trận đấu SBSD
-    local enemyContainer = workspace:FindFirstChild("Enemies") or workspace
+-- Tự động xóa workspace.visuals ngay khi script được bật (Ngoại trừ game 131)
+if not IS_131_GAME then
+    pcall(function()
+        local visuals = workspace:FindFirstChild("visuals")
+        if visuals then
+            visuals:Destroy()
+        end
+    end)
+end
 
-    for _, child in pairs(enemyContainer:GetChildren()) do
-        if child:IsA("Model") and child ~= character then
-            local humanoid = child:FindFirstChildOfClass("Humanoid")
-            local enemyRoot = child:FindFirstChild("HumanoidRootPart") or child:FindFirstChild("PrimaryPart")
-            
-            if humanoid and enemyRoot and humanoid.Health > 0 then
-                -- MULTI-TICK METHOD: Bắn liên tiếp nhiều nhịp va chạm cùng lúc để sát thương nhảy liên tục không ngừng
-                for i = 1, _G.TurboTicks do
-                    firetouchinterest(enemyRoot, toolHandle, 0) -- Kích hoạt chạm
-                    firetouchinterest(enemyRoot, toolHandle, 1) -- Ngắt chạm để sẵn sàng cho phát sau
+-----------------------------------------------------
+-- KIỂM TRA PLACEID
+-----------------------------------------------------
+local supportedPlaces = {
+    [13151311229] = true,
+    [14852797539] = true,
+    [12377995562] = true,
+    [15735896047] = true,
+}
+
+local function showNotSupportedMessage()
+    local sg = Instance.new("ScreenGui")
+    sg.Name = "NotSupportedMsg"
+    if gethui then sg.Parent = gethui() else
+        local success = pcall(function() sg.Parent = game:GetService("CoreGui") end)
+        if not success then sg.Parent = LocalPlayer:WaitForChild("PlayerGui") end
+    end
+    local txt = Instance.new("TextLabel")
+    txt.Parent = sg
+    txt.Size = UDim2.new(1, 0, 1, 0)
+    txt.BackgroundTransparency = 1
+    txt.Text = "This game is not supported"
+    txt.Font = Enum.Font.GothamBlack
+    txt.TextSize = 50
+    txt.TextColor3 = Color3.fromRGB(255, 50, 50)
+    txt.TextStrokeTransparency = 0
+    task.delay(5, function() if sg then sg:Destroy() end end)
+end
+
+if not supportedPlaces[PlaceId] then showNotSupportedMessage() end
+
+-----------------------------------------------------
+-- SCRIPT CHÍNH
+-----------------------------------------------------
+if PlaceId == 14852797539 then
+    local sg = Instance.new("ScreenGui")
+    sg.Name = "ElevatorMsg"
+    if gethui then sg.Parent = gethui() else
+        local success = pcall(function() sg.Parent = game:GetService("CoreGui") end)
+        if not success then sg.Parent = LocalPlayer:WaitForChild("PlayerGui") end
+    end
+    local txt = Instance.new("TextLabel")
+    txt.Parent = sg
+    txt.Size = UDim2.new(1, 0, 1, 0)
+    txt.BackgroundTransparency = 1
+    txt.Text = "Get in the elevator, you idiot"
+    txt.Font = Enum.Font.GothamBlack
+    txt.TextSize = 60
+    txt.TextColor3 = Color3.fromRGB(255, 50, 50)
+    txt.TextStrokeTransparency = 0
+    return
+end
+
+-----------------------------------------------------
+-- SERVICE & ANTI-AFK
+-----------------------------------------------------
+local workspace = game:GetService("Workspace")
+local runService = game:GetService("RunService")
+local virtualInputManager = game:GetService("VirtualInputManager")
+local VirtualUser = game:GetService("VirtualUser")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local UserInputService = game:GetService("UserInputService")
+
+LocalPlayer.Idled:Connect(function()
+    VirtualUser:CaptureController()
+    VirtualUser:ClickButton2(Vector2.new())
+end)
+
+-----------------------------------------------------
+-- ANTI-CHEAT
+-----------------------------------------------------
+if not IS_131_GAME then
+    task.spawn(function()
+        local gc = getgc(true)
+        for _, v in pairs(gc) do
+            pcall(function()
+                local idx = rawget(v, "indexInstance")
+                if type(idx) == "table" and idx[1] == "kick" then
+                    setreadonly(v, false)
+                    v.tvk = { "kick", function() return workspace:WaitForChild("") end }
+                end
+            end)
+        end
+    end)
+
+    task.spawn(function()
+        local PATH = {"Workspace", "Packages", "_Index", "Squads", "Squads", "Components", "SquadLobby", "SquadLobbyBanners"}
+        local function getCorePackages()
+            local ok, cp = pcall(function() return game:GetService("CorePackages") end)
+            if ok and cp then return cp end
+            return game:FindFirstChild("CorePackages")
+        end
+        local function resolvePath()
+            local node = getCorePackages()
+            if not node then return nil end
+            for _, name in ipairs(PATH) do
+                if not node then return nil end
+                node = node:FindFirstChild(name)
+            end
+            return node
+        end
+        local function tryDestroy()
+            local target = resolvePath()
+            if target then
+                pcall(function() target:Destroy() end)
+                pcall(function() target.Parent = nil end)
+                return true
+            end
+            return false
+        end
+        for _ = 1, 20 do
+            if tryDestroy() then break end
+            task.wait(0.25)
+        end
+        task.spawn(function()
+            while task.wait(1) do tryDestroy() end
+        end)
+    end)
+end
+-----------------------------------------------------
+
+-----------------------------------------------------
+-- SILENT AIM
+-----------------------------------------------------
+local silentAimEnabled    = false
+local silentAimDistance   = 5000
+local silentAimPrediction = 0.165
+local silentAimTargetMode = "Box"
+
+local SA_TargetPart  = nil
+local SA_CurrentNPC  = nil
+local SA_Mouse       = LocalPlayer:GetMouse()
+
+local function SA_IsCameraOrSystemScript()
+    if not getcallingscript then return false end
+    local sc = getcallingscript()
+    if not sc then return false end
+    local name = sc.Name:lower()
+    local parent = sc.Parent
+    local parentName = parent and parent.Name:lower() or ""
+    if name:find("camera") or name:find("popper") or name:find("control")
+       or name:find("player") or name:find("zoom") or name:find("shiftlock")
+       or name:find("animate") or name:find("mouse")
+       or parentName:find("camera") or parentName:find("player") or parentName:find("control") then
+        return true
+    end
+    return false
+end
+
+local function SA_IsBaseValid(model)
+    if not model or not model:IsA("Model") then return false end
+    if Players:GetPlayerFromCharacter(model) or model == LocalPlayer.Character then return false end
+    local hum = model:FindFirstChildOfClass("Humanoid")
+    if not hum or hum.Health <= 0 then return false end
+    local root = model:FindFirstChild("HumanoidRootPart") or model:FindFirstChild("Torso") or model:FindFirstChild("UpperTorso")
+    if not root then return false end
+    return true
+end
+
+local function SA_IsGboxAssistant(model)
+    if not model then return false end
+    local nameLower = model.Name:lower():gsub("%s+", "")
+    return nameLower:find("gboxassistant") ~= nil
+end
+
+local function SA_IsValidNPC(model)
+    if not SA_IsBaseValid(model) then return false end
+    local nameLower = model.Name:lower()
+    if silentAimTargetMode == "Box" then
+        return nameLower:find("box") ~= nil
+           and not nameLower:find("boombox")
+           and not nameLower:find("supporter")
+    else
+        return nameLower:find("astral") ~= nil
+            or nameLower:find("void")   ~= nil
+            or nameLower:find("doom")   ~= nil
+    end
+end
+
+local function SA_GetTargetPart(char)
+    return char:FindFirstChild("UpperTorso")
+        or char:FindFirstChild("Torso")
+        or char:FindFirstChild("HumanoidRootPart")
+end
+
+-- Tối ưu quét quái bằng cách quét trong Folder chỉ định hoặc giảm thiểu GetChildren
+local function SA_UpdateTarget()
+    local localRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    if not localRoot then SA_CurrentNPC = nil; SA_TargetPart = nil; return end
+
+    local scanContainer = workspace:FindFirstChild("NPCs") or workspace:FindFirstChild("Enemies") or workspace
+    local objectsToScan = scanContainer:GetChildren()
+
+    if silentAimTargetMode == "Box" then
+        local gboxModel, gboxPart = nil, nil
+        for _, obj in ipairs(objectsToScan) do
+            if obj:IsA("Model") and SA_IsBaseValid(obj) and SA_IsGboxAssistant(obj) then
+                local tPart = SA_GetTargetPart(obj)
+                if tPart and (tPart.Position - localRoot.Position).Magnitude <= silentAimDistance then
+                    gboxModel = obj; gboxPart = tPart; break
+                end
+            end
+        end
+        if gboxPart then
+            SA_CurrentNPC = gboxModel
+            SA_TargetPart = gboxPart
+            return
+        end
+    end
+
+    if SA_CurrentNPC and SA_IsValidNPC(SA_CurrentNPC) then
+        local tPart = SA_GetTargetPart(SA_CurrentNPC)
+        if tPart and (tPart.Position - localRoot.Position).Magnitude <= silentAimDistance then
+            SA_TargetPart = tPart
+            return
+        end
+    end
+
+    local closestDist = silentAimDistance
+    local closestPart, closestModel = nil, nil
+
+    if silentAimTargetMode == "Astral" then
+        for _, obj in ipairs(objectsToScan) do
+            if obj:IsA("Model") and SA_IsValidNPC(obj) and obj.Name:lower():find("glitch") then
+                local tPart = SA_GetTargetPart(obj)
+                if tPart then
+                    local tPos = tPart.Position
+                    if silentAimPrediction > 0 and obj:FindFirstChild("HumanoidRootPart") then
+                        tPos = tPos + (obj.HumanoidRootPart.Velocity * silentAimPrediction)
+                    end
+                    local dist3D = (tPos - localRoot.Position).Magnitude
+                    if dist3D <= closestDist then
+                        closestDist = dist3D
+                        closestPart = tPart
+                        closestModel = obj
+                    end
                 end
             end
         end
     end
-end
 
--- Vòng lặp tối ưu hóa chu kỳ quét chống nghẽn CPU
-task.spawn(function()
-    while true do
-        if _G.SurgeTouchAura then
-            pcall(applySurgeTurboAura)
-        end
-        -- Dùng runservice hoặc đợi tối thiểu để đạt tốc độ giật điện liên tục mượt mà nhất
-        task.wait() 
-    end
-end)
-
--- Tạo nút bật tắt giao diện Rayfield bản quyền MINOS
-local Toggle = MainTab:CreateToggle({
-   Name = "Kích hoạt Surge Turbo Aura (Giật Dmg Liên Tục)",
-   CurrentValue = false,
-   Flag = "MINOSSurgeTurbo",
-   Callback = function(Value)
-      _G.SurgeTouchAura = Value
-      if Value then
-          Rayfield:Notify({Title = "MINOS HUB", Content = "Đã kích hoạt tốc độ giật điện siêu tốc!", Duration = 2.5})
-      else
-          Rayfield:Notify({Title = "MINOS HUB", Content = "Đã tắt Surge Aura.", Duration = 2.5})
-      end
-   end,
-})
+    if not closestModel then
+        for _, obj in ipairs(objectsToScan) do
+            if obj:IsA("Model") and SA_IsValidNPC(obj) then
+                local tPart = SA_GetTargetPart(obj)
+                if tPart then
+                    local tPos = tPart.Position
