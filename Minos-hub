@@ -10,7 +10,6 @@ local TweenService = game:GetService("TweenService")
 
 local IS_131_GAME = tostring(PlaceId):sub(1, 3) == "131"
 
--- Tự động xóa workspace.visuals ngay khi script được bật (Ngoại trừ game 131)
 if not IS_131_GAME then
     pcall(function()
         local visuals = workspace:FindFirstChild("visuals")
@@ -21,31 +20,24 @@ if not IS_131_GAME then
 end
 
 -----------------------------------------------------
--- 🔥 ANTI-DETECTION HOOK (Kích hoạt ngay lập tức)
--- Không liên quan tới PlaceId, chạy trước mọi thứ khác
+-- 🔥 ANTI-DETECTION HOOK
 -----------------------------------------------------
 pcall(function()
     local oldNamecall
     oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
         local method = getnamecallmethod()
-
-        -- Chặn detector dùng bait instance để check hook
         if self == nil or typeof(self) ~= "Instance" then
             return coroutine.yield()
         end
-
-        -- Fail-safe cho các detector Adonis phổ biến
         if not checkcaller() and method == "FindFirstChild" and tostring(self) == "Humanoid" then
             return nil
         end
-
         return oldNamecall(self, ...)
     end)
 end)
 
 -----------------------------------------------------
 -- ⏳ CHỜ 15 GIÂY TRƯỚC KHI KÍCH HOẠT GARRY HUB
--- Trong lúc chờ, hiện thông báo đếm ngược
 -----------------------------------------------------
 local waitNotifGui = Instance.new("ScreenGui")
 waitNotifGui.Name = "GarryHubWaitNotif"
@@ -84,7 +76,6 @@ waitLabel.TextSize = 16
 waitLabel.TextStrokeTransparency = 0.5
 waitLabel.Text = "🛡 Anti-Detect Active — Loading garry hub in 15s..."
 
--- Đếm ngược
 task.spawn(function()
     for i = 15, 1, -1 do
         if not waitLabel or not waitLabel.Parent then break end
@@ -128,9 +119,6 @@ end
 
 if not supportedPlaces[PlaceId] then showNotSupportedMessage() end
 
------------------------------------------------------
--- SCRIPT CHÍNH
------------------------------------------------------
 if PlaceId == 14852797539 then
     local sg = Instance.new("ScreenGui")
     sg.Name = "ElevatorMsg"
@@ -181,45 +169,10 @@ if not IS_131_GAME then
             end)
         end
     end)
-
-    task.spawn(function()
-        local PATH = {"Workspace", "Packages", "_Index", "Squads", "Squads", "Components", "SquadLobby", "SquadLobbyBanners"}
-        local function getCorePackages()
-            local ok, cp = pcall(function() return game:GetService("CorePackages") end)
-            if ok and cp then return cp end
-            return game:FindFirstChild("CorePackages")
-        end
-        local function resolvePath()
-            local node = getCorePackages()
-            if not node then return nil end
-            for _, name in ipairs(PATH) do
-                if not node then return nil end
-                node = node:FindFirstChild(name)
-            end
-            return node
-        end
-        local function tryDestroy()
-            local target = resolvePath()
-            if target then
-                pcall(function() target:Destroy() end)
-                pcall(function() target.Parent = nil end)
-                return true
-            end
-            return false
-        end
-        for _ = 1, 20 do
-            if tryDestroy() then break end
-            task.wait(0.25)
-        end
-        task.spawn(function()
-            while task.wait(1) do tryDestroy() end
-        end)
-    end)
 end
------------------------------------------------------
 
 -----------------------------------------------------
--- SILENT AIM (Đã tối ưu hóa chống lag)
+-- SILENT AIM (Đã fix hoàn toàn lỗi lag / đứng game)
 -----------------------------------------------------
 local silentAimEnabled    = false
 local silentAimDistance   = 5000
@@ -235,15 +188,7 @@ local function SA_IsCameraOrSystemScript()
     local sc = getcallingscript()
     if not sc then return false end
     local name = sc.Name:lower()
-    local parent = sc.Parent
-    local parentName = parent and parent.Name:lower() or ""
-    if name:find("camera") or name:find("popper") or name:find("control")
-       or name:find("player") or name:find("zoom") or name:find("shiftlock")
-       or name:find("animate") or name:find("mouse")
-       or parentName:find("camera") or parentName:find("player") or parentName:find("control") then
-        return true
-    end
-    return false
+    return name:find("camera") or name:find("control") or name:find("player")
 end
 
 local function SA_IsBaseValid(model)
@@ -256,269 +201,23 @@ local function SA_IsBaseValid(model)
     return true
 end
 
-local function SA_IsGboxAssistant(model)
-    if not model then return false end
-    local nameLower = model.Name:lower():gsub("%s+", "")
-    return nameLower:find("gboxassistant") ~= nil
-end
-
 local function SA_IsValidNPC(model)
     if not SA_IsBaseValid(model) then return false end
     local nameLower = model.Name:lower()
     if silentAimTargetMode == "Box" then
-        return nameLower:find("box") ~= nil
-           and not nameLower:find("boombox")
-           and not nameLower:find("supporter")
+        return nameLower:find("box") ~= nil and not nameLower:find("boombox")
     else
-        return nameLower:find("astral") ~= nil
-            or nameLower:find("void")   ~= nil
-            or nameLower:find("doom")   ~= nil
+        return nameLower:find("astral") ~= nil or nameLower:find("void") ~= nil
     end
 end
 
 local function SA_GetTargetPart(char)
-    return char:FindFirstChild("UpperTorso")
-        or char:FindFirstChild("Torso")
-        or char:FindFirstChild("HumanoidRootPart")
+    return char:FindFirstChild("UpperTorso") or char:FindFirstChild("Torso") or char:FindFirstChild("HumanoidRootPart")
 end
 
 local lastCheckTick = 0
 local function SA_UpdateTarget()
-    if tick() - lastCheckTick < 0.15 then return end
+    if tick() - lastCheckTick < 0.2 then return end
     lastCheckTick = tick()
 
-    local localRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-    if not localRoot then SA_CurrentNPC = nil; SA_TargetPart = nil; return end
-
-    if silentAimTargetMode == "Box" then
-        local gboxModel, gboxPart = nil, nil
-        for _, obj in pairs(workspace:GetChildren()) do
-            if obj:IsA("Model") and SA_IsBaseValid(obj) and SA_IsGboxAssistant(obj) then
-                local tPart = SA_GetTargetPart(obj)
-                if tPart and (tPart.Position - localRoot.Position).Magnitude <= silentAimDistance then
-                    gboxModel = obj; gboxPart = tPart; break
-                end
-            end
-        end
-        if gboxPart then
-            SA_CurrentNPC = gboxModel
-            SA_TargetPart = gboxPart
-            return
-        end
-    end
-
-    if SA_CurrentNPC and SA_IsValidNPC(SA_CurrentNPC) then
-        local tPart = SA_GetTargetPart(SA_CurrentNPC)
-        if tPart and (tPart.Position - localRoot.Position).Magnitude <= silentAimDistance then
-            SA_TargetPart = tPart
-            return
-        end
-    end
-
-    local closestDist = silentAimDistance
-    local closestPart, closestModel = nil, nil
-
-    for _, obj in pairs(workspace:GetChildren()) do
-        if obj:IsA("Model") and SA_IsValidNPC(obj) then
-            local tPart = SA_GetTargetPart(obj)
-            if tPart then
-                local tPos = tPart.Position
-                if silentAimPrediction > 0 and obj:FindFirstChild("HumanoidRootPart") then
-                    tPos = tPos + (obj.HumanoidRootPart.Velocity * silentAimPrediction)
-                end
-                local dist3D = (tPos - localRoot.Position).Magnitude
-                if dist3D <= closestDist then
-                    closestDist = dist3D
-                    closestPart = tPart
-                    closestModel = obj
-                end
-            end
-        end
-    end
-
-    SA_CurrentNPC = closestModel
-    SA_TargetPart = closestPart
-end
-
-if not IS_131_GAME then
-    local SA_oldNamecall = nil
-    SA_oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
-        if checkcaller() or not silentAimEnabled or not SA_TargetPart then return SA_oldNamecall(self, ...) end
-        if SA_IsCameraOrSystemScript() then return SA_oldNamecall(self, ...) end
-
-        local method = getnamecallmethod()
-        local args = {...}
-
-        if (method == "FireServer" or method == "InvokeServer") then
-            local nameLower = self.Name:lower()
-            if nameLower:match("fire") or nameLower:match("hit") or nameLower:match("attack") or nameLower:match("shoot") or nameLower:match("mouse") then
-                local modified = false
-                for i = 1, #args do
-                    if typeof(args[i]) == "Vector3" then
-                        args[i] = SA_TargetPart.Position; modified = true
-                    elseif typeof(args[i]) == "CFrame" then
-                        args[i] = CFrame.new(args[i].Position, SA_TargetPart.Position); modified = true
-                    end
-                end
-                if modified then return SA_oldNamecall(self, unpack(args)) end
-            end
-        end
-
-        if method == "Raycast" and self == workspace then
-            local origin = args[1]
-            if origin then
-                local newDir = (SA_TargetPart.Position - origin).Unit * args[2].Magnitude
-                return SA_oldNamecall(self, origin, newDir, args[3], args[4])
-            end
-        end
-
-        if method == "FindPartOnRay" or method == "FindPartOnRayWithIgnoreList" or method == "FindPartOnRayWithWhitelist" then
-            local ray = args[1]
-            if ray then
-                local origin = ray.Origin
-                local newDir = (SA_TargetPart.Position - origin).Unit * ray.Direction.Magnitude
-                args[1] = Ray.new(origin, newDir)
-                return SA_oldNamecall(self, unpack(args))
-            end
-        end
-
-        return SA_oldNamecall(self, ...)
-    end)
-
-    local SA_oldIndex = nil
-    SA_oldIndex = hookmetamethod(game, "__index", function(self, key)
-        if checkcaller() or not silentAimEnabled or not SA_TargetPart then
-            return SA_oldIndex(self, key)
-        end
-        if self == SA_Mouse then
-            if SA_IsCameraOrSystemScript() then return SA_oldIndex(self, key) end
-            local keyLower = tostring(key):lower()
-            if keyLower == "hit" then
-                return CFrame.new(SA_TargetPart.Position)
-            elseif keyLower == "unitray" then
-                local origin = workspace.CurrentCamera.CFrame.Position
-                local direction = (SA_TargetPart.Position - origin).Unit
-                return Ray.new(origin, direction)
-            elseif keyLower == "target" then
-                return SA_TargetPart
-            end
-        end
-        return SA_oldIndex(self, key)
-    end)
-
-    runService.Heartbeat:Connect(function()
-        if silentAimEnabled then
-            SA_UpdateTarget()
-        else
-            SA_CurrentNPC = nil
-            SA_TargetPart = nil
-        end
-    end)
-end
------------------------------------------------------
-
------------------------------------------------------
--- RAYFIELD GUI (Đã bọc an toàn để không bị lỗi không lên UI)
------------------------------------------------------
-local successRayfield, Rayfield = pcall(function()
-    return loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
-end)
-
-if not successRayfield or not Rayfield then
-    warn("[Garry Hub] Không thể tải thư viện Rayfield UI!")
-    return
-end
-
-local windowName = "garry hub"
-
-local Window = Rayfield:CreateWindow({
-   Name = windowName,
-   Icon = 10044538000,
-   LoadingTitle = "Loading Script...",
-   LoadingSubtitle = "Script by garry",
-   Theme = "Default",
-   DisableRayfieldPrompts = false,
-   DisableBuildWarnings = false,
-   ConfigurationSaving = { Enabled = false }
-})
-
-local MainTab  = Window:CreateTab("Auto Farm", 4483362458)
-local SetupTab = Window:CreateTab("Auto Setup", 4483362458)
-
------------------------------------------------------
--- SILENT AIM GUI
------------------------------------------------------
-if not IS_131_GAME then
-    SetupTab:CreateSection("Silent Aim")
-
-    SetupTab:CreateToggle({
-        Name = "Silent Aim",
-        CurrentValue = false,
-        Flag = "SilentAimToggle",
-        Callback = function(Value)
-            silentAimEnabled = Value
-            if not Value then
-                SA_TargetPart = nil
-                SA_CurrentNPC = nil
-            end
-        end
-    })
-
-    SetupTab:CreateDropdown({
-        Name = "Target",
-        Options = {"Box", "Astral"},
-        CurrentOption = {"Box"},
-        Flag = "SilentAimTarget",
-        Callback = function(v) silentAimTargetMode = v[1] end
-    })
-
-    SetupTab:CreateSlider({
-        Name = "Silent Aim Distance",
-        Range = {100, 10000},
-        Increment = 100,
-        Suffix = " studs",
-        CurrentValue = 5000,
-        Flag = "SilentAimDist",
-        Callback = function(v) silentAimDistance = v end
-    })
-
-    SetupTab:CreateSlider({
-        Name = "Silent Aim Prediction",
-        Range = {0, 1},
-        Increment = 0.005,
-        Suffix = "s",
-        CurrentValue = 0.165,
-        Flag = "SilentAimPred",
-        Callback = function(v) silentAimPrediction = v end
-    })
-end
-
------------------------------------------------------
--- AUTO PARRY
------------------------------------------------------
-local isParryToggled = false
-local isPerfectCancelToggled = true
-local isCounterAttackToggled = true
-local parryMode = 1
-local legitMode = false
-local cancelDelay = 0.001
-
-local function equipTool(toolName)
-    local character = LocalPlayer.Character
-    local backpack = LocalPlayer:FindFirstChildOfClass("Backpack")
-    if character and character:FindFirstChildOfClass("Humanoid") then
-        local tool = (backpack and backpack:FindFirstChild(toolName)) or (character and character:FindFirstChild(toolName))
-        if tool and tool.Parent ~= character then
-            character.Humanoid:EquipTool(tool)
-            return tool
-        end
-        return character:FindFirstChild(toolName)
-    end
-    return nil
-end
-
-local function triggerAzureSkill(tool)
-    if tool then
-        local remote = tool:FindFirstChild("Remote")
-        if remote then
-            task
+    local localRoot = LocalPlayer.Character and Local
