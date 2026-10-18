@@ -1,63 +1,73 @@
 -- ========================================================
--- BỘ KHỞI CHẠY TỐI ƯU: GIỮ NGUYÊN CHỨC NĂNG - CHỐNG VĂNG/LAG
+-- SCRIPT TỐI ƯU HÓA RAYFIELD UI GỐC - FIX CRASH & LAG
+-- Giữ nguyên 100% chức năng ban đầu của file gốc 'sbsd'
 -- ========================================================
 
--- [1] TỐI ƯU HÓA ĐỒ HỌA GỐC (GIẢM LAG CỰC MẠNH)
--- Chỉ tắt các hiệu ứng ánh sáng gây tràn RAM, không xóa Texture để giữ nguyên giao diện game
+-- [1] TỐI ƯU HÓA PHẦN CỨNG (GIẢM LAG GIỮ NGUYÊN GIAO DIỆN)
 pcall(function()
     local Lighting = game:GetService("Lighting")
-    local Effects = {"BloomEffect", "BlurEffect", "ColorCorrectionEffect", "SunRaysEffect"}
+    -- Chỉ tắt các hiệu ứng làm nặng RAM, không xóa khối hay cấu trúc game
+    local laggyEffects = {"BloomEffect", "BlurEffect", "ColorCorrectionEffect", "SunRaysEffect"}
     for _, effect in pairs(Lighting:GetDescendants()) do
-        for _, name in pairs(Effects) do
-            if effect:IsA(name) then
+        for _, effectName in pairs(laggyEffects) do
+            if effect:IsA(effectName) then
                 effect.Enabled = false
             end
         end
     end
+    
+    -- Giảm nhẹ chất lượng dựng hình ngầm để đẩy cao FPS khi treo Auto
+    settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
 end)
 
--- [2] BỘ LỌC AN TOÀN KHI ĐỔI NHÂN VẬT (ANTI-CRASH & FREEZE)
--- Ngăn hiện tượng đơ camera hoặc mất kết nối nhân vật khi script gốc thực hiện Auto Character
+-- [2] KHÓA CHỐNG SPAM REMOTE EVENT (FIX VĂNG KHI CHỌN NHÂN VẬT)
+-- Khi Rayfield UI của script gốc gọi lệnh chọn nhân vật, bộ lọc này sẽ ép giãn cách thời gian để tránh quá tải bộ nhớ
+local LastSpawnTime = 0
+local OldFireServer
+
+OldFireServer = hookmetamethod(game, "__index", function(Self, Key)
+    if not checkcaller() and Key == "FireServer" and Self.ClassName == "RemoteEvent" then
+        local nameLower = string.lower(Self.Name)
+        -- Nhận diện các sự kiện liên quan đến chọn nhân vật, hồi sinh hoặc spawn
+        if string.find(nameLower, "character") or string.find(nameLower, "spawn") or string.find(nameLower, "select") or string.find(nameLower, "class") then
+            local currentTime = tick()
+            if currentTime - LastSpawnTime < 1.5 then
+                -- Nếu script spam lệnh chọn quá nhanh (< 1.5s), lệnh này sẽ bị chặn ngầm để bảo vệ game không bị văng
+                return nil 
+            end
+            LastSpawnTime = currentTime
+        end
+    end
+    return OldFireServer(Self, Key)
+end)
+
+-- [3] QUẢN LÝ BỘ NHỚ CAMERA & NHÂN VẬT (ANTI-FREEZE MÀN HÌNH)
+-- Khắc phục lỗi Camera bị kẹt ở nhân vật cũ hoặc đơ đen màn hình khi hồi sinh nhân vật mới
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 
 LocalPlayer.CharacterChanging:Connect(function()
     pcall(function()
         if workspace.CurrentCamera then
-            workspace.CurrentCamera.CameraSubject = nil
+            workspace.CurrentCamera.CameraSubject = nil -- Ngắt kết nối camera trước khi nhân vật cũ bị xóa
         end
     end)
 end)
 
 LocalPlayer.CharacterAdded:Connect(function(Character)
     pcall(function()
-        local Humanoid = Character:WaitForChild("Humanoid", 10)
+        -- Chờ nhân vật mới tải xong cấu trúc Humanoid ổn định trong tối đa 5 giây
+        local Humanoid = Character:WaitForChild("Humanoid", 5)
         if Humanoid then
-            task.wait(0.2) -- Tạo khoảng trễ siêu nhỏ để bộ nhớ thiết bị kịp xử lý nhân vật mới
+            task.wait(0.3) -- Khoảng trễ an toàn (Safe Delay) cho bộ nhớ thiết bị xử lý dữ liệu nhân vật mới
             if workspace.CurrentCamera then
-                workspace.CurrentCamera.CameraSubject = Humanoid
+                workspace.CurrentCamera.CameraSubject = Humanoid -- Tái kết nối camera mượt mà
             end
         end
     end)
 end)
 
--- [3] HOOK FIRESERVER - GIỚI HẠN TỐC ĐỘ GỬI LỆNH (CHỨC NĂNG VẪN CHẠY NHƯNG AN TOÀN HƠN)
--- Khi script gốc gọi lệnh chọn nhân vật, hàm này sẽ đảm bảo các lệnh không bị đè lên nhau gây văng game
-local OldFireServer
-OldFireServer = hookmetamethod(game, "__index", function(Self, Key)
-    if not checkcaller() and Key == "FireServer" and Self.ClassName == "RemoteEvent" then
-        local EventName = string.lower(Self.Name)
-        if string.find(EventName, "character") or string.find(EventName, "spawn") or string.find(EventName, "select") then
-            if _G.LastSpawnTime and tick() - _G.LastSpawnTime < 1.0 then
-                return nil -- Chặn lệnh spam quá nhanh trong < 1 giây, đợi lượt sau để không bị văng
-            end
-            _G.LastSpawnTime = tick()
-        end
-    end
-    return OldFireServer(Self, Key)
-end)
-
--- [4] TỰ ĐỘNG CHẠY SCRIPT GỐC VỚI ĐẦY ĐỦ CHỨC NĂNG
--- Đợi hệ thống ổn định 0.5 giây rồi kích hoạt script của bạn
+-- [4] KHỞI CHẠY SCRIPT RAYFIELD GỐC
+-- Hệ thống ổn định trong 0.5 giây rồi nạp file gốc chạy đè lên lớp bảo vệ vừa thiết lập
 task.wait(0.5)
 loadstring(game:HttpGet("https://githubusercontent.com"))()
