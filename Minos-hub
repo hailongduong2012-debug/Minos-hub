@@ -39,57 +39,6 @@ pcall(function()
 end)
 
 -----------------------------------------------------
--- ⏳ CHỜ 15 GIÂY TRƯỚC KHI KÍCH HOẠT MINOS HUB
------------------------------------------------------
-local waitNotifGui = Instance.new("ScreenGui")
-waitNotifGui.Name = "MinosHubWaitNotif"
-waitNotifGui.ResetOnSpawn = false
-waitNotifGui.DisplayOrder = 999999
-if gethui then waitNotifGui.Parent = gethui() else
-    pcall(function() waitNotifGui.Parent = game:GetService("CoreGui") end)
-    if not waitNotifGui.Parent then waitNotifGui.Parent = LocalPlayer:WaitForChild("PlayerGui") end
-end
-
-local waitFrame = Instance.new("Frame")
-waitFrame.Parent = waitNotifGui
-waitFrame.Size = UDim2.new(0, 420, 0, 60)
-waitFrame.Position = UDim2.new(0.5, -210, 0.05, 0)
-waitFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-waitFrame.BackgroundTransparency = 0.15
-waitFrame.BorderSizePixel = 0
-
-local waitCorner = Instance.new("UICorner")
-waitCorner.CornerRadius = UDim.new(0, 10)
-waitCorner.Parent = waitFrame
-
-local waitStroke = Instance.new("UIStroke")
-waitStroke.Color = Color3.fromRGB(0, 255, 255)
-waitStroke.Thickness = 1.5
-waitStroke.Transparency = 0.2
-waitStroke.Parent = waitFrame
-
-local waitLabel = Instance.new("TextLabel")
-waitLabel.Parent = waitFrame
-waitLabel.Size = UDim2.new(1, 0, 1, 0)
-waitLabel.BackgroundTransparency = 1
-waitLabel.TextColor3 = Color3.fromRGB(0, 255, 255)
-waitLabel.Font = Enum.Font.GothamBold
-waitLabel.TextSize = 16
-waitLabel.TextStrokeTransparency = 0.5
-waitLabel.Text = "🛡 Anti-Detect Active — Loading minos hub in 15s..."
-
-task.spawn(function()
-    for i = 15, 1, -1 do
-        if not waitLabel or not waitLabel.Parent then break end
-        waitLabel.Text = "🛡 Anti-Detect Active — Loading minos hub in " .. i .. "s..."
-        task.wait(1)
-    end
-end)
-
-task.wait(15)
-if waitNotifGui then waitNotifGui:Destroy() end
-
------------------------------------------------------
 -- SERVICE & ANTI-AFK
 -----------------------------------------------------
 LocalPlayer.Idled:Connect(function()
@@ -98,7 +47,7 @@ LocalPlayer.Idled:Connect(function()
 end)
 
 -----------------------------------------------------
--- SILENT AIM (Tối ưu hóa tuyệt đối không lag)
+-- SILENT AIM (Tối ưu chống lag FPS)
 -----------------------------------------------------
 local silentAimEnabled    = false
 local silentAimDistance   = 5000
@@ -197,13 +146,22 @@ end
 -----------------------------------------------------
 -- RAYFIELD GUI SETUP (MINOS HUB)
 -----------------------------------------------------
-local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+local successRayfield, Rayfield = pcall(function()
+    return loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+end)
+
+if not successRayfield or not Rayfield then
+    warn("[Minos Hub] Không thể tải thư viện Rayfield UI!")
+    return
+end
+
 local Window = Rayfield:CreateWindow({
    Name = "minos hub",
    Icon = 10044538000,
    LoadingTitle = "Loading minos hub...",
    LoadingSubtitle = "Script by minos",
    Theme = "Default",
+   DisableRayfieldPrompts = false,
    ConfigurationSaving = { Enabled = false }
 })
 
@@ -214,4 +172,165 @@ if not IS_131_GAME then
     SetupTab:CreateSection("Silent Aim")
     SetupTab:CreateToggle({
         Name = "Silent Aim", CurrentValue = false, Flag = "SilentAimToggle",
-        
+        Callback = function(Value) silentAimEnabled = Value; if not Value then SA_TargetPart = nil end end
+    })
+    SetupTab:CreateDropdown({
+        Name = "Target", Options = {"Box", "Astral"}, CurrentOption = {"Box"}, Flag = "SilentAimTarget",
+        Callback = function(v) silentAimTargetMode = v[1] end
+    })
+    SetupTab:CreateSlider({
+        Name = "Silent Aim Distance", Range = {100, 10000}, Increment = 100, Suffix = " studs", CurrentValue = 5000, Flag = "SilentAimDist",
+        Callback = function(v) silentAimDistance = v end
+    })
+    SetupTab:CreateSlider({
+        Name = "Silent Aim Prediction", Range = {0, 1}, Increment = 0.005, Suffix = "s", CurrentValue = 0.165, Flag = "SilentAimPred",
+        Callback = function(v) silentAimPrediction = v end
+    })
+end
+
+-----------------------------------------------------
+-- AUTO SETUP & AUTO CHARACTER (Chống Crash)
+-----------------------------------------------------
+local map = "Baseplate"
+local mode = "Endless"
+local selectedAutoChar = "Admin"
+local autoMapModeToggled = false
+local autoCharToggled = false
+
+local v14 = {
+  Baseplate        = function() return workspace:FindFirstChild("lobby") and workspace.lobby.btns:FindFirstChild("bp") end,
+  Desert           = function() return workspace:FindFirstChild("lobby") and workspace.lobby.btns:FindFirstChild("Sand") end,
+  Classic          = function() return workspace:FindFirstChild("lobby") and workspace.lobby.btns:FindFirstChild("Classy") end,
+  Default          = function() return workspace:FindFirstChild("lobby") and workspace.lobby.btns:FindFirstChild("defauly") end,
+  ["Free Admin"]   = function() return workspace:FindFirstChild("lobby") and workspace.lobby.btns:FindFirstChild("fa") end,
+  ["Glass Houses"] = function() return workspace:FindFirstChild("lobby") and workspace.lobby.btns:FindFirstChild("glass") end,
+}
+local v15 = {
+  Endless          = function() return workspace:FindFirstChild("start") end,
+  Nightmare        = function() return workspace:FindFirstChild("nightmare") end,
+  Death            = function() return workspace:FindFirstChild("wh") end,
+  ["Endless Hard"] = function() return workspace:FindFirstChild("deadly") end,
+  Siege            = function() return workspace:FindFirstChild("truestart") end,
+  ["Siege Hard"]   = function() return workspace:FindFirstChild("what") end,
+}
+
+local function f28(p8)
+  if not p8 then return false end
+  local p = p8:FindFirstChildOfClass("ProximityPrompt")
+  if not p then return false end
+  p.HoldDuration = 0
+  if fireproximityprompt then fireproximityprompt(p) return true end
+  return false
+end
+
+local nextCharTry = 0
+local function f34()
+  if tick() < nextCharTry then return false end
+  local pg = LocalPlayer:FindFirstChildOfClass("PlayerGui")
+  if not pg then return false end
+  local charClass = pg:FindFirstChild("CharClass")
+  if not charClass then return false end
+
+  local targetBtn = nil
+  for _, desc in ipairs(charClass:GetDescendants()) do
+      if desc:IsA("GuiButton") and desc.Name == selectedAutoChar then
+          targetBtn = desc
+          break
+      end
+  end
+
+  if not targetBtn then return false end
+  nextCharTry = tick() + 1
+  pcall(function()
+      for _, conn in pairs(getconnections(targetBtn.MouseButton1Click)) do
+          conn:Fire()
+      end
+  end)
+  return true
+end
+
+-----------------------------------------------------
+-- AUTO REVIVE (Teleport tới người gục và cứu ngay lập tức - Không lag)
+-----------------------------------------------------
+local isAutoReviveToggled = false
+local isReviving = false
+
+local function autoReviveLoop()
+    task.spawn(function()
+        while isAutoReviveToggled do
+            local allPlayers = Players:GetPlayers()
+            for _, player in ipairs(allPlayers) do
+                if player ~= LocalPlayer and isAutoReviveToggled then
+                    pcall(function()
+                        local remoteFolder = ReplicatedStorage:FindFirstChild("ReviveRemotes")
+                        if not remoteFolder then
+                            remoteFolder = Instance.new("Folder")
+                            remoteFolder.Name = "ReviveRemotes"
+                            remoteFolder.Parent = ReplicatedStorage
+                        end
+                        local playerRemote = remoteFolder:FindFirstChild(player.Name)
+                        if not playerRemote then
+                            playerRemote = Instance.new("RemoteEvent")
+                            playerRemote.Name = player.Name
+                            playerRemote.Parent = remoteFolder
+                        end
+                        playerRemote:FireServer(player.Name)
+                    end)
+
+                    local char = workspace:FindFirstChild(player.Name)
+                    local myChar = LocalPlayer.Character
+                    local myRoot = myChar and myChar:FindFirstChild("HumanoidRootPart")
+                    local myHum  = myChar and myChar:FindFirstChildOfClass("Humanoid")
+
+                    local head = char and char:FindFirstChild("Head")
+                    local revivePrompt = head and head:FindFirstChild("Revive")
+
+                    if revivePrompt and revivePrompt:IsA("ProximityPrompt") and head and myRoot and myHum and myHum.Health > 0 then
+                        isReviving = true
+                        local savedCFrame = myRoot.CFrame
+                        myRoot.AssemblyLinearVelocity = Vector3.zero
+                        myRoot.CFrame = CFrame.new(head.Position + Vector3.new(0, 3, 0))
+
+                        revivePrompt.HoldDuration = 0
+                        if fireproximityprompt then
+                            fireproximityprompt(revivePrompt)
+                        else
+                            virtualInputManager:SendKeyEvent(true, Enum.KeyCode.E, false, game)
+                            task.wait(0.1)
+                            virtualInputManager:SendKeyEvent(false, Enum.KeyCode.E, false, game)
+                        end
+
+                        task.wait(0.05)
+
+                        if LocalPlayer.Character == myChar and myRoot.Parent and myHum.Health > 0 then
+                            myRoot.AssemblyLinearVelocity = Vector3.zero
+                            myRoot.CFrame = savedCFrame
+                        end
+                        isReviving = false
+                    end
+                end
+            end
+            task.wait(0.3)
+        end
+        isReviving = false
+    end)
+end
+
+-----------------------------------------------------
+-- AUTO FARM
+-----------------------------------------------------
+local isFarmToggled = false
+local loopConnection = nil
+local angle = 0
+local selectedFarmMethod = "Magnet & Spin"
+
+local function restoreNPCs()
+    for _, obj in ipairs(workspace:GetChildren()) do
+        if obj:IsA("Model") and obj:FindFirstChild("Humanoid") and obj:FindFirstChild("HumanoidRootPart") then
+            if not Players:GetPlayerFromCharacter(obj) then
+                obj.HumanoidRootPart.Anchored = false
+                obj.HumanoidRootPart.CanCollide = true
+                obj.HumanoidRootPart.Size = Vector3.new(2, 2, 1)
+            end
+        end
+    end
