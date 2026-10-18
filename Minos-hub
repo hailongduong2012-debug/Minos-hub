@@ -152,7 +152,7 @@ local SA_TargetPart  = nil
 local SA_CurrentNPC  = nil
 local SA_Mouse       = LocalPlayer:GetMouse()
 local lastScanTime   = 0
-local SCAN_COOLDOWN  = 0.3 -- Giới hạn tần suất quét để chống lag/văng game [1]
+local SCAN_COOLDOWN  = 0.3 
 
 local function SA_IsCameraOrSystemScript()
     if not getcallingscript then return false end
@@ -217,7 +217,6 @@ local function SA_UpdateTarget()
         return 
     end
 
-    -- 1. Nếu mục tiêu hiện tại vẫn hợp lệ thì giữ lại để TIẾP TỤC DÙNG (Chống lag) [1]
     if SA_CurrentNPC and SA_IsValidNPC(SA_CurrentNPC) then
         local tPart = SA_GetTargetPart(SA_CurrentNPC)
         if tPart and (tPart.Position - localRoot.Position).Magnitude <= silentAimDistance then
@@ -226,14 +225,12 @@ local function SA_UpdateTarget()
         end
     end
 
-    -- 2. Giới hạn thời gian quét để chống văng game khi load/chọn nhân vật [1]
     local now = os.clock()
     if now - lastScanTime < SCAN_COOLDOWN then return end
     lastScanTime = now
 
-    -- 3. Ưu tiên quét mục tiêu "GboxAssistant" trước ở chế độ Box [1]
     if silentAimTargetMode == "Box" then
-        for _, obj in ipairs(workspace:GetChildren()) do -- Sử dụng GetChildren tránh quét sâu gây crash [1]
+        for _, obj in ipairs(workspace:GetChildren()) do 
             if obj:IsA("Model") and SA_IsBaseValid(obj) and SA_IsGboxAssistant(obj) then
                 local tPart = SA_GetTargetPart(obj)
                 if tPart and (tPart.Position - localRoot.Position).Magnitude <= silentAimDistance then
@@ -245,7 +242,6 @@ local function SA_UpdateTarget()
         end
     end
 
-    -- 4. Quét tìm mục tiêu thường gần nhất [1]
     local closestNPC = nil
     local shortestDistance = silentAimDistance
 
@@ -262,7 +258,6 @@ local function SA_UpdateTarget()
         end
     end
 
-    -- Lưu mục tiêu tìm được
     if closestNPC then
         SA_CurrentNPC = closestNPC
         SA_TargetPart = SA_GetTargetPart(closestNPC)
@@ -272,10 +267,23 @@ local function SA_UpdateTarget()
     end
 end
 
--- Kích hoạt vòng lặp quét an toàn qua Heartbeat [1]
 runService.Heartbeat:Connect(function()
     pcall(SA_UpdateTarget)
 end)
 
 -----------------------------------------------------
 -- TÍCH HỢP UI MENU (RAYFIELD)
+-----------------------------------------------------
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu'))()
+local Window = Rayfield:CreateWindow({
+    Name = "Garry Premium Hub",
+    LoadingTitle = "Loading Environment...",
+    LoadingSubtitle = "by Garry",
+    ConfigurationSaving = { Enabled = false }
+})
+
+local MainTab = Window:CreateTab("Silent Aim", 4483362458)
+
+MainTab:CreateToggle({
+    Name = "Enable Silent Aim",
+    CurrentValue = true,
