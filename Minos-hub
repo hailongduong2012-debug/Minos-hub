@@ -16,13 +16,10 @@ local UserInputService = game:GetService("UserInputService")
 
 local IS_131_GAME = tostring(PlaceId):sub(1, 3) == "131"
 
--- Tự động xóa workspace.visuals ngay khi script được bật (Ngoại trừ game 131)
 if not IS_131_GAME then
     pcall(function()
         local visuals = workspace:FindFirstChild("visuals")
-        if visuals then
-            visuals:Destroy()
-        end
+        if visuals then visuals:Destroy() end
     end)
 end
 
@@ -33,9 +30,7 @@ pcall(function()
     local oldNamecall
     oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
         local method = getnamecallmethod()
-        if self == nil or typeof(self) ~= "Instance" then
-            return coroutine.yield()
-        end
+        if self == nil or typeof(self) ~= "Instance" then return coroutine.yield() end
         if not checkcaller() and method == "FindFirstChild" and tostring(self) == "Humanoid" then
             return nil
         end
@@ -95,4 +90,128 @@ task.wait(15)
 if waitNotifGui then waitNotifGui:Destroy() end
 
 -----------------------------------------------------
--- KIỂM TRA PLACE
+-- SERVICE & ANTI-AFK
+-----------------------------------------------------
+LocalPlayer.Idled:Connect(function()
+    VirtualUser:CaptureController()
+    VirtualUser:ClickButton2(Vector2.new())
+end)
+
+-----------------------------------------------------
+-- SILENT AIM (Tối ưu hóa tuyệt đối không lag)
+-----------------------------------------------------
+local silentAimEnabled    = false
+local silentAimDistance   = 5000
+local silentAimPrediction = 0.165
+local silentAimTargetMode = "Box"
+
+local SA_TargetPart = nil
+local SA_CurrentNPC = nil
+
+local function SA_IsBaseValid(model)
+    if not model or not model:IsA("Model") then return false end
+    if Players:GetPlayerFromCharacter(model) or model == LocalPlayer.Character then return false end
+    local hum = model:FindFirstChildOfClass("Humanoid")
+    if not hum or hum.Health <= 0 then return false end
+    local root = model:FindFirstChild("HumanoidRootPart") or model:FindFirstChild("Torso") or model:FindFirstChild("UpperTorso")
+    if not root then return false end
+    return true
+end
+
+local function SA_GetTargetPart(char)
+    return char:FindFirstChild("UpperTorso") or char:FindFirstChild("Torso") or char:FindFirstChild("HumanoidRootPart")
+end
+
+local lastCheckTick = 0
+local function SA_UpdateTarget()
+    if tick() - lastCheckTick < 0.15 then return end
+    lastCheckTick = tick()
+
+    local localRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    if not localRoot then SA_CurrentNPC = nil; SA_TargetPart = nil; return end
+
+    local closestDist = silentAimDistance
+    local closestPart, closestModel = nil, nil
+
+    for _, obj in pairs(workspace:GetChildren()) do
+        if obj:IsA("Model") and SA_IsBaseValid(obj) then
+            local nLower = obj.Name:lower()
+            local isMatch = false
+            if silentAimTargetMode == "Box" then
+                if nLower:find("box") and not nLower:find("boombox") and not nLower:find("supporter") then
+                    isMatch = true
+                end
+            else
+                if nLower:find("astral") or nLower:find("void") or nLower:find("doom") then
+                    isMatch = true
+                end
+            end
+
+            if isMatch then
+                local tPart = SA_GetTargetPart(obj)
+                if tPart then
+                    local tPos = tPart.Position
+                    if silentAimPrediction > 0 and obj:FindFirstChild("HumanoidRootPart") then
+                        tPos = tPos + (obj.HumanoidRootPart.Velocity * silentAimPrediction)
+                    end
+                    local dist3D = (tPos - localRoot.Position).Magnitude
+                    if dist3D <= closestDist then
+                        closestDist = dist3D
+                        closestPart = tPart
+                        closestModel = obj
+                    end
+                end
+            end
+        end
+    end
+
+    SA_CurrentNPC = closestModel
+    SA_TargetPart = closestPart
+end
+
+if not IS_131_GAME then
+    local SA_oldNamecall = nil
+    SA_oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
+        if checkcaller() or not silentAimEnabled or not SA_TargetPart then return SA_oldNamecall(self, ...) end
+        local method = getnamecallmethod()
+        local args = {...}
+
+        if (method == "FireServer" or method == "InvokeServer") then
+            local nameLower = self.Name:lower()
+            if nameLower:match("fire") or nameLower:match("hit") or nameLower:match("attack") or nameLower:match("shoot") then
+                for i = 1, #args do
+                    if typeof(args[i]) == "Vector3" then args[i] = SA_TargetPart.Position
+                    elseif typeof(args[i]) == "CFrame" then args[i] = CFrame.new(args[i].Position, SA_TargetPart.Position) end
+                end
+                return SA_oldNamecall(self, unpack(args))
+            end
+        end
+        return SA_oldNamecall(self, ...)
+    end)
+
+    runService.Heartbeat:Connect(function()
+        if silentAimEnabled then SA_UpdateTarget() else SA_CurrentNPC = nil; SA_TargetPart = nil end
+    end)
+end
+
+-----------------------------------------------------
+-- RAYFIELD GUI SETUP (MINOS HUB)
+-----------------------------------------------------
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+local Window = Rayfield:CreateWindow({
+   Name = "minos hub",
+   Icon = 10044538000,
+   LoadingTitle = "Loading minos hub...",
+   LoadingSubtitle = "Script by minos",
+   Theme = "Default",
+   ConfigurationSaving = { Enabled = false }
+})
+
+local MainTab  = Window:CreateTab("Auto Farm", 4483362458)
+local SetupTab = Window:CreateTab("Auto Setup", 4483362458)
+
+if not IS_131_GAME then
+    SetupTab:CreateSection("Silent Aim")
+    SetupTab:CreateToggle({
+        Name = "Silent Aim", CurrentValue = false, Flag = "SilentAimToggle",
+        
