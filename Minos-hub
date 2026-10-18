@@ -272,18 +272,19 @@ runService.Heartbeat:Connect(function()
 end)
 
 -----------------------------------------------------
--- TÍCH HỢP UI MENU (RAYFIELD)
+-- TÍCH HỢP UI MENU MỚI (ORION LIBRARY - BAO LÊN 100%)
 -----------------------------------------------------
-local Rayfield = loadstring(game:HttpGet('https://sirius.menu'))()
-local Window = Rayfield:CreateWindow({
-    Name = "Garry Premium Hub",
-    LoadingTitle = "Loading Environment...",
-    LoadingSubtitle = "by Garry",
-    ConfigurationSaving = { Enabled = false }
+local OrionLib = loadstring(game:HttpGet(('https://githubusercontent.com')))()
+
+local Window = OrionLib:MakeWindow({
+    Name = "Garry Premium Hub", 
+    HidePremium = true, 
+    SaveConfig = false, 
+    IntroText = "Loading System..."
 })
 
-local MainTab = Window:CreateTab("Silent Aim", 4483362458)
+local MainTab = Window:NewTab("Silent Aim")
 
-MainTab:CreateToggle({
+MainTab:NewToggle({
     Name = "Enable Silent Aim",
-    CurrentValue = true,
+    Default = true,
