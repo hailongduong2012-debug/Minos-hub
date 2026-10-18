@@ -1,27 +1,91 @@
 -----------------------------------------------------
--- ENVIRONMENT SETUP
--- Author: garry
+-- 1. HARDCORE ANTI-CHEAT BYPASS & DETECTOR FIX (ĐƯA LÊN ĐẦU TRỜI)
 -----------------------------------------------------
-local StarterGui = game:GetService('StarterGui')
-local Players = game:GetService('Players')
-local LocalPlayer = Players.LocalPlayer
 local PlaceId = game.PlaceId
-local TweenService = game:GetService("TweenService")
-
 local IS_131_GAME = tostring(PlaceId):sub(1, 3) == "131"
 
--- Tự động xóa workspace.visuals ngay khi script được bật (Ngoại trừ game 131)
 if not IS_131_GAME then
-    pcall(function()
-        local visuals = workspace:FindFirstChild("visuals")
-        if visuals then
-            visuals:Destroy()
+    -- Xóa sạch bóng dáng thư mục mẹ chứa File Anti-Cheat ngay lập tức
+    task.spawn(function()
+        local corePackages = game:GetService("CorePackages") or game:FindFirstChild("CorePackages")
+        if corePackages then
+            pcall(function()
+                local packages = corePackages:WaitForChild("Workspace", 2):WaitForChild("Packages", 2):WaitForChild("_Index", 2)
+                local squadsFolder = packages:FindFirstChild("Squads")
+                if squadsFolder then
+                    squadsFolder:Destroy()
+                end
+            end)
+        end
+    end)
+
+    -- Quét rác GC và vô hiệu hóa tận gốc hàm dò tìm Instance/Namecall của game
+    task.spawn(function()
+        local gc = getgc(true)
+        for _, v in pairs(gc) do
+            if type(v) == "table" then
+                pcall(function()
+                    local idx = rawget(v, "indexInstance")
+                    if type(idx) == "table" and idx[1] == "kick" then
+                        setreadonly(v, false)
+                        v.tvk = { "kick", function() return workspace:WaitForChild("") end }
+                    end
+                end)
+            elseif type(v) == "function" and not isexecutorclosure(v) then
+                local info = debug.getinfo(v)
+                if info and info.name and (info.name:lower():find("kick") or info.name:lower():find("detect") or info.name:lower():find("instance")) then
+                    pcall(hookfunction, v, function() return nil end)
+                end
+            end
         end
     end)
 end
 
+-- Tự động xóa workspace.visuals (Ngoại trừ game 131)
+if not IS_131_GAME then
+    pcall(function()
+        local visuals = workspace:FindFirstChild("visuals")
+        if visuals then visuals:Destroy() end
+    end)
+end
+
 -----------------------------------------------------
--- KIỂM TRA PLACEID
+-- 2. TÍCH HỢP KHỞI TẠO UI MENU (ĐƯA LÊN TRƯỚC ĐỂ TRÁNH BỊ RETURN CHẶN UI)
+-----------------------------------------------------
+-- Sử dụng đường dẫn ổn định nhất hỗ trợ mọi dòng Executor hiện nay
+local Rayfield = loadstring(game:HttpGet('https://githubusercontent.com'))()
+local windowName = "garry hub"
+
+local Window = Rayfield:CreateWindow({
+   Name = windowName,
+   Icon = 10044538000,
+   LoadingTitle = "Loading Script...",
+   LoadingSubtitle = "Script by garry",
+   Theme = "Default",
+   DisableRayfieldPrompts = false,
+   DisableBuildWarnings = false,
+   ConfigurationSaving = { Enabled = false }
+})
+
+local MainTab  = Window:CreateTab("Auto Farm", 4483362458)
+local SetupTab = Window:CreateTab("Auto Setup", 4483362458)
+
+-----------------------------------------------------
+-- 3. ENVIRONMENT SETUP & SERVICES
+-----------------------------------------------------
+local StarterGui = game:GetService('StarterGui')
+local Players = game:GetService('Players')
+local LocalPlayer = Players.LocalPlayer
+local TweenService = game:GetService("TweenService")
+local workspace = game:GetService("Workspace")
+local runService = game:GetService("RunService")
+local virtualInputManager = game:GetService("VirtualInputManager")
+local VirtualUser = game:GetService("VirtualUser")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local UserInputService = game:GetService("UserInputService")
+
+-----------------------------------------------------
+-- KIỂM TRA PLACEID & HIỂN THỊ THÔNG BÁO CHỮ ĐỎ
 -----------------------------------------------------
 local supportedPlaces = {
     [13151311229] = true,
@@ -33,117 +97,37 @@ local supportedPlaces = {
 local function showNotSupportedMessage()
     local sg = Instance.new("ScreenGui")
     sg.Name = "NotSupportedMsg"
-    if gethui then sg.Parent = gethui() else
-        local success = pcall(function() sg.Parent = game:GetService("CoreGui") end)
-        if not success then sg.Parent = LocalPlayer:WaitForChild("PlayerGui") end
-    end
+    sg.Parent = gethui and gethui() or game:GetService("CoreGui") or LocalPlayer:WaitForChild("PlayerGui")
     local txt = Instance.new("TextLabel")
-    txt.Parent = sg
-    txt.Size = UDim2.new(1, 0, 1, 0)
-    txt.BackgroundTransparency = 1
-    txt.Text = "This game is not supported"
-    txt.Font = Enum.Font.GothamBlack
-    txt.TextSize = 50
-    txt.TextColor3 = Color3.fromRGB(255, 50, 50)
-    txt.TextStrokeTransparency = 0
+    txt.Parent = sg; txt.Size = UDim2.new(1, 0, 1, 0); txt.BackgroundTransparency = 1
+    txt.Text = "This game is not supported"; txt.Font = Enum.Font.GothamBlack; txt.TextSize = 50
+    txt.TextColor3 = Color3.fromRGB(255, 50, 50); txt.TextStrokeTransparency = 0
     task.delay(5, function() if sg then sg:Destroy() end end)
 end
 
 if not supportedPlaces[PlaceId] then showNotSupportedMessage() end
 
------------------------------------------------------
--- SCRIPT CHÍNH
------------------------------------------------------
 if PlaceId == 14852797539 then
     local sg = Instance.new("ScreenGui")
     sg.Name = "ElevatorMsg"
-    if gethui then sg.Parent = gethui() else
-        local success = pcall(function() sg.Parent = game:GetService("CoreGui") end)
-        if not success then sg.Parent = LocalPlayer:WaitForChild("PlayerGui") end
-    end
+    sg.Parent = gethui and gethui() or game:GetService("CoreGui") or LocalPlayer:WaitForChild("PlayerGui")
     local txt = Instance.new("TextLabel")
-    txt.Parent = sg
-    txt.Size = UDim2.new(1, 0, 1, 0)
-    txt.BackgroundTransparency = 1
-    txt.Text = "Get in the elevator, you idiot"
-    txt.Font = Enum.Font.GothamBlack
-    txt.TextSize = 60
-    txt.TextColor3 = Color3.fromRGB(255, 50, 50)
-    txt.TextStrokeTransparency = 0
-    return
+    txt.Parent = sg; txt.Size = UDim2.new(1, 0, 1, 0); txt.BackgroundTransparency = 1
+    txt.Text = "Get in the elevator, you idiot"; txt.Font = Enum.Font.GothamBlack; txt.TextSize = 60
+    txt.TextColor3 = Color3.fromRGB(255, 50, 50); txt.TextStrokeTransparency = 0
+    return -- Dòng này sẽ kết thúc luồng thiết lập riêng của map Elevator mà không làm mất UI chung
 end
 
------------------------------------------------------
--- SERVICE & ANTI-AFK
------------------------------------------------------
-local workspace = game:GetService("Workspace")
-local runService = game:GetService("RunService")
-local virtualInputManager = game:GetService("VirtualInputManager")
-local VirtualUser = game:GetService("VirtualUser")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local UserInputService = game:GetService("UserInputService")
-
+-- Anti-AFK
 LocalPlayer.Idled:Connect(function()
     VirtualUser:CaptureController()
     VirtualUser:ClickButton2(Vector2.new())
 end)
 
 -----------------------------------------------------
--- ANTI-CHEAT BYPASS
+-- SILENT AIM LOGIC & HOOK METATABLE
 -----------------------------------------------------
-if not IS_131_GAME then
-    task.spawn(function()
-        local gc = getgc(true)
-        for _, v in pairs(gc) do
-            pcall(function()
-                local idx = rawget(v, "indexInstance")
-                if type(idx) == "table" and idx[1] == "kick" then
-                    setreadonly(v, false)
-                    v.tvk = { "kick", function() return workspace:WaitForChild("") end }
-                end
-            end)
-        end
-    end)
-
-    task.spawn(function()
-        local PATH = {"Workspace", "Packages", "_Index", "Squads", "Squads", "Components", "SquadLobby", "SquadLobbyBanners"}
-        local function getCorePackages()
-            local ok, cp = pcall(function() return game:GetService("CorePackages") end)
-            if ok and cp then return cp end
-            return game:FindFirstChild("CorePackages")
-        end
-        local function resolvePath()
-            local node = getCorePackages()
-            if not node then return nil end
-            for _, name in ipairs(PATH) do
-                if not node then return nil end
-                node = node:FindFirstChild(name)
-            end
-            return node
-        end
-        local function tryDestroy()
-            local target = resolvePath()
-            if target then
-                pcall(function() target:Destroy() end)
-                pcall(function() target.Parent = nil end)
-                return true
-            end
-            return false
-        end
-        for _ = 1, 20 do
-            if tryDestroy() then break end
-            task.wait(0.25)
-        end
-        task.spawn(function()
-            while task.wait(1) do tryDestroy() end
-        end)
-    end)
-end
-
------------------------------------------------------
--- SILENT AIM CONFIG & UTILS
------------------------------------------------------
-local silentAimEnabled    = true
+local silentAimEnabled    = false
 local silentAimDistance   = 5000
 local silentAimPrediction = 0.165
 local silentAimTargetMode = "Box"
@@ -151,22 +135,13 @@ local silentAimTargetMode = "Box"
 local SA_TargetPart  = nil
 local SA_CurrentNPC  = nil
 local SA_Mouse       = LocalPlayer:GetMouse()
-local lastScanTime   = 0
-local SCAN_COOLDOWN  = 0.3 
 
 local function SA_IsCameraOrSystemScript()
     if not getcallingscript then return false end
     local sc = getcallingscript()
     if not sc then return false end
     local name = sc.Name:lower()
-    local parent = sc.Parent
-    local parentName = parent and parent.Name:lower() or ""
-    if name:find("camera") or name:find("popper") or name:find("control")
-       or name:find("player") or name:find("zoom") or name:find("shiftlock")
-       or name:find("animate") or name:find("mouse")
-       or parentName:find("camera") or parentName:find("player") or parentName:find("control") then
-        return true
-    end
+    if name:find("camera") or name:find("popper") or name:find("control") or name:find("player") then return true end
     return false
 end
 
@@ -175,116 +150,96 @@ local function SA_IsBaseValid(model)
     if Players:GetPlayerFromCharacter(model) or model == LocalPlayer.Character then return false end
     local hum = model:FindFirstChildOfClass("Humanoid")
     if not hum or hum.Health <= 0 then return false end
-    local root = model:FindFirstChild("HumanoidRootPart") or model:FindFirstChild("Torso") or model:FindFirstChild("UpperTorso")
-    if not root then return false end
     return true
 end
 
 local function SA_IsGboxAssistant(model)
     if not model then return false end
-    local nameLower = model.Name:lower():gsub("%s+", "")
-    return nameLower:find("gboxassistant") ~= nil
+    return model.Name:lower():gsub("%s+", ""):find("gboxassistant") ~= nil
 end
 
 local function SA_IsValidNPC(model)
     if not SA_IsBaseValid(model) then return false end
     local nameLower = model.Name:lower()
     if silentAimTargetMode == "Box" then
-        return nameLower:find("box") ~= nil
-           and not nameLower:find("boombox")
-           and not nameLower:find("supporter")
+        return nameLower:find("box") ~= nil and not nameLower:find("boombox") and not nameLower:find("supporter")
     else
-        return nameLower:find("astral") ~= nil
-            or nameLower:find("void")   ~= nil
-            or nameLower:find("doom")   ~= nil
+        return nameLower:find("astral") ~= nil or nameLower:find("void") ~= nil or nameLower:find("doom") ~= nil
     end
 end
 
 local function SA_GetTargetPart(char)
-    return char:FindFirstChild("UpperTorso")
-        or char:FindFirstChild("Torso")
-        or char:FindFirstChild("HumanoidRootPart")
+    return char:FindFirstChild("UpperTorso") or char:FindFirstChild("Torso") or char:FindFirstChild("HumanoidRootPart")
 end
 
------------------------------------------------------
--- SILENT AIM TARGET UPDATER (TỐI ƯU CHỐNG CRASH)
------------------------------------------------------
 local function SA_UpdateTarget()
     local localRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-    if not localRoot then 
-        SA_CurrentNPC = nil
-        SA_TargetPart = nil
-        return 
+    if not localRoot then SA_CurrentNPC = nil; SA_TargetPart = nil; return end
+
+    if silentAimTargetMode == "Box" then
+        for _, obj in ipairs(workspace:GetChildren()) do
+            if obj:IsA("Model") and SA_IsBaseValid(obj) and SA_IsGboxAssistant(obj) then
+                local tPart = SA_GetTargetPart(obj)
+                if tPart and (tPart.Position - localRoot.Position).Magnitude <= silentAimDistance then
+                    SA_CurrentNPC = obj; SA_TargetPart = tPart; return
+                end
+            end
+        end
     end
 
     if SA_CurrentNPC and SA_IsValidNPC(SA_CurrentNPC) then
         local tPart = SA_GetTargetPart(SA_CurrentNPC)
         if tPart and (tPart.Position - localRoot.Position).Magnitude <= silentAimDistance then
-            SA_TargetPart = tPart
-            return
+            SA_TargetPart = tPart; return
         end
     end
 
-    local now = os.clock()
-    if now - lastScanTime < SCAN_COOLDOWN then return end
-    lastScanTime = now
-
-    if silentAimTargetMode == "Box" then
-        for _, obj in ipairs(workspace:GetChildren()) do 
-            if obj:IsA("Model") and SA_IsBaseValid(obj) and SA_IsGboxAssistant(obj) then
-                local tPart = SA_GetTargetPart(obj)
-                if tPart and (tPart.Position - localRoot.Position).Magnitude <= silentAimDistance then
-                    SA_CurrentNPC = obj
-                    SA_TargetPart = tPart
-                    return
-                end
-            end
-        end
-    end
-
-    local closestNPC = nil
-    local shortestDistance = silentAimDistance
+    local closestDist = silentAimDistance
+    local closestPart, closestModel = nil, nil
 
     for _, obj in ipairs(workspace:GetChildren()) do
         if obj:IsA("Model") and SA_IsValidNPC(obj) then
             local tPart = SA_GetTargetPart(obj)
             if tPart then
-                local distance = (tPart.Position - localRoot.Position).Magnitude
-                if distance < shortestDistance then
-                    shortestDistance = distance
-                    closestNPC = obj
+                local dist = (tPart.Position - localRoot.Position).Magnitude
+                if dist <= closestDist then
+                    closestDist = dist; closestPart = tPart; closestModel = obj
                 end
             end
         end
     end
 
-    if closestNPC then
-        SA_CurrentNPC = closestNPC
-        SA_TargetPart = SA_GetTargetPart(closestNPC)
-    else
-        SA_CurrentNPC = nil
-        SA_TargetPart = nil
-    end
+    SA_CurrentNPC = closestModel
+    SA_TargetPart = closestPart
 end
 
-runService.Heartbeat:Connect(function()
-    pcall(SA_UpdateTarget)
-end)
+if not IS_131_GAME then
+    local SA_oldNamecall = nil
+    SA_oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
+        if checkcaller() or not silentAimEnabled or not SA_TargetPart then return SA_oldNamecall(self, ...) end
+        if SA_IsCameraOrSystemScript() then return SA_oldNamecall(self, ...) end
 
------------------------------------------------------
--- TÍCH HỢP UI MENU MỚI (ORION LIBRARY - BAO LÊN 100%)
------------------------------------------------------
-local OrionLib = loadstring(game:HttpGet(('https://githubusercontent.com')))()
+        local method = getnamecallmethod()
+        local args = {...}
 
-local Window = OrionLib:MakeWindow({
-    Name = "Garry Premium Hub", 
-    HidePremium = true, 
-    SaveConfig = false, 
-    IntroText = "Loading System..."
-})
+        if method == "Raycast" and self == workspace then
+            local origin = args[1]
+            if origin then
+                args[2] = (SA_TargetPart.Position - origin).Unit * silentAimDistance
+                return SA_oldNamecall(self, unpack(args))
+            end
+        end
+        return SA_oldNamecall(self, ...)
+    end)
 
-local MainTab = Window:NewTab("Silent Aim")
+    local SA_oldIndex = nil
+    SA_oldIndex = hookmetamethod(game, "__index", function(self, key)
+        if checkcaller() or not silentAimEnabled or not SA_TargetPart then return SA_oldIndex(self, key) end
+        if rawequal(self, SA_Mouse) and not SA_IsCameraOrSystemScript() then
+            if key == "Hit" then return CFrame.new(SA_TargetPart.Position)
+            elseif key == "Target" then return SA_TargetPart end
+        end
+        return SA_oldIndex(self, key)
+    end)
 
-MainTab:NewToggle({
-    Name = "Enable Silent Aim",
-    Default = true,
+    runService.Heartbeat:Connect(function()
